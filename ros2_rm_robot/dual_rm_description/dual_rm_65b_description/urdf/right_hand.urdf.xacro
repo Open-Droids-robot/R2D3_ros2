@@ -40,7 +40,7 @@
       <mass value="0.14143"/>
       <inertia ixx="0.00012281" ixy="2.1711E-06" ixz="1.7709E-06" iyy="8.3832E-05" iyz="-1.6551E-06" izz="7.6663E-05"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_base_link.glb" />
+    <xacro:visual_mesh mesh_vis="right_base_link.dae" />
     <collision>
       <origin xyz="0 -0.0136 0" rpy="1.57079 0 0"/>
       <geometry>
@@ -97,7 +97,7 @@
       <mass value="0.0018869"/>
       <inertia ixx="5.816E-08" ixy="1.4539E-08" ixz="4.491E-09" iyy="7.9161E-08" iyz="-1.8727E-09" izz="6.7433E-08"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_right_thumb_proximal_base.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_right_thumb_proximal_base.dae" />
     <xacro:collision_mesh mesh_col="right_right_right_thumb_proximal_base.obj" />
   </link>
 
@@ -115,7 +115,7 @@
       <mass value="0.0066075"/>
       <inertia ixx="1.5686E-06" ixy="-7.8296E-07" ixz="8.9143E-10" iyy="1.7353E-06" iyz="-1.0191E-09" izz="2.786E-06"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_thumb_proximal.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_thumb_proximal.dae" />
     <xacro:collision_mesh mesh_col="right_right_thumb_proximal.obj" />
   </link>
 
@@ -133,7 +133,7 @@
       <mass value="0.0037847"/>
       <inertia ixx="3.6981E-07" ixy="-9.8581E-08" ixz="-4.7469E-12" iyy="3.2394E-07" iyz="1.0939E-12" izz="4.6531E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_thumb_intermediate.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_thumb_intermediate.dae" />
     <xacro:collision_mesh mesh_col="right_right_thumb_intermediate.obj" />
   </link>
 
@@ -152,7 +152,7 @@
       <mass value="0.0033441"/>
       <inertia ixx="1.3632E-07" ixy="-5.6788E-08" ixz="-9.2764E-11" iyy="1.4052E-07" iyz="-1.2283E-10" izz="2.0026E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_thumb_distal.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_thumb_distal.dae" />
     <xacro:collision_mesh mesh_col="right_right_thumb_distal.obj" />
   </link>
 
@@ -171,7 +171,7 @@
       <mass value="0.0042403"/>
       <inertia ixx="6.6232E-07" ixy="-1.5775E-08" ixz="1.8515E-12" iyy="2.1146E-07" iyz="-5.0828E-12" izz="6.9398E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_index_proximal.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_index_proximal.dae" />
     <xacro:collision_mesh mesh_col="right_right_index_proximal.obj" />
   </link>
 
@@ -189,7 +189,7 @@
       <mass value="0.0045683"/>
       <inertia ixx="7.6111E-07" ixy="8.7637E-08" ixz="-3.7751E-13" iyy="9.6076E-08" iyz="9.9444E-13" izz="7.8179E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_index_intermediate.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_index_intermediate.dae" />
     <xacro:collision_mesh mesh_col="right_right_index_intermediate.obj" />
   </link>
 
@@ -208,7 +208,7 @@
       <mass value="0.0042403"/>
       <inertia ixx="6.6211E-07" ixy="-1.8461E-08" ixz="1.8002E-12" iyy="2.1167E-07" iyz="-6.6808E-12" izz="6.9397E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_index_proximal.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_index_proximal.dae" />
     <xacro:collision_mesh mesh_col="right_right_index_proximal.obj" />
   </link>
 
@@ -226,7 +226,7 @@
       <mass value="0.0050396"/>
       <inertia ixx="9.5822E-07" ixy="1.1425E-07" ixz="-2.4791E-12" iyy="1.0646E-07" iyz="5.9173E-12" izz="9.8384E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_middle_intermediate.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_middle_intermediate.dae" />
     <xacro:collision_mesh mesh_col="right_right_middle_intermediate.obj" />
   </link>
 
@@ -245,7 +245,7 @@
       <mass value="0.0042403"/>
       <inertia ixx="6.6211E-07" ixy="-1.8461E-08" ixz="1.5793E-12" iyy="2.1167E-07" iyz="-6.6868E-12" izz="6.9397E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_index_proximal.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_index_proximal.dae" />
     <xacro:collision_mesh mesh_col="right_right_index_proximal.obj" />
   </link>
 
@@ -263,7 +263,7 @@
       <mass value="0.0045683"/>
       <inertia ixx="7.6286E-07" ixy="8.0635E-08" ixz="-6.1562E-13" iyy="9.431E-08" iyz="5.8619E-13" izz="7.8177E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_index_intermediate.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_index_intermediate.dae" />
     <xacro:collision_mesh mesh_col="right_right_index_intermediate.obj" />
   </link>
 
@@ -282,7 +282,7 @@
       <mass value="0.0042403"/>
       <inertia ixx="6.6211E-07" ixy="-1.8461E-08" ixz="1.6907E-12" iyy="2.1167E-07" iyz="-6.9334E-12" izz="6.9397E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_index_proximal.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_index_proximal.dae" />
     <xacro:collision_mesh mesh_col="right_right_index_proximal.obj" />
   </link>
 
@@ -300,7 +300,7 @@
       <mass value="0.0035996"/>
       <inertia ixx="4.3913E-07" ixy="4.1418E-08" ixz="3.7168E-11" iyy="7.0247E-08" iyz="5.8613E-11" izz="4.4867E-07"/>
     </inertial>
-    <xacro:visual_mesh mesh_vis="right_right_pinky_intermediate.glb" />
+    <xacro:visual_mesh mesh_vis="right_right_pinky_intermediate.dae" />
     <xacro:collision_mesh mesh_col="right_right_pinky_intermediate.obj" />
   </link>
 
