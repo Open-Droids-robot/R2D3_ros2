@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: dual_rm_65b_description
+    relative_path: urdf/dual_rm_65b_description.urdf.xacro
+  srdf:
+    relative_path: config/dual_rm_65b_description.srdf
+  package_settings:
+    author_name: Haley
+    author_email: haleyli@realman-robot.com
+    generated_timestamp: 1732619152
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

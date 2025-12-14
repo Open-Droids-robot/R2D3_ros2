@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_rm_65b_description">
+    <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+
+    <!-- Import dual_rm_65b_description urdf file -->
+    <xacro:include filename="$(find dual_rm_65b_description)/urdf/dual_rm_65b_description.urdf.xacro" />
+
+    <!-- Import control_xacro -->
+    <xacro:include filename="dual_rm_65b_description.ros2_control.xacro" />
+
+
+    <xacro:dual_rm_65b_description_ros2_control name="FakeSystem" initial_positions_file="$(arg initial_positions_file)"/>
+
+</robot>

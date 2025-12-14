@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_rm_65b_gazebo">
+
+    <link name="base_footprint"/>
+    <joint name="base_footprint_to_base_link" type="fixed">
+        <parent link="base_footprint"/>
+        <child link="base_link_underpan"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <xacro:include filename="$(find dual_rm_65b_description)/urdf/dual_rm_65b_description.urdf.xacro" />
+    <xacro:include filename="$(find dual_rm_65b_gazebo)/urdf/dual_rm_65b_sim.ros2_control.xacro" />
+    <xacro:include filename="$(find dual_rm_65b_gazebo)/urdf/depth_camera_65b_gazebo.xacro" />
+    
+    
+    <gazebo reference="base_link">
+        <material>Gazebo/White</material>   
+    </gazebo>
+
+    <gazebo reference="r_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link3">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link4">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link5">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link6">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="l_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link3">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link4">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link5">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link6">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="head_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="head_link2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    
+   <gazebo reference="link_left_wheel">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <!-- <kp>1000000.0</kp>
+        <kd>100.0</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>1.0</maxVel> -->
+        <material>Gazebo/Red</material>   
+    </gazebo>
+    <gazebo reference="link_right_wheel">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <!-- <kp>1000000.0</kp>
+        <kd>100.0</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>1.0</maxVel> -->
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <gazebo reference="link_swivel_wheel_1_1">
+        <mu1 value="0.000002" />
+        <mu2 value="0.000002" />
+        <material>Gazebo/White</material>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_1_2">
+        <mu1 value="0.000002" />
+        <mu2 value="0.000002" />
+        <material>Gazebo/White</material>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_2_1">
+        <mu1 value="0.000002" />
+        <mu2 value="0.000002" />
+        <material>Gazebo/White</material>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_2_2">
+        <mu1 value="0.000002" />
+        <mu2 value="0.000002" />
+        <material>Gazebo/White</material>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_3_1">
+        <mu1 value="0.000002" />
+        <mu2 value="0.000002" />
+        <material>Gazebo/White</material>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_3_2">
+        <mu1 value="0.000002" />
+        <mu2 value="0.000002" />
+        <material>Gazebo/White</material>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_4_1">
+        <mu1 value="0.000002" />
+        <mu2 value="0.000002" />        
+        <material>Gazebo/White</material>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_4_2">
+        <mu1 value="0.000002" />
+        <mu2 value="0.000002" />
+        <material>Gazebo/White</material>
+    </gazebo>
+
+    <gazebo reference="body_base_link">
+        <material>Gazebo/White</material>   
+    </gazebo>
+    <gazebo reference="platform_base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_base_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_base_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_hand_base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_hand_base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="base_link_underpan">
+        <mu1 value="0.2" />
+        <mu2 value="0.2" />
+        <material>Gazebo/White</material>   
+    </gazebo>
+   
+    <gazebo>
+        <is_static>false</is_static>
+        <self_collide>true</self_collide>
+    </gazebo>
+
+</robot>

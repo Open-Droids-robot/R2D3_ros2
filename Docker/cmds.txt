@@ -1,0 +1,30 @@
+mkdir ros2_ws 
+mkdir src
+cd ros2_ws/src
+git clone https://github.com/OpenDroids-robot/R2D3_ros2.git
+cd /home/ros/ros2_ws/src/R2D3_ros2/ros2_rm_robot/dual_rm_install/scripts
+sudo chmod 777 ros2_install.sh moveit2_install.sh
+sudo ./ros2_install.sh
+sudo ./moveit2_install.sh
+(if permissions missing, give permissions)
+
+cd /home/ros/ros2_ws/src/R2D3_ros2/ros2_rm_robot/dual_rm_driver/rm_driver/lib
+sudo chmod 777 lib_install.sh
+sudo ./lib_install.sh
+
+
+sudo apt update && sudo apt install -y unzip libprotobuf-dev protobuf-compiler
+sudo mkdir -p /opt/woosh/{lib/x86_64-linux-gnu,include}
+cd /home/ros/ros2_ws/src/R2D3_ros2/ros2_agv_robot/lib
+sudo ./ros-humble-woosh-robot-agent_0.0.3-0jammy_amd64.run
+
+# Check installed Woosh packages
+dpkg -l | grep woosh
+
+# Check Woosh directory structure
+ls -la /opt/woosh/
+
+# Verify ROS2 can see the packages
+cd /home/ros/ros2_ws
+source /opt/ros/humble/setup.bash
+ros2 pkg list | grep woosh

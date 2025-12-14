@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="rm75_b_v_left_transmission" params="joint_name">
+    <transmission name="${joint_name}_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${joint_name}">
+        <hardwareInterface>PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${joint_name}_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+  <xacro:rm75_b_v_left_transmission joint_name="l_joint1" />
+  <xacro:rm75_b_v_left_transmission joint_name="l_joint2" />
+  <xacro:rm75_b_v_left_transmission joint_name="l_joint3" />
+  <xacro:rm75_b_v_left_transmission joint_name="l_joint4" />
+  <xacro:rm75_b_v_left_transmission joint_name="l_joint5" />
+  <xacro:rm75_b_v_left_transmission joint_name="l_joint6" />
+  <xacro:rm75_b_v_left_transmission joint_name="l_joint7" />
+</robot>

@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<robot name="joint" xmlns:xacro="http://www.ros.org/wiki/xacro">
+   <joint
+    name="body_base_joint"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="base_link_underpan" />
+    <child
+      link="body_base_link" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      effort="0"
+      velocity="0" />
+  </joint>
+  <joint
+    name="r_base_joint1"
+    type="fixed">
+    <origin
+      xyz="-0.1 -0.1103 0.031645"
+      rpy="0 -0.7854 0" />
+    <parent
+      link="platform_base_link" />
+    <child
+      link="r_base_link1" />
+    <axis
+      xyz="0 0 0" />
+  </joint> 
+  <joint
+    name="l_base_joint1"
+    type="fixed">
+    <origin
+      xyz="0.1 -0.1103 0.031645"
+      rpy="0 -0.7854 3.1416" />
+    <parent
+      link="platform_base_link" />
+    <child
+      link="l_base_link1" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <joint
+    name="r_hand_joint"
+    type="fixed">
+    <origin
+      xyz="0 0 0.0445"
+      rpy="0 0 0" />
+    <parent
+      link="r_link7" />
+    <child
+      link="r_hand" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <joint
+    name="l_hand_joint"
+    type="fixed">
+    <origin
+      xyz="0 0 0.0445"
+      rpy="0 0 3.1415" />
+    <parent
+      link="l_link7" />
+    <child
+      link="l_hand_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>  
+</robot>
+
+
+

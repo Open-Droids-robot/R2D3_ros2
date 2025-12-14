@@ -1,0 +1,261 @@
+<?xml version="1.0"?>
+<robot name="rm65_b_v_right" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Define constants -->
+  <xacro:property name="mesh_path" value="file://$(find dual_rm_65b_description)/meshes/" />
+  <!-- Macro for visual and collision elements -->
+  <xacro:macro name="visual_collision" params="mesh">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="${mesh_path}${mesh}" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="${mesh_path}${mesh}" />
+      </geometry>
+    </collision>
+  </xacro:macro>
+  <link
+    name="r_base_link1">
+    <inertial>
+      <origin
+        xyz="-4.8022E-05 0.0056915 0.024715"
+        rpy="0 0 0" />
+      <mass
+        value="0.23441" />
+      <inertia
+        ixx="0.00027369"
+        ixy="6.5702E-08"
+        ixz="-3.2599E-09"
+        iyy="0.000264"
+        iyz="1.6355E-06"
+        izz="0.00036679" />
+    </inertial>
+    <xacro:visual_collision mesh="r_base_link1.STL" />
+  </link>
+  <link
+    name="r_link1">
+    <inertial>
+      <origin
+        xyz="-2.8998E-07 0.021107 -0.025188"
+        rpy="0 0 0" />
+      <mass
+        value="0.59353" />
+      <inertia
+        ixx="0.0012661"
+        ixy="-5.3526E-09"
+        ixz="-2.0479E-09"
+        iyy="0.0011816"
+        iyz="-0.00021118"
+        izz="0.00056131" />
+    </inertial>
+    <xacro:visual_collision mesh="r_link1.STL" />
+  </link>
+  <link
+    name="r_link2">
+    <inertial>
+      <origin
+        xyz="0.15226 2.505E-07 -0.0062027"
+        rpy="0 0 0" />
+      <mass
+        value="0.86416" />
+      <inertia
+        ixx="0.00063253"
+        ixy="1.9052E-09"
+        ixz="0.00042162"
+        iyy="0.0020527"
+        iyz="3.5874E-09"
+        izz="0.0019528" />
+    </inertial>
+    <xacro:visual_collision mesh="r_link2.STL" />
+  </link>
+  <link
+    name="r_link3">
+    <inertial>
+      <origin
+        xyz="4.7421E-06 -0.059592 0.010268"
+        rpy="0 0 0" />
+      <mass
+        value="0.28963" />
+      <inertia
+        ixx="0.00063737"
+        ixy="-6.2554E-08"
+        ixz="-3.5031E-08"
+        iyy="0.00015649"
+        iyz="-0.00014461"
+        izz="0.00061418" />
+    </inertial>
+    <xacro:visual_collision mesh="r_link3.STL" />
+  </link>
+  <link
+    name="r_link4">
+    <inertial>
+      <origin
+        xyz="2.9088E-07 -0.018042 -0.02154"
+        rpy="0 0 0" />
+      <mass
+        value="0.23942" />
+      <inertia
+        ixx="0.00028595"
+        ixy="-2.3541E-09"
+        ixz="1.386E-09"
+        iyy="0.00026273"
+        iyz="4.424E-05"
+        izz="0.0001199" />
+    </inertial>
+    <xacro:visual_collision mesh="r_link4.STL" />
+  </link>
+  <link
+    name="r_link5">
+    <inertial>
+      <origin
+        xyz="4.2478E-06 -0.059381 0.007067"
+        rpy="0 0 0" />
+      <mass
+        value="0.21879" />
+      <inertia
+        ixx="0.00035053"
+        ixy="-2.8579E-08"
+        ixz="-1.655E-08"
+        iyy="0.00010492"
+        iyz="-7.824E-05"
+        izz="0.00033447" />
+    </inertial>
+    <xacro:visual_collision mesh="r_link5.STL" />
+  </link>
+  <link
+    name="r_link6">
+    <inertial>
+      <origin
+        xyz="-0.028764 5.1464E-06 0.02806"
+        rpy="0 0 0" />
+      <mass
+        value="0.22147" />
+      <inertia
+        ixx="0.0001376"
+        ixy="-5.7488E-08"
+        ixz="1.6634E-05"
+        iyy="0.00026855"
+        iyz="-1.7799E-08"
+        izz="0.00035277" />
+    </inertial>
+    <xacro:visual_collision mesh="r_link6.STL" />
+  </link>
+
+  <joint
+    name="r_joint1"
+    type="revolute">
+    <origin
+      xyz="0 0 0.187"
+      rpy="0 0 0" />
+    <parent
+      link="r_base_link1" />
+    <child
+      link="r_link1" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.11"
+      upper="3.11"
+      effort="60"
+      velocity="3.14" />
+  </joint>
+  <joint
+    name="r_joint2"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="r_link1" />
+    <child
+      link="r_link2" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.27"
+      upper="2.27"
+      effort="60"
+      velocity="3.14" />
+  </joint>
+  <joint
+    name="r_joint3"
+    type="revolute">
+    <origin
+      xyz="0.256 0 0"
+      rpy="0 0 1.5708" />
+    <parent
+      link="r_link2" />
+    <child
+      link="r_link3" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.36"
+      upper="2.36"
+      effort="30"
+      velocity="3.925" />
+  </joint>
+  <joint
+    name="r_joint4"
+    type="revolute">
+    <origin
+      xyz="0 -0.21 -0.00030007"
+      rpy="1.5708 0 0" />
+    <parent
+      link="r_link3" />
+    <child
+      link="r_link4" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.11"
+      upper="3.11"
+      effort="10"
+      velocity="3.925" />
+  </joint>
+  <joint
+    name="r_joint5"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5708 0 0" />
+    <parent
+      link="r_link4" />
+    <child
+      link="r_link5" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.23"
+      upper="2.23"
+      effort="10"
+      velocity="3.925" />
+  </joint>
+  <joint
+    name="r_joint6"
+    type="revolute">
+    <origin
+      xyz="0 -0.11203 -0.00029971"
+      rpy="1.5708 0 0" />
+    <parent
+      link="r_link5" />
+    <child
+      link="r_link6" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="10"
+      velocity="3.925" />
+  </joint>
+</robot>
+
+
+

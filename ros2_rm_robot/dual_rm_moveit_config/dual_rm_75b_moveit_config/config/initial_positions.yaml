@@ -1,0 +1,18 @@
+# Default initial positions for dual_rm_75b_description's ros2_control fake system
+
+initial_positions:
+  l_joint1: 0
+  l_joint2: 0
+  l_joint3: 0
+  l_joint4: 0
+  l_joint5: 0
+  l_joint6: 0
+  l_joint7: 0
+  platform_joint: 0
+  r_joint1: 0
+  r_joint2: 0
+  r_joint3: 0
+  r_joint4: 0
+  r_joint5: 0
+  r_joint6: 0
+  r_joint7: 0
