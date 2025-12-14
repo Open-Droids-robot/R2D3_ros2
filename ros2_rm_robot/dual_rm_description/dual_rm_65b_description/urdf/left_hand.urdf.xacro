@@ -99,7 +99,7 @@
       <inertia ixx="5.816E-08" ixy="-1.4539E-08" ixz="-4.491E-09" iyy="7.9161E-08" iyz="-1.8727E-09" izz="6.7433E-08"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_thumb_proximal_base.dae" />
-    <xacro:collision_mesh mesh_col="left_left_thumb_proximal_base.obj" />
+    <xacro:collision_mesh mesh_col="left_left_thumb_proximal_base.dae" />
   </link>
 
   <joint name="left_thumb_proximal_yaw_joint" type="revolute">
@@ -117,7 +117,7 @@
       <inertia ixx="1.5686E-06" ixy="7.8296E-07" ixz="8.9143E-10" iyy="1.7353E-06" iyz="1.0191E-09" izz="2.786E-06"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_thumb_proximal.dae" />
-    <xacro:collision_mesh mesh_col="left_left_thumb_proximal.obj" />
+    <xacro:collision_mesh mesh_col="left_left_thumb_proximal.dae" />
   </link>
 
   <joint name="left_thumb_proximal_pitch_joint" type="revolute">
@@ -135,7 +135,7 @@
       <inertia ixx="3.6981E-07" ixy="9.8581E-08" ixz="-4.7469E-12" iyy="3.2394E-07" iyz="-1.0939E-12" izz="4.6531E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_thumb_intermediate.dae" />
-    <xacro:collision_mesh mesh_col="left_left_thumb_intermediate.obj" />
+    <xacro:collision_mesh mesh_col="left_left_thumb_intermediate.dae" />
   </link>
 
   <joint name="left_thumb_intermediate_joint" type="revolute">
@@ -154,7 +154,7 @@
       <inertia ixx="1.3632E-07" ixy="5.6788E-08" ixz="-9.2764E-11" iyy="1.4052E-07" iyz="1.2283E-10" izz="2.0026E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_thumb_distal.dae" />
-    <xacro:collision_mesh mesh_col="left_left_thumb_distal.obj" />
+    <xacro:collision_mesh mesh_col="left_left_thumb_distal.dae" />
   </link>
 
   <joint name="left_thumb_distal_joint" type="revolute">
@@ -173,7 +173,7 @@
       <inertia ixx="6.6232E-07" ixy="1.5775E-08" ixz="1.8515E-12" iyy="2.1146E-07" iyz="5.0828E-12" izz="6.9398E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_index_proximal.dae" />
-    <xacro:collision_mesh mesh_col="left_left_index_proximal.obj" />
+    <xacro:collision_mesh mesh_col="left_left_index_proximal.dae" />
 
   </link>
 
@@ -192,7 +192,7 @@
       <inertia ixx="7.6111E-07" ixy="-8.7637E-08" ixz="-3.7751E-13" iyy="9.6076E-08" iyz="-9.9444E-13" izz="7.8179E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_index_intermediate.dae" />
-    <xacro:collision_mesh mesh_col="left_left_index_intermediate.obj" />
+    <xacro:collision_mesh mesh_col="left_left_index_intermediate.dae" />
   </link>
 
   <joint name="left_index_intermediate_joint" type="revolute">
@@ -211,7 +211,7 @@
       <inertia ixx="6.6211E-07" ixy="1.8461E-08" ixz="1.8002E-12" iyy="2.1167E-07" iyz="6.6808E-12" izz="6.9397E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_index_proximal.dae" />
-    <xacro:collision_mesh mesh_col="left_left_index_proximal.obj" />
+    <xacro:collision_mesh mesh_col="left_left_index_proximal.dae" />
   </link>
 
   <joint name="left_middle_proximal_joint" type="revolute">
@@ -229,7 +229,7 @@
       <inertia ixx="9.5822E-07" ixy="-1.1425E-07" ixz="-2.4791E-12" iyy="1.0646E-07" iyz="-5.9173E-12" izz="9.8384E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_middle_intermediate.dae" />
-    <xacro:collision_mesh mesh_col="left_left_middle_intermediate.obj" />
+    <xacro:collision_mesh mesh_col="left_left_middle_intermediate.dae" />
   </link>
 
   <joint name="left_middle_intermediate_joint" type="revolute">
@@ -248,7 +248,7 @@
       <inertia ixx="6.6211E-07" ixy="1.8461E-08" ixz="1.5793E-12" iyy="2.1167E-07" iyz="6.6868E-12" izz="6.9397E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_index_proximal.dae" />
-    <xacro:collision_mesh mesh_col="left_left_index_proximal.obj" />
+    <xacro:collision_mesh mesh_col="left_left_index_proximal.dae" />
   </link>
 
   <joint name="left_ring_proximal_joint" type="revolute">
@@ -266,7 +266,7 @@
       <inertia ixx="7.6286E-07" ixy="-8.0635E-08" ixz="-6.1562E-13" iyy="9.431E-08" iyz="-5.8619E-13" izz="7.8177E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_index_intermediate.dae" />
-    <xacro:collision_mesh mesh_col="left_left_index_intermediate.obj" />
+    <xacro:collision_mesh mesh_col="left_left_index_intermediate.dae" />
   </link>
 
   <joint name="left_ring_intermediate_joint" type="revolute">
@@ -285,7 +285,7 @@
       <inertia ixx="6.6211E-07" ixy="1.8461E-08" ixz="1.6907E-12" iyy="2.1167E-07" iyz="6.9334E-12" izz="6.9397E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_index_proximal.dae" />
-    <xacro:collision_mesh mesh_col="left_left_index_proximal.obj" />
+    <xacro:collision_mesh mesh_col="left_left_index_proximal.dae" />
   </link>
 
   <joint name="left_pinky_proximal_joint" type="revolute">
@@ -303,7 +303,7 @@
       <inertia ixx="4.3913E-07" ixy="-4.1418E-08" ixz="3.7168E-11" iyy="7.0247E-08" iyz="-5.8613E-11" izz="4.4867E-07"/>
     </inertial>
     <xacro:visual_mesh mesh_vis="left_left_pinky_intermediate.dae" />
-    <xacro:collision_mesh mesh_col="left_left_pinky_intermediate.obj" />
+    <xacro:collision_mesh mesh_col="left_left_pinky_intermediate.dae" />
   </link>
 
   <joint name="left_pinky_intermediate_joint" type="revolute">
