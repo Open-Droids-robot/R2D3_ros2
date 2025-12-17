@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="left_hand_transmission" params="joint_name">
+    <transmission name="${joint_name}_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${joint_name}">
+        <hardwareInterface>PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${joint_name}_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+  <!-- Thumb joints -->
+  <xacro:left_hand_transmission joint_name="left_thumb_proximal_yaw_joint" />
+  <xacro:left_hand_transmission joint_name="left_thumb_proximal_pitch_joint" />
+  <xacro:left_hand_transmission joint_name="left_thumb_intermediate_joint" />
+  <xacro:left_hand_transmission joint_name="left_thumb_distal_joint" />
+
+  <!-- Index finger joints -->
+  <xacro:left_hand_transmission joint_name="left_index_proximal_joint" />
+  <xacro:left_hand_transmission joint_name="left_index_intermediate_joint" />
+
+  <!-- Middle finger joints -->
+  <xacro:left_hand_transmission joint_name="left_middle_proximal_joint" />
+  <xacro:left_hand_transmission joint_name="left_middle_intermediate_joint" />
+
+  <!-- Ring finger joints -->
+  <xacro:left_hand_transmission joint_name="left_ring_proximal_joint" />
+  <xacro:left_hand_transmission joint_name="left_ring_intermediate_joint" />
+
+  <!-- Pinky finger joints -->
+  <xacro:left_hand_transmission joint_name="left_pinky_proximal_joint" />
+  <xacro:left_hand_transmission joint_name="left_pinky_intermediate_joint" />
+</robot>

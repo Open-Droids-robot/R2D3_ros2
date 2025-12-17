@@ -49,18 +49,13 @@
     type="fixed">
     <origin
       xyz="0 0 0.0445"
-      rpy="0 0 0" />
+      rpy="-1.5707963 0 3.14159" />
     <parent
       link="r_link6" />
     <child
-      link="base_right" />
+      link="right_hand_base_link" />
     <axis
-      xyz="0 0 -1" />
-    <limit
-      lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
+      xyz="0 0 0" />
   </joint>  
 
   <joint
@@ -68,18 +63,13 @@
     type="fixed">
     <origin
       xyz="0 0 0.0445"
-      rpy="3.1415 3.1415 3.1415" />
+      rpy="1.5707963 3.14159 3.14159" />
     <parent
       link="l_link6" />
     <child
-      link="base_left" />
+      link="left_hand_base_link" />
     <axis
       xyz="0 0 0" />
-    <limit
-      lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
   </joint>  
 </robot>
 

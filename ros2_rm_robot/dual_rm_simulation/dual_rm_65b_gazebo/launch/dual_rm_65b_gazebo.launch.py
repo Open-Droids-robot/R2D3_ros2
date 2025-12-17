@@ -85,6 +85,20 @@ def generate_launch_description():
         output='screen'
     )
     
+    # Load left hand controller
+    load_left_hand_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start',
+             'left_hand_controller'],
+        output='screen'
+    )
+    
+    # Load right hand controller
+    load_right_hand_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start',
+             'right_hand_controller'],
+        output='screen'
+    )
+    
     # Load platform controller
     load_platform_controller = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'start',
@@ -125,8 +139,24 @@ def generate_launch_description():
             )
     )
     
-    # Listen for joint_state_broadcaster completion, then start platform_controller
+        # Listen for joint_state_broadcaster completion, then start left_hand_controller
     close_evt4 = RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_controller,
+                on_exit=[load_left_hand_controller]
+            )
+    )
+    
+    # Listen for joint_state_broadcaster completion, then start right_hand_controller
+    close_evt5 = RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_controller,
+                on_exit=[load_right_hand_controller]
+            )
+    )
+    
+    # Listen for joint_state_broadcaster completion, then start platform_controller
+    close_evt6 = RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_joint_state_controller,
                 on_exit=[load_platform_controller]
@@ -134,15 +164,15 @@ def generate_launch_description():
     )
     
     # Listen for joint_state_broadcaster completion, then start diff_controller
-    close_evt5 = RegisterEventHandler(
+    close_evt7 = RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_joint_state_controller,
                 on_exit=[load_diff_controller]
             )
     )
     
-    # NEW: Listen for diff_controller completion (last controller), then start RViz2
-    close_evt6 = RegisterEventHandler(
+    # Listen for diff_controller completion (last controller), then start RViz2
+    close_evt8 = RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_diff_controller,
                 on_exit=[rviz_node]
@@ -158,6 +188,8 @@ def generate_launch_description():
         close_evt4,
         close_evt5,
         close_evt6,
+        close_evt7,
+        close_evt8,
         gazebo,
         node_robot_state_publisher,
         spawn_entity,

@@ -9,9 +9,6 @@
     </joint>
 
     <xacro:include filename="$(find dual_rm_65b_description)/urdf/dual_rm_65b_description.urdf.xacro" />
-    <xacro:include filename="$(find dual_rm_65b_gazebo)/urdf/dual_rm_65b_sim.ros2_control.xacro" />
-    <xacro:include filename="$(find dual_rm_65b_gazebo)/urdf/depth_camera_65b_gazebo.xacro" />
-    
     
     <gazebo reference="base_link">
         <material>Gazebo/White</material>   
@@ -164,10 +161,196 @@
         <mu2 value="0.2" />
         <material>Gazebo/White</material>   
     </gazebo>
+
+    <gazebo reference="left_hand_base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_thumb_proximal_base">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_thumb_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_thumb_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_thumb_distal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_thumb_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_index_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_index_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_index_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_middle_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_middle_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_middle_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_ring_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_ring_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_ring_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_pinky_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_pinky_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="left_pinky_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+
+    <!-- RIGHT HAND GAZEBO TAGS -->
+    
+    <gazebo reference="right_hand_base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_thumb_proximal_base">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_thumb_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_thumb_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_thumb_distal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_thumb_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_index_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_index_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_index_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_middle_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_middle_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_middle_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_ring_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_ring_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_ring_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_pinky_proximal">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_pinky_intermediate">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="right_pinky_tip">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
    
     <gazebo>
         <is_static>false</is_static>
         <self_collide>true</self_collide>
     </gazebo>
+
+    <xacro:include filename="$(find dual_rm_65b_gazebo)/urdf/dual_rm_65b_sim.ros2_control.xacro" />
+    <xacro:include filename="$(find dual_rm_65b_gazebo)/urdf/depth_camera_65b_gazebo.xacro" />
 
 </robot>

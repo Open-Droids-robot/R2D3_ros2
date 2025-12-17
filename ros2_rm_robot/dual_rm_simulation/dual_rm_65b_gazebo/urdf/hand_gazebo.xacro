@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <!-- Gazebo Mimic Joint Plugin for Left and Right Hand -->
+  
+  <gazebo>
+    <plugin name="gazebo_mimic_joint_plugin" filename="libroboticsgroup_gazebo_mimic_joint_plugin.so">
+      
+      <!-- ========== LEFT HAND MIMIC JOINTS ========== -->
+      
+      <!-- Left Thumb Intermediate Joint -->
+      <!-- Mimics: left_thumb_proximal_pitch_joint -->
+      <!-- Multiplier: 1.334, Offset: 0 -->
+      <joint>left_thumb_intermediate_joint</joint>
+      <mimicJoint>left_thumb_proximal_pitch_joint</mimicJoint>
+      <multiplier>1.334</multiplier>
+      <offset>0.0</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Left Thumb Distal Joint -->
+      <!-- Mimics: left_thumb_proximal_pitch_joint -->
+      <!-- Multiplier: 0.667, Offset: 0 -->
+      <joint>left_thumb_distal_joint</joint>
+      <mimicJoint>left_thumb_proximal_pitch_joint</mimicJoint>
+      <multiplier>0.667</multiplier>
+      <offset>0.0</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Left Index Intermediate Joint -->
+      <!-- Mimics: left_index_proximal_joint -->
+      <!-- Multiplier: 1.06399, Offset: -0.04545 -->
+      <joint>left_index_intermediate_joint</joint>
+      <mimicJoint>left_index_proximal_joint</mimicJoint>
+      <multiplier>1.06399</multiplier>
+      <offset>-0.04545</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Left Middle Intermediate Joint -->
+      <!-- Mimics: left_middle_proximal_joint -->
+      <!-- Multiplier: 1.06399, Offset: -0.04545 -->
+      <joint>left_middle_intermediate_joint</joint>
+      <mimicJoint>left_middle_proximal_joint</mimicJoint>
+      <multiplier>1.06399</multiplier>
+      <offset>-0.04545</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Left Ring Intermediate Joint -->
+      <!-- Mimics: left_ring_proximal_joint -->
+      <!-- Multiplier: 1.06399, Offset: -0.04545 -->
+      <joint>left_ring_intermediate_joint</joint>
+      <mimicJoint>left_ring_proximal_joint</mimicJoint>
+      <multiplier>1.06399</multiplier>
+      <offset>-0.04545</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Left Pinky Intermediate Joint -->
+      <!-- Mimics: left_pinky_proximal_joint -->
+      <!-- Multiplier: 1.06399, Offset: -0.04545 -->
+      <joint>left_pinky_intermediate_joint</joint>
+      <mimicJoint>left_pinky_proximal_joint</mimicJoint>
+      <multiplier>1.06399</multiplier>
+      <offset>-0.04545</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      
+      <!-- ========== RIGHT HAND MIMIC JOINTS ========== -->
+      
+      <!-- Right Thumb Intermediate Joint -->
+      <!-- Mimics: right_thumb_proximal_pitch_joint -->
+      <!-- Multiplier: 1.334, Offset: 0 -->
+      <joint>right_thumb_intermediate_joint</joint>
+      <mimicJoint>right_thumb_proximal_pitch_joint</mimicJoint>
+      <multiplier>1.334</multiplier>
+      <offset>0.0</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Right Thumb Distal Joint -->
+      <!-- Mimics: right_thumb_proximal_pitch_joint -->
+      <!-- Multiplier: 0.667, Offset: 0 -->
+      <joint>right_thumb_distal_joint</joint>
+      <mimicJoint>right_thumb_proximal_pitch_joint</mimicJoint>
+      <multiplier>0.667</multiplier>
+      <offset>0.0</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Right Index Intermediate Joint -->
+      <!-- Mimics: right_index_proximal_joint -->
+      <!-- Multiplier: 1.06399, Offset: -0.04545 -->
+      <joint>right_index_intermediate_joint</joint>
+      <mimicJoint>right_index_proximal_joint</mimicJoint>
+      <multiplier>1.06399</multiplier>
+      <offset>-0.04545</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Right Middle Intermediate Joint -->
+      <!-- Mimics: right_middle_proximal_joint -->
+      <!-- Multiplier: 1.06399, Offset: -0.04545 -->
+      <joint>right_middle_intermediate_joint</joint>
+      <mimicJoint>right_middle_proximal_joint</mimicJoint>
+      <multiplier>1.06399</multiplier>
+      <offset>-0.04545</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Right Ring Intermediate Joint -->
+      <!-- Mimics: right_ring_proximal_joint -->
+      <!-- Multiplier: 1.06399, Offset: -0.04545 -->
+      <joint>right_ring_intermediate_joint</joint>
+      <mimicJoint>right_ring_proximal_joint</mimicJoint>
+      <multiplier>1.06399</multiplier>
+      <offset>-0.04545</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+      <!-- Right Pinky Intermediate Joint -->
+      <!-- Mimics: right_pinky_proximal_joint -->
+      <!-- Multiplier: 1.06399, Offset: -0.04545 -->
+      <joint>right_pinky_intermediate_joint</joint>
+      <mimicJoint>right_pinky_proximal_joint</mimicJoint>
+      <multiplier>1.06399</multiplier>
+      <offset>-0.04545</offset>
+      <sensitiveness>0.0</sensitiveness>
+      <maxEffort>1.0</maxEffort>
+      <hasPID/>
+      <p>5.0</p>
+      <i>0.0</i>
+      <d>0.5</d>
+      
+    </plugin>
+  </gazebo>
+  
+</robot>

@@ -10,6 +10,12 @@ controller_manager:
     right_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
+    left_hand_controller:  
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    right_hand_controller: 
+      type: joint_trajectory_controller/JointTrajectoryController
+
     platform_controller:
       type: position_controllers/GripperActionController
 
@@ -34,6 +40,7 @@ left_arm_controller:
     state_interfaces:
       - position
       - velocity
+      
 right_arm_controller:
   ros__parameters:
     use_sim_time: true
@@ -49,11 +56,65 @@ right_arm_controller:
     state_interfaces:
       - position
       - velocity
+
+# Left Hand Controller
+# Including ALL joints - both actuated and mimic joints
+# Mimic joints are defined in dual_arm_65b_sim.ros2_control.xacro
+left_hand_controller:
+  ros__parameters:
+    use_sim_time: true
+    joints:
+      - left_thumb_proximal_yaw_joint
+      - left_thumb_proximal_pitch_joint
+      - left_thumb_intermediate_joint
+      - left_thumb_distal_joint
+      - left_index_proximal_joint
+      - left_index_intermediate_joint
+      - left_middle_proximal_joint
+      - left_middle_intermediate_joint
+      - left_ring_proximal_joint
+      - left_ring_intermediate_joint
+      - left_pinky_proximal_joint
+      - left_pinky_intermediate_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+
+# Right Hand Controller
+# Including ALL joints - both actuated and mimic joints
+# Mimic joints are defined in dual_arm_65b_sim.ros2_control.xacro
+right_hand_controller:
+  ros__parameters:
+    use_sim_time: true
+    joints:
+      - right_thumb_proximal_yaw_joint
+      - right_thumb_proximal_pitch_joint
+      - right_thumb_intermediate_joint
+      - right_thumb_distal_joint
+      - right_index_proximal_joint
+      - right_index_intermediate_joint
+      - right_middle_proximal_joint
+      - right_middle_intermediate_joint
+      - right_ring_proximal_joint
+      - right_ring_intermediate_joint
+      - right_pinky_proximal_joint
+      - right_pinky_intermediate_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+
+# Platform Controller
 platform_controller:
   ros__parameters:
     use_sim_time: true
     joint: platform_joint
 
+
+# Diff Drive Controller 
 diff_controller:
   ros__parameters:
     use_sim_time: true

@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <robot name="rm65_b_v_right" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
   <!-- Define constants -->
   <xacro:property name="mesh_path" value="file://$(find dual_rm_65b_description)/meshes/" />
   <!-- Macro for visual and collision elements -->

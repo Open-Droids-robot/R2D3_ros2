@@ -73,3 +73,125 @@ joint_limits:
     max_velocity: 3.9249999999999998
     has_acceleration_limits: false
     max_acceleration: 0.0
+  left_thumb_proximal_yaw_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_thumb_proximal_pitch_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_thumb_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_thumb_distal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_index_proximal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_index_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_middle_proximal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_middle_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_ring_proximal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_ring_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_pinky_proximal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  left_pinky_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_thumb_proximal_yaw_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_thumb_proximal_pitch_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_thumb_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_thumb_distal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_index_proximal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_index_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_middle_proximal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_middle_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_ring_proximal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_ring_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_pinky_proximal_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  right_pinky_intermediate_joint: 
+    has_velocity_limits: true
+    max_velocity: 3.9249999999999998
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+    
+    
