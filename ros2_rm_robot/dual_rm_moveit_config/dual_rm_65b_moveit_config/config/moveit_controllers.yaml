@@ -3,6 +3,8 @@ controller_names:
   - left_arm_controller
   - right_arm_controller
   - platform_controller
+  - left_hand_controller
+  - right_hand_controller
 
 left_arm_controller:
   type: FollowJointTrajectory
@@ -26,6 +28,40 @@ right_arm_controller:
     - r_joint4
     - r_joint5
     - r_joint6
+left_hand_controller:
+  type: FollowJointTrajectory
+  action_ns: follow_joint_trajectory
+  default: true
+  joints:
+    - left_thumb_proximal_yaw_joint
+    - left_thumb_proximal_pitch_joint
+    - left_thumb_intermediate_joint
+    - left_thumb_distal_joint
+    - left_index_proximal_joint
+    - left_index_intermediate_joint
+    - left_middle_proximal_joint
+    - left_middle_intermediate_joint
+    - left_ring_proximal_joint
+    - left_ring_intermediate_joint
+    - left_pinky_proximal_joint
+    - left_pinky_intermediate_joint
+right_hand_controller:
+  type: FollowJointTrajectory
+  action_ns: follow_joint_trajectory
+  default: true
+  joints:
+    - right_thumb_proximal_yaw_joint
+    - right_thumb_proximal_pitch_joint
+    - right_thumb_intermediate_joint
+    - right_thumb_distal_joint
+    - right_index_proximal_joint
+    - right_index_intermediate_joint
+    - right_middle_proximal_joint
+    - right_middle_intermediate_joint
+    - right_ring_proximal_joint
+    - right_ring_intermediate_joint
+    - right_pinky_proximal_joint
+    - right_pinky_intermediate_joint
 platform_controller:
   type: GripperCommand
   joints:

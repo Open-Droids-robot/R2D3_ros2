@@ -69,12 +69,12 @@ ros-foxy-controller-interface is already the newest version (0.11.0-1focal.20230
 ros-foxy-controller-manager is already the newest version (0.11.0-1focal.20230527.054630).
 ros-foxy-controller-manager-msgs is already the newest version (0.11.0-1focal.20230527.044114).
 0 upgraded, 0 newly installed, 0 to remove and 16 not upgraded.
-[H[2J[3J[0m            [0m
-[0m            [0m
-[0m            [0m
-[0m            [0m
-[0m            [0m
-[1;32m                                Moveit installation completed! [0m
-[0m            [0m
-[0m            [0m
-[0m            [0m
+[H[2J[3J[0m           [0m
+[0m           [0m
+[0m           [0m
+[0m           [0m
+[0m           [0m
+[1;32m          Moveit installation completed! [0m
+[0m           [0m
+[0m           [0m
+[0m           [0m
