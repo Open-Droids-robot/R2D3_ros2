@@ -18,7 +18,7 @@ public:
     void runDemo() 
     {
         // 定义初始化位姿
-        std::vector<double> start_pos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+        std::vector<double> start_pos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         // 设置每个关节的角度值
         move_group_left_hand_.setJointValueTarget(start_pos);
         move_group_right_hand_.setJointValueTarget(start_pos);
@@ -29,7 +29,7 @@ public:
 
         rclcpp::sleep_for(std::chrono::seconds(1));
         // 设置目标位姿
-        std::vector<double> target_pose = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
+        std::vector<double> target_pose = {0.511, 0.107, 0.145, 0.222, 0.133, 0.401};
         move_group_left_hand_.setJointValueTarget(target_pose);
         move_group_right_hand_.setJointValueTarget(target_pose);
         move_group_left_hand_.move();

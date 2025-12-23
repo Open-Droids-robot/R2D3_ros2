@@ -14,22 +14,20 @@ def generate_launch_description():
           'use_sim_time':use_sim_time,
           'subscribe_depth':True,
           'use_action_for_goal':True,
-          'queue_size':30,
-          'approx_sync_max_interval':3.0,
           'Reg/Force3DoF':'true',
           'Grid/RayTracing':'true', # Fill empty space
           'Grid/3D':'false', # Use 2D occupancy
           'Grid/RangeMax':'3',
           'Grid/NormalsSegmentation':'false', # Use passthrough filter to detect obstacles
-          'Grid/MaxGroundHeight':'0.05', # All points above 5 cm are obstacles
-          'Grid/MaxObstacleHeight':'0.4',  # All points over 1 meter are ignored
+          'Grid/MaxGroundHeight':'0.02', # All points above 5 cm are obstacles
+          'Grid/MaxObstacleHeight':'1.5',  # All points over 1 meter are ignored
           'Optimizer/GravitySigma':'0' # Disable imu constraints (we are already in 2D)
     }
 
     remappings=[
-          ('rgb/image', '/camera/image_raw'),
-          ('rgb/camera_info', '/camera/camera_info'),
-          ('depth/image', '/camera/depth/image_raw')]
+          ('rgb/image', '/depth_camera/image_raw'),
+          ('rgb/camera_info', '/depth_camera/camera_info'),
+          ('depth/image', '/depth_camera/depth/image_raw')]
 
     return LaunchDescription([
 
@@ -50,7 +48,7 @@ def generate_launch_description():
             package='rtabmap_slam', executable='rtabmap', output='screen',
             parameters=[parameters],
             remappings=remappings,
-            arguments=['-d', '--udebug']), # This will delete the previous database (~/.ros/rtabmap.db)
+            arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
             
         # Localization mode:
         Node(
@@ -74,13 +72,13 @@ def generate_launch_description():
             parameters=[{'decimation': 2,
                          'max_depth': 3.0,
                          'voxel_size': 0.02}],
-            remappings=[('depth/image', '/camera/depth/image_raw'),
-                        ('depth/camera_info', '/camera/camera_info'),
-                        ('cloud', '/camera/cloud')]),
+            remappings=[('depth/image', '/depth_camera/depth/image_raw'),
+                        ('depth/camera_info', '/depth_camera/depth/camera_info'),
+                        ('cloud', '/depth_camera/cloud')]),
         Node(
             package='rtabmap_util', executable='obstacles_detection', output='screen',
             parameters=[parameters],
-            remappings=[('cloud', '/camera/cloud'),
-                        ('obstacles', '/camera/obstacles'),
-                        ('ground', '/camera/ground')]),
+            remappings=[('cloud', '/depth_camera/cloud'),
+                        ('obstacles', '/depth_camera/obstacles'),
+                        ('ground', '/depth_camera/ground')]),
     ])

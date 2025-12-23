@@ -6,7 +6,7 @@
 
         <sensor name="depth_camera" type="depth">
             <!-- Rotate sensor to match optical frame -->
-            <pose>0 0 0 ${-pi/2} 0 ${-pi/2}</pose>
+            <pose>0.0016556 -0.01252 1.2156E-05 0 0 0</pose>
             <visualize>true</visualize>
             <update_rate>30.0</update_rate>
 
@@ -35,7 +35,7 @@
 
         <!-- IMU Sensor (shares same coordinate system as depth sensor) -->
         <sensor name="camera_imu" type="imu">
-            <pose>0 0 0 ${-pi/2} 0 ${-pi/2}</pose>  <!-- Same rotation as camera -->
+            <pose>0.0016556 -0.01252 1.2156E-05 0 0 0</pose>  <!-- Same rotation as camera -->
             <always_on>true</always_on>
             <update_rate>200</update_rate>
             <visualize>false</visualize>

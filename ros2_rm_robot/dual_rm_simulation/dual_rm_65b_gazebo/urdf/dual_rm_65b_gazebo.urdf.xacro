@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_rm_65b_gazebo">
 
-    <link name="world"/>
-    <joint name="world_to_base_link" type="fixed">
-        <parent link="world"/>
+    <link name="base_footprint"/>
+    <joint name="base_footprint_to_base_link" type="fixed">
+        <parent link="base_footprint"/>
         <child link="base_link_underpan"/>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
     </joint>
 
     <xacro:include filename="$(find dual_rm_65b_description)/urdf/dual_rm_65b_description.urdf.xacro" />
@@ -93,43 +93,43 @@
     </gazebo>
 
     <gazebo reference="link_swivel_wheel_1_1">
-        <mu1 value="0.000002" />
-        <mu2 value="0.000002" />
+        <mu1>0.0005</mu1>
+        <mu2>0.0005</mu2>
         <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_1_2">
-        <mu1 value="0.000002" />
-        <mu2 value="0.000002" />
+        <mu1>0.0005</mu1>
+        <mu2>0.0005</mu2>
         <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_2_1">
-        <mu1 value="0.000002" />
-        <mu2 value="0.000002" />
+        <mu1>0.0005</mu1>
+        <mu2>0.0005</mu2>
         <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_2_2">
-        <mu1 value="0.000002" />
-        <mu2 value="0.000002" />
+        <mu1>0.0005</mu1>
+        <mu2>0.0005</mu2>
         <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_3_1">
-        <mu1 value="0.000002" />
-        <mu2 value="0.000002" />
+        <mu1>0.0005</mu1>
+        <mu2>0.0005</mu2>
         <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_3_2">
-        <mu1 value="0.000002" />
-        <mu2 value="0.000002" />
+        <mu1>0.0005</mu1>
+        <mu2>0.0005</mu2>
         <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_4_1">
-        <mu1 value="0.000002" />
-        <mu2 value="0.000002" />        
+        <mu1>0.0005</mu1>
+        <mu2>0.0005</mu2>      
         <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_4_2">
-        <mu1 value="0.000002" />
-        <mu2 value="0.000002" />
+        <mu1>0.0005</mu1>
+        <mu2>0.0005</mu2>
         <material>Gazebo/White</material>
     </gazebo>
 

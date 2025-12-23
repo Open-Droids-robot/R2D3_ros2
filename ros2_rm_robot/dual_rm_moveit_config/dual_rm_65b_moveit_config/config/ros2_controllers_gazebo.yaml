@@ -57,9 +57,6 @@ right_arm_controller:
       - position
       - velocity
 
-# Left Hand Controller
-# Including ALL joints - both actuated and mimic joints
-# Mimic joints are defined in dual_arm_65b_sim.ros2_control.xacro
 left_hand_controller:
   ros__parameters:
     use_sim_time: true
@@ -76,9 +73,6 @@ left_hand_controller:
       - position
       - velocity
 
-# Right Hand Controller
-# Including ALL joints - both actuated and mimic joints
-# Mimic joints are defined in dual_arm_65b_sim.ros2_control.xacro
 right_hand_controller:
   ros__parameters:
     use_sim_time: true
@@ -101,7 +95,6 @@ platform_controller:
     use_sim_time: true
     joint: platform_joint
 
-
 # Diff Drive Controller 
 diff_controller:
   ros__parameters:
@@ -111,10 +104,11 @@ diff_controller:
     wheels_per_side: 1
     wheel_separation: 0.296
     wheel_radius: 0.084
-    base_frame_id: world
+    base_frame_id: base_footprint
     use_stamped_vel: false
 
     publish_rate: 30.0
+    enable_odom_tf: true
 
     linear.x.has_velocity_limits: false
     linear.x.has_acceleration_limits: false

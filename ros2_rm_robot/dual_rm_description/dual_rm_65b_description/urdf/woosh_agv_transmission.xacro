@@ -17,18 +17,5 @@
   <!-- Drive Wheels Transmissions -->
   <xacro:woosh_agv_transmission joint_name="joint_right_wheel" />
   <xacro:woosh_agv_transmission joint_name="joint_left_wheel" />
-
-  <!-- Optional: Swivel Wheels Transmissions (if you want them controlled) -->
-  <!-- Uncomment these if you need swivel wheels to be controlled by ros2_control -->
-<!--   
-  <xacro:woosh_agv_transmission joint_name="joint_swivel_wheel_1_1" />
-  <xacro:woosh_agv_transmission joint_name="joint_swivel_wheel_1_2" />
-  <xacro:woosh_agv_transmission joint_name="joint_swivel_wheel_2_1" />
-  <xacro:woosh_agv_transmission joint_name="joint_swivel_wheel_2_2" />
-  <xacro:woosh_agv_transmission joint_name="joint_swivel_wheel_3_1" />
-  <xacro:woosh_agv_transmission joint_name="joint_swivel_wheel_3_2" />
-  <xacro:woosh_agv_transmission joint_name="joint_swivel_wheel_4_1" />
-  <xacro:woosh_agv_transmission joint_name="joint_swivel_wheel_4_2" /> -->
  
-
 </robot>

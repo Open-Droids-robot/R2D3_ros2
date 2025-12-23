@@ -225,7 +225,6 @@
 
         <!-- Passive Swivel Wheels - No command interface, only state -->
         <joint name="joint_swivel_wheel_1_1">
-            <!-- NO command_interface - this is passive -->
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>

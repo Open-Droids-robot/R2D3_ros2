@@ -25,6 +25,8 @@ ros2 launch dual_rm_75b_moveit_config demo.launch.py
 ros2 launch dual_rm_moveit_demo rm_65_moveit2_fk.launch.py
 # or
 ros2 launch dual_rm_moveit_demo rm_75_moveit2_fk.launch.py
+# or
+ros2 launch dual_rm_moveit_demo rm_hand_moveit2.launch.py
 ```
 
 ---

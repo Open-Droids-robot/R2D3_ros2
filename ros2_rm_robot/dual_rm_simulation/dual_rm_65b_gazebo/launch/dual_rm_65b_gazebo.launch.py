@@ -50,7 +50,7 @@ def generate_launch_description():
                                    '-entity', f'{robot_name_in_model}',
                                    '-x','0.0',
                                    '-y','0.0',
-                                   '-z','0.25',
+                                   '-z','0.43',
                                    ], 
                         output='screen')
 

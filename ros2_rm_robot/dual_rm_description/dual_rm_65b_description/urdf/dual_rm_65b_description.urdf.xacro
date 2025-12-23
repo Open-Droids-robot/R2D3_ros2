@@ -14,6 +14,5 @@
   <xacro:include filename="$(find dual_rm_65b_description)/urdf/rm65_b_v_right_transmission.xacro"/>
   <xacro:include filename="$(find dual_rm_65b_description)/urdf/body_head_platform_transmission.xacro"/>
   <xacro:include filename="$(find dual_rm_65b_description)/urdf/woosh_agv_transmission.xacro"/>
-  <!-- <xacro:include filename="$(find dual_rm_65b_description)/urdf/common_gazebo.xacro"/> -->
   
 </robot>

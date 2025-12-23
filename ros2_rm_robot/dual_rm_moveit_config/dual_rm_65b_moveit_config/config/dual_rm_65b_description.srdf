@@ -58,7 +58,7 @@
         <joint name="right_pinky_proximal_joint"/>
     </group>
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
-    <virtual_joint name="virtual_joint" type="fixed" parent_frame="world" child_link="base_link_underpan"/>
+    <virtual_joint name="virtual_joint" type="fixed" parent_frame="base_footprint" child_link="base_link_underpan"/>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="base_link_underpan" link2="body_base_link" reason="Adjacent"/>
     <disable_collisions link1="base_link_underpan" link2="camera_link" reason="Never"/>

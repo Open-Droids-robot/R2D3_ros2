@@ -1,0 +1,150 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Tool Properties
+    Name: Tool Properties
+  - Class: rviz_common/Views
+    Name: Views
+  - Class: nav2_rviz_plugins/Navigation 2
+    Name: Navigation 2
+
+Visualization Manager:
+  Class: ""
+  Displays:
+    # Grid
+    - Alpha: 0.3
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 32; 74; 135
+      Enabled: true
+      Name: Grid
+      Value: true
+    
+    # TF - Auto-detects all frames
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Scale: 2
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: false
+      Tree: {}
+      Update Interval: 0
+      Value: true
+    
+    # Map
+    - Alpha: 1
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: true
+      Enabled: true
+      Name: Map
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /map
+      Value: true
+    
+    # Depth Camera Image
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Name: Depth Camera
+      Topic:
+        Value: /depth_camera/image_raw
+      Value: true
+    
+    # Depth Camera Point Cloud
+    - Alpha: 1
+      Class: rviz_default_plugins/PointCloud2
+      Enabled: true
+      Name: Depth Point Cloud
+      Topic:
+        Value: /depth_camera/points
+      Value: true
+    
+    # Global Planner
+    - Class: rviz_common/Group
+      Displays:
+        - Alpha: 0.2
+          Class: rviz_default_plugins/Map
+          Name: Global Costmap
+          Topic:
+            Value: /global_costmap/costmap
+          Value: true
+        - Alpha: 0.5
+          Class: rviz_default_plugins/Path
+          Color: 78; 154; 6
+          Name: Path
+          Topic:
+            Value: /plan
+          Value: true
+      Enabled: true
+      Name: Global Planner
+    
+    # Local Controller
+    - Class: rviz_common/Group
+      Displays:
+        - Alpha: 0.5
+          Class: rviz_default_plugins/Map
+          Name: Local Costmap
+          Topic:
+            Value: /local_costmap/costmap
+          Value: true
+        - Alpha: 0.5
+          Class: rviz_default_plugins/Path
+          Color: 0; 12; 255
+          Name: Local Plan
+          Topic:
+            Value: /local_plan
+          Value: true
+        - Alpha: 1
+          Class: rviz_default_plugins/Polygon
+          Color: 25; 255; 0
+          Name: Footprint
+          Topic:
+            Value: /local_costmap/published_footprint
+          Value: true
+      Enabled: true
+      Name: Controller
+    
+    # Robot Model
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Enabled: true
+      Name: RobotModel
+      Topic:
+        Value: /robot_description
+      Value: true
+
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: map
+    Frame Rate: 30
+  
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic:
+        Value: /initialpose
+    - Class: rviz_default_plugins/PublishPoint
+      Topic:
+        Value: /clicked_point
+    - Class: nav2_rviz_plugins/GoalTool
+  
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Target Frame: base_footprint
+      Value: TopDownOrtho (rviz_default_plugins)
