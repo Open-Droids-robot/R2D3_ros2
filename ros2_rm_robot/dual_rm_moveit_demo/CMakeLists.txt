@@ -25,6 +25,7 @@ find_package(geometry_msgs REQUIRED)
 
 add_executable(moveit2_fk_demo src/moveit2_fk_demo.cpp)
 add_executable(moveit2_ik_demo src/moveit2_ik_demo.cpp)
+add_executable(moveit2_hand_demo src/moveit2_hand_demo.cpp)
 
 target_include_directories(moveit2_fk_demo PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -45,10 +46,19 @@ ament_target_dependencies(
   "geometry_msgs"
 )
 
+ament_target_dependencies(
+  moveit2_hand_demo
+  "moveit_ros_planning_interface"
+  "rclcpp"
+  "std_msgs"
+  "geometry_msgs"
+)
+
 
 install(TARGETS
   moveit2_fk_demo
   moveit2_ik_demo
+  moveit2_hand_demo
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch

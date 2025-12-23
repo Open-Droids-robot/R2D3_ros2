@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_rm_75b_gazebo">
 
-    <link name="base_footprint"/>
-    <joint name="base_footprint_to_base_link" type="fixed">
-        <parent link="base_footprint"/>
+    <link name="world"/>
+    <joint name="world_to_base_link" type="fixed">
+        <parent link="world"/>
         <child link="base_link_underpan"/>
         <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>

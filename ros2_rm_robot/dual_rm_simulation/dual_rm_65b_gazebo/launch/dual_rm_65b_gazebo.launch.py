@@ -189,7 +189,7 @@ def generate_launch_description():
         close_evt5,
         close_evt6,
         close_evt7,
-        close_evt8,
+        # close_evt8,
         gazebo,
         node_robot_state_publisher,
         spawn_entity,

@@ -103,6 +103,7 @@ def generate_launch_description():
             joint_limits,
             moveit_controllers,
             planning_scene_monitor_parameters,
+            {"use_sim_time": True},
         ],
     )
     # RViz
@@ -119,6 +120,7 @@ def generate_launch_description():
             robot_description_semantic,
             ompl_planning_pipeline_config,
             kinematics_yaml,
+            {"use_sim_time": True},
         ],
     )
     delayed_rviz_node = TimerAction(
@@ -132,6 +134,7 @@ def generate_launch_description():
         name="static_transform_publisher",
         output="log",
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "base_link_underpan"],
+        parameters=[{"use_sim_time": True}],
     )
     # Publish TF
     robot_state_publisher = Node(
@@ -139,13 +142,16 @@ def generate_launch_description():
         executable="robot_state_publisher",
         name="robot_state_publisher",
         output="both",
-        parameters=[robot_description],
+        parameters=[
+            robot_description,
+            {"use_sim_time": True}
+        ],
     )
     # ros2_control using FakeSystem as hardware
     ros2_controllers_path = os.path.join(
         get_package_share_directory("dual_rm_65b_moveit_config"),
         "config",
-        "ros2_controllers.yaml",
+        "ros2_controllers_gazebo.yaml",
     )
     
     ros2_control_node = Node(
@@ -161,7 +167,7 @@ def generate_launch_description():
     
     load_controllers = []
     for controller in [
-        "joint_state_broadcaster","left_arm_controller","right_arm_controller","platform_controller"]:
+        "joint_state_broadcaster","left_arm_controller","right_arm_controller","left_hand_controller","right_hand_controller","platform_controller","diff_controller"]:
         load_controllers += [
             ExecuteProcess(
                 cmd=["ros2 run controller_manager spawner.py {}".format(controller)],

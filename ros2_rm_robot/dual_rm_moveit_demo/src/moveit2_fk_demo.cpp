@@ -98,7 +98,7 @@ private:
   moveit::planning_interface::MoveGroupInterface move_group_right_; // 声明moveit2右臂规划接口
   int arm_dof;                                                      // 自由度
 };
-
+ 
 int main(int argc, char **argv)
 {
 
