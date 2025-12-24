@@ -57,6 +57,25 @@
         <joint name="right_ring_proximal_joint"/>
         <joint name="right_pinky_proximal_joint"/>
     </group>
+    <!-- Victory sign for left hand -->
+    <group_state name="victory" group="left_hand">
+        <joint name="left_thumb_proximal_yaw_joint" value="0.8"/>
+        <joint name="left_thumb_proximal_pitch_joint" value="0.4"/>
+        <joint name="left_index_proximal_joint" value="0.0"/>
+        <joint name="left_middle_proximal_joint" value="0.0"/>
+        <joint name="left_ring_proximal_joint" value="1.4"/>
+        <joint name="left_pinky_proximal_joint" value="1.4"/>
+    </group_state>
+
+    <!-- Victory sign for right hand -->
+    <group_state name="victory" group="right_hand">
+        <joint name="right_thumb_proximal_yaw_joint" value="0.8"/>
+        <joint name="right_thumb_proximal_pitch_joint" value="0.4"/>
+        <joint name="right_index_proximal_joint" value="0.0"/>
+        <joint name="right_middle_proximal_joint" value="0.0"/>
+        <joint name="right_ring_proximal_joint" value="1.4"/>
+        <joint name="right_pinky_proximal_joint" value="1.4"/>
+    </group_state>
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
     <virtual_joint name="virtual_joint" type="fixed" parent_frame="base_footprint" child_link="base_link_underpan"/>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
@@ -559,4 +578,7 @@
     <disable_collisions link1="right_index_proximal" link2="right_ring_proximal" reason="Never"/>
     <disable_collisions link1="right_index_proximal" link2="right_pinky_proximal" reason="Never"/>
     <disable_collisions link1="right_middle_proximal" link2="right_pinky_proximal" reason="Never"/>
+    <!-- Fix collision between thumb and middle finger when closing -->
+    <disable_collisions link1="right_thumb_proximal" link2="right_middle_intermediate" reason="Adjacent"/>
+    <disable_collisions link1="left_thumb_proximal" link2="left_middle_intermediate" reason="Adjacent"/>
 </robot>

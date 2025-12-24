@@ -12,39 +12,43 @@ public:
                       move_group_left_hand_(node_, "left_hand"),
                       move_group_right_hand_(node_, "right_hand") 
     {
-        RCLCPP_INFO(logger_, "hello moveit2 realman hand demo!");
+        RCLCPP_INFO(logger_, "hello moveit2 inspire hand demo!");
     }
 
     void runDemo() 
     {
-        // 定义初始化位姿
-        std::vector<double> start_pos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        // 设置每个关节的角度值
-        move_group_left_hand_.setJointValueTarget(start_pos);
-        move_group_right_hand_.setJointValueTarget(start_pos);
-        // 执行
-        move_group_left_hand_.move();
-        move_group_right_hand_.move();
-        RCLCPP_INFO(logger_, "Successfully returned to the start position!");
+        // Fully open hand (all joints at 0)
+        std::vector<double> open_hand = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-        rclcpp::sleep_for(std::chrono::seconds(1));
-        // 设置目标位姿
-        std::vector<double> target_pose = {0.511, 0.107, 0.145, 0.222, 0.133, 0.401};
-        move_group_left_hand_.setJointValueTarget(target_pose);
-        move_group_right_hand_.setJointValueTarget(target_pose);
-        move_group_left_hand_.move();
-        move_group_right_hand_.move();
-        RCLCPP_INFO(logger_, "Successfully reached the desired target pose!");
+        // Closed fist 
+        // [thumb_yaw, thumb_pitch, index, middle, ring, pinky]
+        std::vector<double> closed_fist = {1.0, 0.5, 1.4, 1.4, 1.4, 1.4};
 
-        rclcpp::sleep_for(std::chrono::seconds(1));
-        // 回到初始位姿
-        move_group_left_hand_.setJointValueTarget(start_pos);
-        move_group_right_hand_.setJointValueTarget(start_pos);
+        RCLCPP_INFO(logger_, "Opening hands...");
+        move_group_left_hand_.setJointValueTarget(open_hand);
+        move_group_right_hand_.setJointValueTarget(open_hand);
         move_group_left_hand_.move();
         move_group_right_hand_.move();
-        RCLCPP_INFO(logger_, "Successfully returned to the start position!");
+        RCLCPP_INFO(logger_, "Hands fully opened!");
+
+        rclcpp::sleep_for(std::chrono::seconds(3));
+
+        RCLCPP_INFO(logger_, "Closing hands into fist...");
+        move_group_left_hand_.setJointValueTarget(closed_fist);
+        move_group_right_hand_.setJointValueTarget(closed_fist);
+        move_group_left_hand_.move();
+        move_group_right_hand_.move();
+        RCLCPP_INFO(logger_, "Hands closed into fist!");
+
+        rclcpp::sleep_for(std::chrono::seconds(3));
+
+        RCLCPP_INFO(logger_, "Opening hands again...");
+        move_group_left_hand_.setJointValueTarget(open_hand);
+        move_group_right_hand_.setJointValueTarget(open_hand);
+        move_group_left_hand_.move();
+        move_group_right_hand_.move();
+        RCLCPP_INFO(logger_, "Hands opened again!");
     }
-
 private:
     rclcpp::Node::SharedPtr node_;
     rclcpp::Logger logger_;

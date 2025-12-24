@@ -33,7 +33,7 @@ def generate_launch_description():
 
     # Launch Gazebo simulation environment
     gazebo =  ExecuteProcess(
-        cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so', gazebo_world_path],
+        cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'],
         output='screen')
 
     # Robot state publisher node - publishes robot TF transforms and joint states
