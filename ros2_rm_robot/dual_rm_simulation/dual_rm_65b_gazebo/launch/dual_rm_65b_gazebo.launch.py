@@ -10,19 +10,6 @@ import xacro
 
 def generate_launch_description():
     
-    # Set Gazebo plugin path for RealSense camera
-    realsense_plugin_path = os.path.join(
-        os.path.expanduser('home/ros/ros2_ws/install/realsense_gazebo_plugin/lib')
-    )
-    
-    if 'GAZEBO_PLUGIN_PATH' in os.environ:
-        os.environ['GAZEBO_PLUGIN_PATH'] = os.environ['GAZEBO_PLUGIN_PATH'] + ':' + realsense_plugin_path
-    else:
-        os.environ['GAZEBO_PLUGIN_PATH'] = realsense_plugin_path
-    
-    print(f"[INFO] GAZEBO_PLUGIN_PATH set to: {os.environ['GAZEBO_PLUGIN_PATH']}")
-    # ==================================================
-    
     # Package name
     package_name = 'dual_rm_65b_gazebo'
     # Robot model name
