@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <robot name="body_head_platform" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
+
   <xacro:property name="mesh_path" value="file://$(find dual_rm_65b_description)/meshes/" />
   <xacro:macro name="visual_collision" params="mesh">
     <visual>
@@ -90,27 +93,6 @@
     </inertial>
     <xacro:visual_collision mesh="head_link2.STL" />
   </link>
-  <link
-    name="camera_link">
-    <inertial>
-      <origin
-        xyz="0.0016556 -0.01252 1.2156E-05"
-        rpy="0 0 0" />
-      <mass
-        value="0.049778" />
-      <inertia
-        ixx="4.8577E-06"
-        ixy="4.3442E-07"
-        ixz="-6.2436E-10"
-        iyy="3.075E-05"
-        iyz="6.4645E-10"
-        izz="3.0901E-05" />
-    </inertial>
-    <xacro:visual_collision mesh="camera_link.STL" />
-  </link>
-
-  <link name="camera_link_optical">
-  </link>
 
   <joint
     name="platform_joint"
@@ -166,29 +148,10 @@
       effort="2"
       velocity="1.57" />
   </joint>
-  <joint
-    name="camera_joint"
-    type="fixed">
-    <origin
-      xyz="-0.0032391 -0.051866 0.061606"
-      rpy="0 0 0" />
-    <parent
-      link="head_link2" />
-    <child
-      link="camera_link" />
-  </joint>
-
-  <joint 
-    name="camera_optical_joint" 
-    type="fixed">
-    <origin 
-      xyz="0 0 0" 
-      rpy="${-pi/2} 0 ${-pi/2}" />
-    <parent 
-      link="camera_link" />
-    <child 
-      link="camera_link_optical" />
-  </joint>
+  
+  <xacro:sensor_d435i parent="head_link2" name="camera" use_nominal_extrinsics="true">
+    <origin xyz="-0.0002391 -0.063866 0.048606" rpy="0 0 ${-pi/2}"/>
+  </xacro:sensor_d435i>
 
 </robot>
 

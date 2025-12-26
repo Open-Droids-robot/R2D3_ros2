@@ -69,6 +69,7 @@
         <gravity>false</gravity>
     </gazebo>
     <gazebo reference="head_link2">
+        <material>Gazebo/DarkGrey</material>
         <self_collide>false</self_collide>
         <gravity>false</gravity>
     </gazebo>
@@ -80,7 +81,7 @@
         <kd>100.0</kd>
         <minDepth>0.001</minDepth>
         <maxVel>1.0</maxVel> -->
-        <material>Gazebo/Red</material>   
+        <material>Gazebo/DarkGrey</material>   
     </gazebo>
     <gazebo reference="link_right_wheel">
         <mu1>0.2</mu1>
@@ -89,48 +90,48 @@
         <kd>100.0</kd>
         <minDepth>0.001</minDepth>
         <maxVel>1.0</maxVel> -->
-        <material>Gazebo/Red</material>
+        <material>Gazebo/DarkGrey</material>
     </gazebo>
 
     <gazebo reference="link_swivel_wheel_1_1">
         <mu1>0.0005</mu1>
         <mu2>0.0005</mu2>
-        <material>Gazebo/White</material>
+        <material>Gazebo/DarkGrey</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_1_2">
         <mu1>0.0005</mu1>
         <mu2>0.0005</mu2>
-        <material>Gazebo/White</material>
+        <material>Gazebo/DarkGrey</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_2_1">
         <mu1>0.0005</mu1>
         <mu2>0.0005</mu2>
-        <material>Gazebo/White</material>
+        <material>Gazebo/DarkGrey</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_2_2">
         <mu1>0.0005</mu1>
         <mu2>0.0005</mu2>
-        <material>Gazebo/White</material>
+        <material>Gazebo/DarkGrey</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_3_1">
         <mu1>0.0005</mu1>
         <mu2>0.0005</mu2>
-        <material>Gazebo/White</material>
+        <material>Gazebo/DarkGrey</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_3_2">
         <mu1>0.0005</mu1>
         <mu2>0.0005</mu2>
-        <material>Gazebo/White</material>
+        <material>Gazebo/DarkGrey</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_4_1">
         <mu1>0.0005</mu1>
         <mu2>0.0005</mu2>      
-        <material>Gazebo/White</material>
+        <material>Gazebo/DarkGrey</material>
     </gazebo>
     <gazebo reference="link_swivel_wheel_4_2">
         <mu1>0.0005</mu1>
         <mu2>0.0005</mu2>
-        <material>Gazebo/White</material>
+        <material>Gazebo/DarkGrey</material>
     </gazebo>
 
     <gazebo reference="body_base_link">

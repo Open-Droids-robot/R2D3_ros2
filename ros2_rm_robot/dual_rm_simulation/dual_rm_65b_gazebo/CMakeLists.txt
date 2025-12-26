@@ -19,6 +19,7 @@ install(DIRECTORY launch config worlds rviz urdf DESTINATION share/${PROJECT_NAM
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(realsense_gazebo_plugin REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
