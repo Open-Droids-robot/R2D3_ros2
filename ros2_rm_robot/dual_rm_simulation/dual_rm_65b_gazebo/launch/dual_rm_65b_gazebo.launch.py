@@ -54,6 +54,15 @@ def generate_launch_description():
                                    '-z','0.25',
                                    ], 
                         output='screen')
+    
+    # Robot localization node using EKF
+    robot_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[os.path.join(pkg_share, 'config/ekf.yaml'), {'use_sim_time': True}]
+    )
 
     # RViz2 visualization node
     rviz_node = Node(
@@ -172,10 +181,18 @@ def generate_launch_description():
             )
     )
     
-    # Listen for diff_controller completion (last controller), then start RViz2
+    # Listen for diff_controller completion, then start robot_localization_node
     close_evt8 = RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_diff_controller,
+                on_exit=[robot_localization_node]
+            )
+    )
+    
+    # Listen for robot_localization_node, then start RViz2
+    close_evt9 = RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=robot_localization_node,
                 on_exit=[rviz_node]
             )
     )
@@ -190,7 +207,7 @@ def generate_launch_description():
         close_evt5,
         close_evt6,
         close_evt7,
-        # close_evt8,
+        close_evt8,
         gazebo,
         node_robot_state_publisher,
         spawn_entity,

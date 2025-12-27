@@ -63,10 +63,16 @@ left_hand_controller:
     joints:
       - left_thumb_proximal_yaw_joint
       - left_thumb_proximal_pitch_joint
+      - left_thumb_intermediate_joint
+      - left_thumb_distal_joint
       - left_index_proximal_joint
+      - left_index_intermediate_joint
       - left_middle_proximal_joint
+      - left_middle_intermediate_joint
       - left_ring_proximal_joint
+      - left_ring_intermediate_joint
       - left_pinky_proximal_joint
+      - left_pinky_intermediate_joint
     command_interfaces:
       - position
     state_interfaces:
@@ -79,10 +85,16 @@ right_hand_controller:
     joints:
       - right_thumb_proximal_yaw_joint
       - right_thumb_proximal_pitch_joint
+      - right_thumb_intermediate_joint
+      - right_thumb_distal_joint
       - right_index_proximal_joint
+      - right_index_intermediate_joint
       - right_middle_proximal_joint
+      - right_middle_intermediate_joint
       - right_ring_proximal_joint
+      - right_ring_intermediate_joint
       - right_pinky_proximal_joint
+      - right_pinky_intermediate_joint
     command_interfaces:
       - position
     state_interfaces:
@@ -108,7 +120,7 @@ diff_controller:
     use_stamped_vel: false
 
     publish_rate: 30.0
-    enable_odom_tf: true
+    enable_odom_tf: false
 
     linear.x.has_velocity_limits: false
     linear.x.has_acceleration_limits: false

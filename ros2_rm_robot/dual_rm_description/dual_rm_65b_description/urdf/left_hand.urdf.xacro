@@ -227,10 +227,10 @@
       upper="0.8" 
       effort="1.0" 
       velocity="0.5"/>
-    <mimic 
+    <!-- <mimic 
       joint="left_thumb_proximal_pitch_joint" 
       multiplier="1.334" 
-      offset="0"/>
+      offset="0"/> -->
   </joint>
 
   <link 
@@ -267,10 +267,10 @@
       upper="0.4" 
       effort="1.0" 
       velocity="0.5"/>
-    <mimic 
+    <!-- <mimic 
       joint="left_thumb_proximal_pitch_joint" 
       multiplier="0.667" 
-      offset="0"/>
+      offset="0"/> -->
   </joint>
 
   <link 
@@ -347,10 +347,10 @@
       upper="1.56" 
       effort="1.0" 
       velocity="0.5"/>
-    <mimic 
+    <!-- <mimic 
       joint="left_index_proximal_joint" 
       multiplier="1.06399" 
-      offset="-0.04545"/>
+      offset="-0.04545"/> -->
   </joint>
 
   <link 
@@ -426,10 +426,10 @@
       upper="1.56" 
       effort="1.0" 
       velocity="0.5"/>
-    <mimic 
+    <!-- <mimic 
       joint="left_middle_proximal_joint" 
       multiplier="1.06399" 
-      offset="-0.04545"/>
+      offset="-0.04545"/> -->
   </joint>
 
   <link 
@@ -506,10 +506,10 @@
       upper="1.56" 
       effort="1.0" 
       velocity="0.5"/>
-    <mimic 
+    <!-- <mimic 
       joint="left_ring_proximal_joint"
       multiplier="1.06399" 
-      offset="-0.04545"/>
+      offset="-0.04545"/> -->
   </joint>
 
   <link 
@@ -585,10 +585,10 @@
       lower="-0.04545" upper="1.56" 
       effort="1.0" 
       velocity="0.5"/>
-    <mimic 
+    <!-- <mimic 
       joint="left_pinky_proximal_joint" 
       multiplier="1.06399" 
-      offset="-0.04545"/>
+      offset="-0.04545"/> -->
   </joint>
 
   <link 

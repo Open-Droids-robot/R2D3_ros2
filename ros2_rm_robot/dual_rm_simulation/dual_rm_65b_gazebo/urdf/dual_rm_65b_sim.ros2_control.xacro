@@ -62,7 +62,28 @@
             </state_interface>
             <state_interface name="velocity"/>
         </joint>
+        <joint name="right_thumb_intermediate_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="right_thumb_distal_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
         <joint name="right_index_proximal_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="right_index_intermediate_joint">
             <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
@@ -76,6 +97,13 @@
             </state_interface>
             <state_interface name="velocity"/>
         </joint>
+        <joint name="right_middle_intermediate_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
         <joint name="right_ring_proximal_joint">
             <command_interface name="position"/>
             <state_interface name="position">
@@ -83,7 +111,21 @@
             </state_interface>
             <state_interface name="velocity"/>
         </joint>
+        <joint name="right_ring_intermediate_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
         <joint name="right_pinky_proximal_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="right_pinky_intermediate_joint">
             <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
@@ -147,7 +189,28 @@
             </state_interface>
             <state_interface name="velocity"/>
         </joint>
+        <joint name="left_thumb_intermediate_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="left_thumb_distal_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
         <joint name="left_index_proximal_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="left_index_intermediate_joint">
             <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
@@ -161,6 +224,13 @@
             </state_interface>
             <state_interface name="velocity"/>
         </joint>
+        <joint name="left_middle_intermediate_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
         <joint name="left_ring_proximal_joint">
             <command_interface name="position"/>
             <state_interface name="position">
@@ -168,7 +238,21 @@
             </state_interface>
             <state_interface name="velocity"/>
         </joint>
+        <joint name="left_ring_intermediate_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
         <joint name="left_pinky_proximal_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="left_pinky_intermediate_joint">
             <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>

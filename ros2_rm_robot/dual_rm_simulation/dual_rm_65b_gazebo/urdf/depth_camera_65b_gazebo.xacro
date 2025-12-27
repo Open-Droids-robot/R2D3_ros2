@@ -42,6 +42,7 @@
                 <image>
                     <width>1280</width>
                     <height>720</height>
+                    <format>L16</format>
                 </image>
                 <clip>
                     <near>0.1</near>
@@ -53,10 +54,12 @@
                     <namespace>camera</namespace>
                     <remapping>depth/image_raw:=depth/image_rect_raw</remapping>
                     <remapping>depth/camera_info:=depth/camera_info</remapping>
-                    <remapping>points:=depth/color/points</remapping>
+                    <remapping>points:=depth/points</remapping>
                 </ros>
                 <camera_name>depth</camera_name>
                 <frame_name>camera_depth_optical_frame</frame_name>
+                <depth_camera>true</depth_camera>
+                <hack_baseline>0.07</hack_baseline>
                 <min_depth>0.3</min_depth>
                 <max_depth>10.0</max_depth>
             </plugin>

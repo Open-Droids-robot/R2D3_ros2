@@ -64,7 +64,7 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="left_thumb_intermediate_joint">
+            <joint name="left_thumb_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['left_thumb_intermediate_joint']}</param>
@@ -77,7 +77,7 @@
                     <param name="initial_value">${initial_positions['left_thumb_distal_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
             <joint name="left_index_proximal_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
@@ -85,13 +85,13 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="left_index_intermediate_joint">
+            <joint name="left_index_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['left_index_intermediate_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
             <joint name="left_middle_proximal_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
@@ -99,13 +99,13 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="left_middle_intermediate_joint">
+            <joint name="left_middle_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['left_middle_intermediate_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
             <joint name="left_ring_proximal_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
@@ -113,13 +113,13 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="left_ring_intermediate_joint">
+            <joint name="left_ring_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['left_ring_intermediate_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
             <joint name="left_pinky_proximal_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
@@ -127,13 +127,13 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="left_pinky_intermediate_joint">
+            <joint name="left_pinky_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['left_pinky_intermediate_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
 
             <joint name="r_joint1">
                 <command_interface name="position"/>
@@ -191,7 +191,7 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="right_thumb_intermediate_joint">
+            <joint name="right_thumb_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['right_thumb_intermediate_joint']}</param>
@@ -204,7 +204,7 @@
                     <param name="initial_value">${initial_positions['right_thumb_distal_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
             <joint name="right_index_proximal_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
@@ -212,13 +212,13 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="right_index_intermediate_joint">
+            <joint name="right_index_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['right_index_intermediate_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
             <joint name="right_middle_proximal_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
@@ -226,13 +226,13 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="right_middle_intermediate_joint">
+            <joint name="right_middle_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['right_middle_intermediate_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
             <joint name="right_ring_proximal_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
@@ -240,13 +240,13 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="right_ring_intermediate_joint">
+            <joint name="right_ring_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['right_ring_intermediate_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
             <joint name="right_pinky_proximal_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
@@ -254,13 +254,13 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <!-- <joint name="right_pinky_intermediate_joint">
+            <joint name="right_pinky_intermediate_joint">
                 <command_interface name="position"/>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['right_pinky_intermediate_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
-            </joint> -->
+            </joint>
 
             <joint name="platform_joint">
                 <command_interface name="position"/>
