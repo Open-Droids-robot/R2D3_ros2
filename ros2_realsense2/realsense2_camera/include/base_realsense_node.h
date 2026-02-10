@@ -9,7 +9,7 @@
 #include <librealsense2/rsutil.h>
 #include "constants.h"
 #include "dynamic_params.h"
-#include <cv_bridge/cv_bridge.h>
+#include <cv_bridge/cv_bridge.hpp>
 
 // #include <nav_msgs/Odometry.h>
 #if defined(DASHING) || defined(ELOQUENT)

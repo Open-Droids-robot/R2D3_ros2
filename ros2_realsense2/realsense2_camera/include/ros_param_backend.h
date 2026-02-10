@@ -1,7 +1,14 @@
 #include <rclcpp/rclcpp.hpp>
+#include <rcl_interfaces/msg/set_parameters_result.hpp>
+#include <functional>
+#include <vector>
 
 namespace realsense2_camera
 {
+    // Both Humble's OnParametersSetCallbackType and Jazzy's OnSetParametersCallbackType
+    // resolve to this same function signature, so we use it directly for portability.
+    using ParametersCallbackType = std::function<rcl_interfaces::msg::SetParametersResult(const std::vector<rclcpp::Parameter> &)>;
+
     class ParametersBackend
     {
         public:
@@ -10,7 +17,7 @@ namespace realsense2_camera
                 _logger(rclcpp::get_logger("RealSenseCameraNode"))
                 {};
             ~ParametersBackend();
-            void add_on_set_parameters_callback(rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType callback);
+            void add_on_set_parameters_callback(ParametersCallbackType callback);
 
 
         private:

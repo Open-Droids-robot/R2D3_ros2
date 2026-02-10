@@ -1,0 +1,8 @@
+# WiFi Mode
+int32 K_WI_FI_MODE_UNDEFINED=0
+int32 K_AP=1
+int32 K_TO_AP=2
+int32 K_CLIENT=3
+int32 K_TO_CLIENT=4
+
+int32 value

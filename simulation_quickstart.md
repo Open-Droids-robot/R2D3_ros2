@@ -1,32 +1,68 @@
-## Simulation Quickstart
+# Simulation Quickstart (ROS 2 Jazzy)
 
-Once you have the Docker environment running, follow the steps below to bring up the dual RM simulation stack.
+This workspace has been updated to support **Gazebo Harmonic (Gz Sim)**, the default simulator for ROS 2 Jazzy.
 
-### Choose Your Robot
-- `65` for the 6-DoF arm  
-- `75` for the 7-DoF arm
+> **Note**: The legacy `gazebo_ros` (Gazebo Classic) launch files are still present but will not work on Jazzy. Use the `_gz_sim` variants below.
 
-### 1. Launch Gazebo
+---
+
+### 1. Launch Emulation with Gz Sim
+
+Choose your arm variant (65B or 75B):
+
 ```bash
-ros2 launch dual_rm_gazebo dual_rm_65b_gazebo.launch.py
-# or
-ros2 launch dual_rm_gazebo dual_rm_75b_gazebo.launch.py
+# For 65B (6-DOF) arm
+ros2 launch dual_rm_gazebo dual_rm_65b_gz_sim.launch.py
+
+# For 75B (7-DOF) arm
+ros2 launch dual_rm_gazebo dual_rm_75b_gz_sim.launch.py
 ```
 
-### 2. Launch MoveIt
+This will:
+- Launch Gz Sim (Harmonic)
+- Spawn the robot model
+- Load `ros_gz_bridge` for `/clock` (time sync)
+- Load `ros2_control` controllers (`joint_state_broadcaster`, `left/right_arm_controller`, `platform_controller`)
+
+---
+
+### 2. Launch MoveIt 2 (Motion Planning)
+
+In a new terminal:
+
 ```bash
+# Source workspace
+source install/setup.bash
+
+# For 65B arm
 ros2 launch dual_rm_65b_moveit_config demo.launch.py
-# or
+
+# For 75B arm
 ros2 launch dual_rm_75b_moveit_config demo.launch.py
 ```
 
-### 3. Run MoveIt Example
+---
+
+### 3. Run MoveIt Demo
+
+In a third terminal:
+
 ```bash
+# Source workspace
+source install/setup.bash
+
+# For 65B arm
 ros2 launch dual_rm_moveit_demo rm_65_moveit2_fk.launch.py
-# or
+
+# For 75B arm
 ros2 launch dual_rm_moveit_demo rm_75_moveit2_fk.launch.py
 ```
 
 ---
 
-This workflow covers the essentials for simulation. Feel free to extend the setup with Nav2 for navigation or integrate cameras and LiDAR for your own VSLAM pipeline—this is a bare-bones structure so you can develop without limits.
+### Troubleshooting
+
+If controllers fail to load or simulation time is not syncing:
+1. Ensure `ros-jazzy-ros-gz-sim` and `ros-jazzy-gz-ros2-control` are installed.
+2. Check that the `/clock` bridge is running (it is included in the launch file).
+3. Verify `use_sim_time` is set to `true` for all nodes (handled by launch files).

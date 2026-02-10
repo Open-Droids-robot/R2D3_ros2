@@ -1,0 +1,5 @@
+# Execute predefined task
+woosh_robot_msgs/ExecPreTaskArg arg
+---
+bool ok
+string msg

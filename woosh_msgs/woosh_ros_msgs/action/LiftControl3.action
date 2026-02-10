@@ -1,0 +1,8 @@
+# Goal
+woosh_ros_msgs/LiftControl3 arg
+---
+# Result
+woosh_ros_msgs/Feedback ret
+---
+# Feedback
+woosh_ros_msgs/Feedback fb
