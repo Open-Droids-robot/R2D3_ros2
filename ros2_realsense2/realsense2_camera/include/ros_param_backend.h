@@ -4,7 +4,8 @@
 #include <vector>
 
 namespace realsense2_camera
-{
+{   
+    // We are making things compatible with ros2 Jazzy
     // Both Humble's OnParametersSetCallbackType and Jazzy's OnSetParametersCallbackType
     // resolve to this same function signature, so we use it directly for portability.
     using ParametersCallbackType = std::function<rcl_interfaces::msg::SetParametersResult(const std::vector<rclcpp::Parameter> &)>;

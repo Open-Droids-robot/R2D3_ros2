@@ -1,52 +1,42 @@
 """
-Gazebo Harmonic (gz sim 8) launch file for dual RM-75B robot.
-This is the Jazzy-compatible equivalent of dual_rm_75b_gazebo.launch.py.
+Gz Sim 8 (Gazebo Harmonic) Compatible File 
 """
 import os
 from launch import LaunchDescription
 from launch.actions import (
-    ExecuteProcess,
     IncludeLaunchDescription,
     RegisterEventHandler,
-    DeclareLaunchArgument,
     SetEnvironmentVariable,
 )
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
-import xacro
 
 
 def generate_launch_description():
-    package_name = 'dual_rm_gazebo'
     robot_name_in_model = 'dual_rm_75b_description'
 
-    pkg_share = FindPackageShare(package=package_name).find(package_name)
+    pkg_gazebo = FindPackageShare(package='dual_rm_gazebo').find('dual_rm_gazebo')
+    pkg_description = get_package_share_directory('dual_rm_75b_description')
 
-    # Use the Gz Sim-compatible xacro
-    urdf_model_path = os.path.join(pkg_share, 'config/dual_rm_75b_gz_sim.urdf.xacro')
+    urdf_xacro_path = os.path.join(pkg_gazebo, 'config', 'dual_rm_75b_gz_sim.urdf.xacro')
 
-    print("---", urdf_model_path)
+    robot_description_content = Command([
+        PathJoinSubstitution([FindExecutable(name='xacro')]),
+        ' ',
+        urdf_xacro_path,
+    ])
+    robot_description = {'robot_description': robot_description_content}
 
-    # Parse xacro → URDF string
-    doc = xacro.parse(open(urdf_model_path))
-    xacro.process_doc(doc)
-    robot_description = doc.toxml()
-    params = {'robot_description': robot_description}
-
-    # --- Gz Sim (Harmonic) ---
-    # Set GZ_SIM_RESOURCE_PATH so Gz can find meshes
     gz_resource_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
-        value=os.path.join(
-            get_package_share_directory('dual_rm_75b_description'), 'meshes'
-        )
+        value=os.path.join(pkg_description, 'meshes')
     )
 
-    # Launch Gz Sim via ros_gz_sim
+    # Launch Gz Sim (Harmonic) via ros_gz_sim
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -63,104 +53,93 @@ def generate_launch_description():
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        parameters=[{'use_sim_time': True}, params, {'publish_frequency': 15.0}],
+        parameters=[{'use_sim_time': True}, robot_description, {'publish_frequency': 15.0}],
         output='screen',
     )
 
-    # Spawn the robot into Gz Sim using ros_gz_sim's create node
+    # Spawn entity into Gz Sim via topic (official pattern: avoids CLI length limits)
     spawn_entity = Node(
         package='ros_gz_sim',
         executable='create',
         arguments=[
-            '-string', robot_description,
+            '-topic', 'robot_description',
             '-name', robot_name_in_model,
             '-x', '0.0',
             '-y', '0.0',
             '-z', '0.25',
+            '-allow_renaming', 'true',
         ],
         output='screen',
     )
 
-    # --- ros2_control Controllers ---
-    # Joint State Broadcaster
-    load_joint_state_controller = ExecuteProcess(
-        cmd=[
-            'ros2', 'control', 'load_controller', '--set-state', 'active',
-            'joint_state_broadcaster',
-        ],
-        output='screen',
+    # --- Controller Spawners (Jazzy pattern: Node with 'spawner' executable) ---
+    joint_state_broadcaster_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster'],
     )
 
-    # Left Arm Controller
-    load_left_arm_controller = ExecuteProcess(
-        cmd=[
-            'ros2', 'control', 'load_controller', '--set-state', 'active',
-            'left_arm_controller',
-        ],
-        output='screen',
+    left_arm_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['left_arm_controller'],
     )
 
-    # Right Arm Controller
-    load_right_arm_controller = ExecuteProcess(
-        cmd=[
-            'ros2', 'control', 'load_controller', '--set-state', 'active',
-            'right_arm_controller',
-        ],
-        output='screen',
+    right_arm_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['right_arm_controller'],
     )
 
-    # Platform Controller
-    load_platform_controller = ExecuteProcess(
-        cmd=[
-            'ros2', 'control', 'load_controller', '--set-state', 'active',
-            'platform_controller',
-        ],
-        output='screen',
+    platform_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['platform_controller'],
     )
 
     # --- Event sequencing ---
     # After spawn completes → load joint_state_broadcaster
-    close_evt1 = RegisterEventHandler(
+    evt_spawn_done = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=spawn_entity,
-            on_exit=[load_joint_state_controller],
+            on_exit=[joint_state_broadcaster_spawner],
         )
     )
-    # After joint_state_broadcaster → load arm controllers + platform
-    close_evt2 = RegisterEventHandler(
+    # After joint_state_broadcaster → load arm + platform controllers
+    evt_jsb_done_left = RegisterEventHandler(
         event_handler=OnProcessExit(
-            target_action=load_joint_state_controller,
-            on_exit=[load_left_arm_controller],
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[left_arm_controller_spawner],
         )
     )
-    close_evt3 = RegisterEventHandler(
+    evt_jsb_done_right = RegisterEventHandler(
         event_handler=OnProcessExit(
-            target_action=load_joint_state_controller,
-            on_exit=[load_right_arm_controller],
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[right_arm_controller_spawner],
         )
     )
-    close_evt4 = RegisterEventHandler(
+    evt_jsb_done_platform = RegisterEventHandler(
         event_handler=OnProcessExit(
-            target_action=load_joint_state_controller,
-            on_exit=[load_platform_controller],
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[platform_controller_spawner],
         )
     )
 
-    # Bridge /clock
+    # Bridge /clock from Gz to ROS 2
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
-        output='screen'
+        output='screen',
     )
 
     return LaunchDescription([
         gz_resource_path,
         bridge,
-        close_evt1,
-        close_evt2,
-        close_evt3,
-        close_evt4,
+        evt_spawn_done,
+        evt_jsb_done_left,
+        evt_jsb_done_right,
+        evt_jsb_done_platform,
         gz_sim,
         node_robot_state_publisher,
         spawn_entity,
