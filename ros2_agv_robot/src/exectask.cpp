@@ -38,11 +38,11 @@ int main(int argc, char** argv) {
       rclcpp_action::create_client<woosh_robot_msgs::action::ExecTask>(
           node, "woosh_robot/robot/ExecTask");
   if (!exec_task_cli->wait_for_action_server(std::chrono::seconds(20))) {
-    RCLCPP_ERROR(node->get_logger(), "等待服务超时!");
+    RCLCPP_ERROR(node->get_logger(), "Service timeout!");
     return 1;
   }
 
-  // 请求参数
+  // Request parameters
   auto send_goal = woosh_robot_msgs::action::ExecTask::Goal();
   send_goal.arg.task_id = task_id;       // 任务ID
   send_goal.arg.type.value = type;       // 任务类型
@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
   send_goal.arg.task_type_no = type_no;  // 动作组合
   send_goal.arg.mark_no = mark_no;       // 目标点储位号
 
-  // 任务执行过程回调
+  // Task execution process callback
   auto send_goal_options = rclcpp_action::Client<
       woosh_robot_msgs::action::ExecTask>::SendGoalOptions();
   send_goal_options.feedback_callback =

@@ -1,0 +1,116 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+  - Class: nav2_rviz_plugins/Navigation 2
+    Name: Navigation 2
+
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Description Topic:
+        Value: /robot_description
+      Enabled: true
+      Update Interval: 0
+      Value: true
+
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        {}
+      Update Interval: 0
+      Value: true
+
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Topic:
+        Value: /scan
+      Enabled: true
+      Size (Pixels): 3
+      Style: Points
+      Color: 255; 0; 0
+      Value: true
+
+    - Class: rviz_default_plugins/Map
+      Name: Map
+      Topic:
+        Value: /map
+      Enabled: true
+      Value: true
+      Draw Behind: true
+
+    - Class: rviz_default_plugins/Map
+      Name: LocalCostmap
+      Topic:
+        Value: /local_costmap/costmap
+      Enabled: true
+      Value: true
+      Color Scheme: costmap
+
+    - Class: rviz_default_plugins/Map
+      Name: GlobalCostmap
+      Topic:
+        Value: /global_costmap/costmap
+      Enabled: false
+      Value: true
+      Color Scheme: costmap
+
+    - Class: rviz_default_plugins/Path
+      Name: GlobalPath
+      Topic:
+        Value: /plan
+      Enabled: true
+      Color: 0; 255; 0
+      Value: true
+
+    - Class: rviz_default_plugins/Path
+      Name: LocalPath
+      Topic:
+        Value: /local_plan
+      Enabled: true
+      Color: 0; 0; 255
+      Value: true
+
+    - Class: rviz_default_plugins/MarkerArray
+      Name: TrajectoryVisualization
+      Topic:
+        Value: /marker
+      Enabled: true
+      Value: true
+
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: map
+    Frame Rate: 30
+
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic: /initialpose
+    - Class: rviz_default_plugins/SetGoal
+      Topic: /goal_pose
+
+  Value: true
+
+  Views:
+    Current:
+      Class: rviz_default_plugins/ThirdPersonFollower
+      Distance: 8
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Name: TopDownOrtho
+      Near Clip Distance: 0.01
+      Pitch: 1.5708
+      Target Frame: base_footprint
+      Value: ThirdPersonFollower (rviz_default_plugins)
+      Yaw: 0
