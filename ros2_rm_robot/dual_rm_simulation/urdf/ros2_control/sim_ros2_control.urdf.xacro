@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<!--
+  ros2_control hardware interface + gz_ros2_control plugin for R2D3 sim.
+
+  Defines command/state interfaces for every actuated and passive joint.
+  Parameterised by arm_dof (6 for 65b, 7 for 75b) and the path to the
+  controller-manager YAML so both robot variants share one file.
+
+  Usage:
+    <xacro:include filename=".../ros2_control/sim_ros2_control.urdf.xacro"/>
+    <xacro:sim_ros2_control arm_dof="6"
+        controllers_yaml="$(find dual_rm_simulation)/config/controllers_65b.yaml"/>
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- ── Helper: single position-command arm joint ─────────── -->
+    <xacro:macro name="_arm_joint" params="joint_name">
+        <joint name="${joint_name}">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+    </xacro:macro>
+
+    <!-- ── Helper: passive (state-only) caster joint ─────────── -->
+    <xacro:macro name="_passive_joint" params="joint_name">
+        <joint name="${joint_name}">
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+    </xacro:macro>
+
+    <!-- ============================================================
+         Main macro
+         ============================================================ -->
+    <xacro:macro name="sim_ros2_control" params="arm_dof controllers_yaml">
+
+        <ros2_control name="GazeboSimSystem" type="system">
+            <hardware>
+                <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+            </hardware>
+
+            <!-- ── Drive wheels (velocity command) ───────────── -->
+            <joint name="joint_left_wheel">
+                <command_interface name="velocity">
+                    <param name="min">-10</param>
+                    <param name="max">10</param>
+                </command_interface>
+                <state_interface name="position"/>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_right_wheel">
+                <command_interface name="velocity">
+                    <param name="min">-10</param>
+                    <param name="max">10</param>
+                </command_interface>
+                <state_interface name="position"/>
+                <state_interface name="velocity"/>
+            </joint>
+
+            <!-- ── Left arm (position command) ───────────────── -->
+            <xacro:_arm_joint joint_name="l_joint1"/>
+            <xacro:_arm_joint joint_name="l_joint2"/>
+            <xacro:_arm_joint joint_name="l_joint3"/>
+            <xacro:_arm_joint joint_name="l_joint4"/>
+            <xacro:_arm_joint joint_name="l_joint5"/>
+            <xacro:_arm_joint joint_name="l_joint6"/>
+            <xacro:if value="${arm_dof == 7}">
+                <xacro:_arm_joint joint_name="l_joint7"/>
+            </xacro:if>
+
+            <!-- ── Right arm (position command) ──────────────── -->
+            <xacro:_arm_joint joint_name="r_joint1"/>
+            <xacro:_arm_joint joint_name="r_joint2"/>
+            <xacro:_arm_joint joint_name="r_joint3"/>
+            <xacro:_arm_joint joint_name="r_joint4"/>
+            <xacro:_arm_joint joint_name="r_joint5"/>
+            <xacro:_arm_joint joint_name="r_joint6"/>
+            <xacro:if value="${arm_dof == 7}">
+                <xacro:_arm_joint joint_name="r_joint7"/>
+            </xacro:if>
+
+            <!-- ── Platform lift (position command) ──────────── -->
+            <xacro:_arm_joint joint_name="platform_joint"/>
+
+            <!-- ── Head joints (position command) ────────────── -->
+            <xacro:_arm_joint joint_name="head_joint1"/>
+            <xacro:_arm_joint joint_name="head_joint2"/>
+
+            <!-- ── Caster wheels (passive, state only) ───────── -->
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_1_1"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_1_2"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_2_1"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_2_2"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_3_1"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_3_2"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_4_1"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_4_2"/>
+
+        </ros2_control>
+
+        <!-- ── gz_ros2_control plugin ────────────────────────── -->
+        <gazebo>
+            <plugin filename="gz_ros2_control-system"
+                    name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+                <parameters>${controllers_yaml}</parameters>
+                <robot_param>robot_description</robot_param>
+                <robot_param_node>robot_state_publisher</robot_param_node>
+            </plugin>
+        </gazebo>
+
+    </xacro:macro>
+
+</robot>

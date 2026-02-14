@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!--
+  R2D3 65b Simulation URDF — Gazebo Harmonic (Gz Sim 8)
+
+  Top-level xacro for the 65b variant.  Assembles the robot from
+  modular pieces:
+
+    1. base_footprint    (required by Nav2)
+    2. Mechanical model   (from dual_rm_65b_description)
+    3. Sensors            (urdf/sensors/)
+    4. Gazebo properties  (urdf/gazebo/)
+    5. ros2_control       (urdf/ros2_control/)
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="r2d3_65b_sim">
+
+    <!-- ── Modular includes ──────────────────────────────────── -->
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/lidar.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/imu.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/gazebo/sim_gazebo.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/ros2_control/sim_ros2_control.urdf.xacro"/>
+
+    <!-- ── 1. base_footprint (ground-level frame for Nav2) ───── -->
+    <link name="base_footprint"/>
+
+    <!-- Rotate +90° about Z so that base_link_underpan's -Y (robot front,
+         where head & arms are) aligns with base_footprint's +X (ROS forward).
+         After this rotation:
+           base_link_underpan -Y  →  base_footprint +X  (forward)
+           base_link_underpan +X  →  base_footprint +Y  (left)     -->
+    <joint name="base_footprint_to_base" type="fixed">
+        <parent link="base_footprint"/>
+        <child link="base_link_underpan"/>
+        <origin xyz="0 0 0.233" rpy="0 0 ${pi/2}"/>
+    </joint>
+
+    <!-- ── 2. Full robot mechanical description ──────────────── -->
+    <xacro:include filename="$(find dual_rm_65b_description)/urdf/dual_rm_65b_description.urdf.xacro"/>
+
+    <!-- ── 3. Sensors ────────────────────────────────────────── -->
+    <!-- LiDAR: front of AGV chassis (-Y = robot front, where head/arms are) -->
+    <xacro:lidar_sensor parent_link="base_link_underpan"
+                        xyz="0.0 -0.24 0.0" rpy="0 0 0"/>
+
+    <!-- IMU: centre of AGV chassis -->
+    <xacro:imu_sensor parent_link="base_link_underpan"
+                      xyz="0 0 0" rpy="0 0 0"/>
+
+    <!-- ── 4. Gazebo physics properties ──────────────────────── -->
+    <xacro:sim_gazebo_properties arm_dof="6"/>
+
+    <!-- ── 5. ros2_control + gz_ros2_control plugin ──────────── -->
+    <xacro:sim_ros2_control arm_dof="6"
+        controllers_yaml="$(find dual_rm_simulation)/config/controllers_65b.yaml"/>
+
+</robot>

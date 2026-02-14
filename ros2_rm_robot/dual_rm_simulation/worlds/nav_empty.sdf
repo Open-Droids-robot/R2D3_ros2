@@ -49,6 +49,24 @@
               <size>100 100</size>
             </plane>
           </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+            </friction>
+            <bounce>
+              <restitution_coefficient>0.0</restitution_coefficient>
+              <threshold>1e6</threshold>
+            </bounce>
+            <contact>
+              <ode>
+                <soft_cfm>0</soft_cfm>
+                <soft_erp>0.2</soft_erp>
+              </ode>
+            </contact>
+          </surface>
         </collision>
         <visual name="visual">
           <geometry>

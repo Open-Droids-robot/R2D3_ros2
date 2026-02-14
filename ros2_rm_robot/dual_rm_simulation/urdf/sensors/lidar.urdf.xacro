@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!--
+  LiDAR sensor macro for R2D3 navigation simulation (Gz Sim / Harmonic).
+
+  Provides:
+    - lidar_link         (visual cylinder + collision + inertial)
+    - lidar_joint        (fixed, attached to parent_link)
+    - Gazebo gpu_lidar   sensor plugin (360° scan)
+    - Gazebo reference   properties (no self-collide, no gravity)
+
+  Usage:
+    <xacro:include filename=".../sensors/lidar.urdf.xacro"/>
+    <xacro:lidar_sensor parent_link="base_link_underpan"
+                        xyz="0.0 0.24 0.0" rpy="0 0 0"/>
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="lidar_sensor" params="parent_link xyz:='0.0 0.24 0.0' rpy:='0 0 0'">
+
+        <!-- ── Link ──────────────────────────────────────────── -->
+        <link name="lidar_link">
+            <visual>
+                <geometry>
+                    <cylinder length="0.05" radius="0.03"/>
+                </geometry>
+                <material name="lidar_black">
+                    <color rgba="0.1 0.1 0.1 1.0"/>
+                </material>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.05" radius="0.03"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.1"/>
+                <inertia ixx="0.0001" ixy="0" ixz="0"
+                         iyy="0.0001" iyz="0" izz="0.0001"/>
+            </inertial>
+        </link>
+
+        <!-- ── Joint ─────────────────────────────────────────── -->
+        <joint name="lidar_joint" type="fixed">
+            <parent link="${parent_link}"/>
+            <child link="lidar_link"/>
+            <origin xyz="${xyz}" rpy="${rpy}"/>
+        </joint>
+
+        <!-- ── Gazebo physics ────────────────────────────────── -->
+        <gazebo reference="lidar_link">
+            <self_collide>false</self_collide>
+            <gravity>false</gravity>
+        </gazebo>
+
+        <!-- ── Gazebo gpu_lidar sensor (360°) ────────────────── -->
+        <gazebo reference="lidar_link">
+            <sensor name="lidar" type="gpu_lidar">
+                <always_on>true</always_on>
+                <visualize>true</visualize>
+                <update_rate>10</update_rate>
+                <topic>scan</topic>
+                <gz_frame_id>lidar_link</gz_frame_id>
+                <ray>
+                    <scan>
+                        <horizontal>
+                            <samples>360</samples>
+                            <resolution>1.0</resolution>
+                            <min_angle>0.0</min_angle>
+                            <max_angle>6.28318</max_angle>
+                        </horizontal>
+                    </scan>
+                    <range>
+                        <min>0.12</min>
+                        <max>12.0</max>
+                        <resolution>0.015</resolution>
+                    </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.01</stddev>
+                    </noise>
+                </ray>
+            </sensor>
+        </gazebo>
+
+    </xacro:macro>
+
+</robot>

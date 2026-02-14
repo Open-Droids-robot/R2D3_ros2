@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="woosh_agv" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- Define constants -->
-  <xacro:property name="mesh_path" value="file://$(find dual_rm_65b_description)/meshes/" />
+  <xacro:property name="mesh_path" value="file://$(find dual_rm_75b_description)/meshes/" />
   <!-- Macro for visual and collision elements -->
   <xacro:macro name="visual_collision" params="mesh">
     <visual>
@@ -38,6 +38,8 @@
     </inertial>
     <xacro:visual_collision mesh="base_link_underpan.STL" />
   </link>
+  <!-- Drive wheels: mesh for visual, CYLINDER for collision (reliable rolling contact in Gz Sim) -->
+  <!-- Wheel geometry: radius=0.08m, width≈0.05m, axis along X -->
   <link
     name="link_right_wheel">
     <inertial>
@@ -54,7 +56,22 @@
         iyz="2.5666E-19"
         izz="0.0018066" />
     </inertial>
-    <xacro:visual_collision mesh="link_right_wheel.STL" />
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="${mesh_path}link_right_wheel.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <!-- Cylinder along X axis: rotate 90° around Y -->
+      <origin xyz="-0.025 0 0" rpy="0 ${pi/2} 0" />
+      <geometry>
+        <cylinder radius="0.08" length="0.05" />
+      </geometry>
+    </collision>
   </link>
   <link
     name="link_left_wheel">
@@ -72,7 +89,22 @@
         iyz="3.7534E-19"
         izz="0.0019593" />
     </inertial>
-    <xacro:visual_collision mesh="link_left_wheel.STL" />
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="${mesh_path}link_left_wheel.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <!-- Cylinder along X axis: rotate 90° around Y -->
+      <origin xyz="0.025 0 0" rpy="0 ${pi/2} 0" />
+      <geometry>
+        <cylinder radius="0.08" length="0.05" />
+      </geometry>
+    </collision>
   </link>
   <link
     name="link_swivel_wheel_1_1">
@@ -246,7 +278,7 @@
     <child
       link="link_left_wheel" />
     <axis
-      xyz="-1 0 0" />
+      xyz="1 0 0" />
     <limit
       effort="100"
       velocity="10" />
@@ -356,8 +388,3 @@
       xyz="1 0 0" />
   </joint>
 </robot>
-
-
-
-
-

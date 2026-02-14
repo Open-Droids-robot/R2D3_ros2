@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by
+Stephen Brawner (brawner@gmail.com) 
      Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
@@ -582,17 +583,7 @@
       xyz="1 0 0" />
   </joint>
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
   <link
     name="body_base_link">
     <inertial>
@@ -633,11 +624,8 @@
       </geometry>
     </collision>
   </link>
-  
-  
-  
-  
-  
+
+
   <joint
     name="body_base_joint"
     type="fixed">
@@ -653,15 +641,9 @@
     <limit
       effort="0"
       velocity="0" />
-  </joint>  
-  
-  
-  
-  
-  
-  
-  
-  
+  </joint>
+
+
   <link
     name="platform_base_link">
     <inertial>
@@ -994,14 +976,9 @@
       link="r_base_link1" />
     <axis
       xyz="0 0 0" />
-  </joint>  
-  
-  
-  
-  
-  
-  
- 
+  </joint>
+
+
   <link
     name="r_link1">
     <inertial>
@@ -1351,12 +1328,8 @@
       velocity="3.925" />
   </joint>
 
-  
-  
-  
-  
-  
-   <link
+
+  <link
     name="r_hand_base_link">
     <inertial>
       <origin
@@ -1395,7 +1368,7 @@
           filename="package://dual_rm_65b_description/meshes/r_hand_base_link.STL" />
       </geometry>
     </collision>
-  </link> 
+  </link>
   <joint
     name="r_hand_joint"
     type="fixed">
@@ -1413,37 +1386,9 @@
       upper="0"
       effort="0"
       velocity="0" />
-  </joint>  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
- 
+  </joint>
+
+
   <link
     name="l_link1">
     <inertial>
@@ -1793,11 +1738,6 @@
       velocity="3.925" />
   </joint>
 
-  
-  
-
-
-
 
   <link
     name="l_hand_base_link">
@@ -1841,23 +1781,6 @@
   </link>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   <joint
     name="l_hand_joint"
     type="fixed">
@@ -1875,8 +1798,7 @@
       upper="0"
       effort="0"
       velocity="0" />
-  </joint>  
-    
-  
-  
+  </joint>
+
+
 </robot>

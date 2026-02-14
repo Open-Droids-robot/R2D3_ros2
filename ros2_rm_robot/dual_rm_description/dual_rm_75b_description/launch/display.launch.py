@@ -3,6 +3,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
+from launch_ros.descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
@@ -19,15 +20,17 @@ def generate_launch_description():
     )
 
     # 使用xacro工具转换URDF文件
-    robot_description_cmd = Command(['xacro ', LaunchConfiguration('urdf_file')])
+    robot_description = ParameterValue(
+        Command(['xacro ', LaunchConfiguration('urdf_file')]),
+        value_type=str,
+    )
 
-    # 创建robot_state_publisher节点
     rsp_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        parameters=[{'robot_description': robot_description_cmd}]
+        parameters=[{'robot_description': robot_description}]
     )
 
     # 创建joint_state_publisher_gui节点

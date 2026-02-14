@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot name="joint" xmlns:xacro="http://www.ros.org/wiki/xacro">
-   <joint
+  <joint
     name="body_base_joint"
     type="fixed">
     <origin
@@ -28,7 +28,7 @@
       link="r_base_link1" />
     <axis
       xyz="0 0 0" />
-  </joint> 
+  </joint>
   <joint
     name="l_base_joint1"
     type="fixed">
@@ -59,7 +59,7 @@
       upper="0"
       effort="0"
       velocity="0" />
-  </joint>  
+  </joint>
   <joint
     name="l_hand_joint"
     type="fixed">
@@ -77,8 +77,5 @@
       upper="0"
       effort="0"
       velocity="0" />
-  </joint>  
+  </joint>
 </robot>
-
-
-
