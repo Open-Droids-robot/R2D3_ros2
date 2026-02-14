@@ -32,17 +32,18 @@ def load_yaml(package_name, file_path):
 
 def generate_launch_description():
     # 读取并处理 xacro 文件
-    def load_xacro_file(package_name, file_path):
+    def load_xacro_file(package_name, file_path, mappings=None):
         package_path = get_package_share_directory(package_name)
         absolute_file_path = os.path.join(package_path, file_path)
         
         doc = xacro.parse(open(absolute_file_path))
-        xacro.process_doc(doc)
+        xacro.process_doc(doc, mappings=mappings or {})
         return doc.toxml()
 
-    # planning_context
+    # planning_context (unified description package, 75b variant)
     robot_description_config = load_xacro_file(
-        "dual_rm_75b_description", "urdf/dual_rm_75b_description.urdf.xacro"
+        "dual_rm_description", "urdf/r2d3_description.urdf.xacro",
+        mappings={'arm_model': '75b'}
     )
     robot_description = {"robot_description": robot_description_config}
 

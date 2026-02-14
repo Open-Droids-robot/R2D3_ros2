@@ -40,9 +40,9 @@ def generate_launch_description():
         xacro.process_doc(doc)
         return doc.toxml()
 
-    # planning_context
+    # planning_context (unified description package, 65b variant via default)
     robot_description_config = load_xacro_file(
-        "dual_rm_65b_description", "urdf/dual_rm_65b_description.urdf.xacro"
+        "dual_rm_description", "urdf/r2d3_description.urdf.xacro"
     )
     robot_description = {"robot_description": robot_description_config}
 

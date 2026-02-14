@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  R2D3 Simulation URDF — Gazebo Harmonic (Gz Sim 8)
+  Usage:
+    xacro r2d3_sim.urdf.xacro                     # default: 65b
+    xacro r2d3_sim.urdf.xacro arm_model:=75b      # 75b variant
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="r2d3_sim">
+
+    <xacro:arg name="arm_model" default="65b"/>
+    <xacro:property name="arm_model" value="$(arg arm_model)"/>
+    <xacro:property name="arm_dof" value="${6 if arm_model == '65b' else 7}"/>
+
+    <!-- ── Modular includes ──────────────────────────────────── -->
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/lidar.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/imu.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/gazebo/sim_gazebo.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/ros2_control/sim_ros2_control.urdf.xacro"/>
+
+    <!-- ── 1. base_footprint (ground-level frame for Nav2) ───── -->
+    <link name="base_footprint"/>
+
+    <joint name="base_footprint_to_base" type="fixed">
+        <parent link="base_footprint"/>
+        <child link="base_link_underpan"/>
+        <origin xyz="0 0 0.233" rpy="0 0 ${pi/2}"/>
+    </joint>
+
+    <!-- ── 2. Full robot mechanical description ──────────────── -->
+    <xacro:include filename="$(find dual_rm_description)/urdf/r2d3_description.urdf.xacro"/>
+
+    <!-- ── 3. Sensors ────────────────────────────────────────── -->
+    <xacro:lidar_sensor parent_link="base_link_underpan"
+                        xyz="0.0 -0.24 0.0" rpy="0 0 0"/>
+
+    <!-- IMU: centre of AGV chassis -->
+    <xacro:imu_sensor parent_link="base_link_underpan"
+                      xyz="0 0 0" rpy="0 0 0"/>
+
+    <!-- ── 4. Gazebo physics properties ──────────────────────── -->
+    <xacro:sim_gazebo_properties arm_dof="${arm_dof}"/>
+
+    <!-- ── 5. ros2_control + gz_ros2_control plugin ──────────── -->
+    <xacro:sim_ros2_control arm_dof="${arm_dof}"
+        controllers_yaml="$(find dual_rm_simulation)/config/controllers_${arm_model}.yaml"/>
+
+</robot>

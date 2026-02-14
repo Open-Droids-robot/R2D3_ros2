@@ -1,13 +1,6 @@
 <?xml version="1.0"?>
 <!--
   IMU sensor macro for R2D3 navigation simulation (Gz Sim / Harmonic).
-
-  Provides:
-    - imu_link          (inertial only, no visual)
-    - imu_joint         (fixed, attached to parent_link)
-    - Gazebo imu sensor plugin
-    - Gazebo reference  properties (no self-collide, no gravity)
-
   Usage:
     <xacro:include filename=".../sensors/imu.urdf.xacro"/>
     <xacro:imu_sensor parent_link="base_link_underpan"

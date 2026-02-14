@@ -1,14 +1,5 @@
 """
 Gazebo Harmonic (Gz Sim) launch for the R2D3 dual-arm mobile robot.
-
-Brings up:
-  - Gz Sim with the requested world
-  - robot_state_publisher  (URDF → TF)
-  - ros_gz_bridge          (clock, LiDAR, IMU)
-  - ros2_control controllers (diff_drive, arms, platform)
-
-This file lives in dual_rm_simulation and is purely about simulation.
-Navigation / SLAM / RViz are launched separately from dual_rm_navigation.
 """
 
 import os
@@ -28,7 +19,6 @@ from launch.substitutions import (
     FindExecutable,
     LaunchConfiguration,
     PathJoinSubstitution,
-    PythonExpression,
 )
 from launch_ros.actions import Node
 from launch_ros.descriptions import ParameterValue
@@ -38,8 +28,7 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     pkg_sim = get_package_share_directory('dual_rm_simulation')
-    desc_65b_dir = get_package_share_directory('dual_rm_65b_description')
-    desc_75b_dir = get_package_share_directory('dual_rm_75b_description')
+    pkg_desc = get_package_share_directory('dual_rm_description')
 
     # ── Launch arguments ─────────────────────────────────────────
     declare_robot_model = DeclareLaunchArgument(
@@ -60,12 +49,10 @@ def generate_launch_description():
     world = LaunchConfiguration('world')
     gz_verbosity = LaunchConfiguration('gz_verbosity')
 
-    # ── Resolve xacro path based on robot_model ──────────────────
+    # ── Unified sim xacro with arm_model argument ─────────────────
     urdf_xacro_path = PathJoinSubstitution([
         FindPackageShare('dual_rm_simulation'), 'urdf',
-        PythonExpression([
-            "'r2d3_' + '", robot_model, "' + '_sim.urdf.xacro'"
-        ]),
+        'r2d3_sim.urdf.xacro',
     ])
 
     # ── Process xacro → robot_description ────────────────────────
@@ -73,20 +60,21 @@ def generate_launch_description():
         Command([
             PathJoinSubstitution([FindExecutable(name='xacro')]),
             ' ', urdf_xacro_path,
+            ' arm_model:=', robot_model,
         ]),
         value_type=str,
     )
     robot_description = {'robot_description': robot_description_content}
 
     # ── GZ_SIM_RESOURCE_PATH ─────────────────────────────────────
-    set_resource_path_65b = AppendEnvironmentVariable(
-        'GZ_SIM_RESOURCE_PATH', os.path.join(desc_65b_dir, 'meshes'))
-    set_resource_path_75b = AppendEnvironmentVariable(
-        'GZ_SIM_RESOURCE_PATH', os.path.join(desc_75b_dir, 'meshes'))
-    set_resource_path_desc65 = AppendEnvironmentVariable(
-        'GZ_SIM_RESOURCE_PATH', str(Path(desc_65b_dir).parent.resolve()))
-    set_resource_path_desc75 = AppendEnvironmentVariable(
-        'GZ_SIM_RESOURCE_PATH', str(Path(desc_75b_dir).parent.resolve()))
+    set_resource_path_common = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH', os.path.join(pkg_desc, 'meshes', 'common'))
+    set_resource_path_arms65 = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH', os.path.join(pkg_desc, 'meshes', 'arms_65b'))
+    set_resource_path_arms75 = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH', os.path.join(pkg_desc, 'meshes', 'arms_75b'))
+    set_resource_path_desc = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH', str(Path(pkg_desc).parent.resolve()))
     set_resource_path_worlds = AppendEnvironmentVariable(
         'GZ_SIM_RESOURCE_PATH', os.path.join(pkg_sim, 'worlds'))
 
@@ -116,8 +104,6 @@ def generate_launch_description():
     )
 
     # ── Spawn robot into Gz Sim ──────────────────────────────────
-    # No spawn yaw needed: the URDF base_footprint_to_base joint already
-    # rotates -90° so that base_footprint +X = robot front.
     spawn_entity = Node(
         package='ros_gz_sim',
         executable='create',
@@ -125,7 +111,7 @@ def generate_launch_description():
         arguments=[
             '-topic', 'robot_description',
             '-name', 'r2d3_robot',
-            '-x', '0.0', '-y', '0.0', '-z', '0.05',
+            '-x', '0.0', '-y', '0.0', '-z', '0.01',
             '-allow_renaming', 'true',
         ],
     )
@@ -188,10 +174,10 @@ def generate_launch_description():
         declare_world,
         declare_gz_verbosity,
 
-        set_resource_path_65b,
-        set_resource_path_75b,
-        set_resource_path_desc65,
-        set_resource_path_desc75,
+        set_resource_path_common,
+        set_resource_path_arms65,
+        set_resource_path_arms75,
+        set_resource_path_desc,
         set_resource_path_worlds,
         gz_sim,
         bridge,

@@ -1,11 +1,5 @@
 <?xml version="1.0"?>
 <!--
-  ros2_control hardware interface + gz_ros2_control plugin for R2D3 sim.
-
-  Defines command/state interfaces for every actuated and passive joint.
-  Parameterised by arm_dof (6 for 65b, 7 for 75b) and the path to the
-  controller-manager YAML so both robot variants share one file.
-
   Usage:
     <xacro:include filename=".../ros2_control/sim_ros2_control.urdf.xacro"/>
     <xacro:sim_ros2_control arm_dof="6"
@@ -24,7 +18,6 @@
         </joint>
     </xacro:macro>
 
-    <!-- ── Helper: passive (state-only) caster joint ─────────── -->
     <xacro:macro name="_passive_joint" params="joint_name">
         <joint name="${joint_name}">
             <state_interface name="position">
@@ -34,9 +27,7 @@
         </joint>
     </xacro:macro>
 
-    <!-- ============================================================
-         Main macro
-         ============================================================ -->
+   
     <xacro:macro name="sim_ros2_control" params="arm_dof controllers_yaml">
 
         <ros2_control name="GazeboSimSystem" type="system">

@@ -2,8 +2,9 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_rm_65b_description">
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
 
-    <!-- Import dual_rm_65b_description urdf file -->
-    <xacro:include filename="$(find dual_rm_65b_description)/urdf/dual_rm_65b_description.urdf.xacro" />
+    <!-- Import robot description (unified package, 65b variant) -->
+    <xacro:arg name="arm_model" default="65b"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/r2d3_description.urdf.xacro" />
 
     <!-- Import control_xacro -->
     <xacro:include filename="dual_rm_65b_description.ros2_control.xacro" />

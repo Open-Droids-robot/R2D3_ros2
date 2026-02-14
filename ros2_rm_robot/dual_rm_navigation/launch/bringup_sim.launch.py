@@ -1,12 +1,5 @@
 """
 Full navigation bringup for R2D3 in Gazebo Harmonic simulation.
-
-Orchestrates three layers with timed delays:
-  t=0s   — Simulation  (dual_rm_simulation: Gz Sim + robot + controllers + bridge)
-  t=20s  — Mapping/Loc  (SLAM Toolbox  OR  AMCL + map_server)
-  t=30s  — Navigation   (Nav2 stack)
-
-RViz2 is launched alongside the simulation for immediate visualisation.
 """
 
 import os
@@ -94,7 +87,7 @@ def generate_launch_description():
     # ── 3. SLAM Toolbox (mapping mode) ───────────────────────────
     #    Delayed to let Gz Sim, sensors, and controllers start first.
     slam_launch = TimerAction(
-        period=20.0,
+        period=20.0,   #TODO One can adjust time accordingly, I have taken max safe time
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
@@ -134,7 +127,7 @@ def generate_launch_description():
     # ── 5. Nav2 navigation stack ─────────────────────────────────
     #    Delayed further to let SLAM/localization establish the map→odom TF.
     nav2_launch = TimerAction(
-        period=30.0,
+        period=30.0,  #TODO One can adjust time accordingly, I have taken max safe time
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(

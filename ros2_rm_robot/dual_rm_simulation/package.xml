@@ -12,8 +12,7 @@
   <!-- Robot description -->
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>xacro</exec_depend>
-  <exec_depend>dual_rm_65b_description</exec_depend>
-  <exec_depend>dual_rm_75b_description</exec_depend>
+  <exec_depend>dual_rm_description</exec_depend>
 
   <!-- ros2_control -->
   <exec_depend>controller_manager</exec_depend>
