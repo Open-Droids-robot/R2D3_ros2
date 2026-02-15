@@ -1,0 +1,215 @@
+# R2D3 Gazebo Harmonic Simulation – Quick Start Guide
+
+## Prerequisites
+
+```bash
+# Build the workspace
+cd ~/Ros2_Workspaces/R2D3_ros2
+colcon build --symlink-install
+source install/setup.bash
+```
+
+> **Tip:** Always source `install/setup.bash` in every new terminal.
+
+---
+
+## 1. Simulation Only (Gazebo + Controllers)
+
+Starts Gazebo Harmonic (headless rendering), spawns the robot, and activates
+all ros2_control controllers. No navigation, no MoveIt.
+
+```bash
+ros2 launch dual_rm_simulation gz_sim.launch.py
+```
+
+### Parameters
+
+| Parameter        | Default      | Description                              |
+|------------------|--------------|------------------------------------------|
+| `robot_model`    | `65b`        | Robot arm variant: `65b` or `75b`        |
+| `world`          | `nav_empty.sdf` | Full path to Gz Sim world SDF file   |
+| `gz_verbosity`   | `1`          | Gz Sim verbosity level (`0`–`4`)         |
+
+### Example
+
+```bash
+ros2 launch dual_rm_simulation gz_sim.launch.py robot_model:=75b gz_verbosity:=2
+```
+
+### What starts
+
+| Node / Process              | Purpose                                   |
+|-----------------------------|-------------------------------------------|
+| `gazebo` (Gz Sim)           | Physics simulation (headless rendering)   |
+| `robot_state_publisher`     | Publishes `/robot_description` and `/tf`  |
+| `ros_gz_bridge`             | Bridges `/clock`, `/scan`, `/imu`         |
+| `joint_state_broadcaster`   | Publishes `/joint_states`                 |
+| `diff_drive_controller`     | AGV base velocity control                 |
+| `left_arm_controller`       | Left arm joint trajectory control         |
+| `right_arm_controller`      | Right arm joint trajectory control        |
+| `platform_controller`       | Torso lift (gripper-style) control        |
+
+### Teleop (manual driving)
+
+Once the simulation is running, in a separate terminal:
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard \
+  --ros-args -r /cmd_vel:=/diff_drive_controller/cmd_vel \
+  -p stamped:=true -p frame_id:=base_footprint
+```
+
+---
+
+## 2. Test Nodes (AGV + Arm motion verification)
+
+Simple scripted motions to verify controllers are working.  
+Requires the simulation from Step 1 to be already running.
+
+### AGV motion test
+
+Runs a sequence: forward → stop → rotate CW → stop → backward → stop.
+
+```bash
+ros2 run r2d3_test_nodes test_agv_motion --ros-args -p use_sim_time:=true
+```
+
+### Arm motion test
+
+Sends joint trajectory goals: left arm wave → home → right arm wave → home.
+
+```bash
+ros2 run r2d3_test_nodes test_arm_motion --ros-args -p use_sim_time:=true
+```
+
+---
+
+## 3. Navigation Only (Gazebo + Nav2)
+
+Starts the full simulation **plus** SLAM Toolbox and the Nav2 navigation stack.
+No MoveIt arm planning.
+
+```bash
+ros2 launch dual_rm_navigation bringup_sim.launch.py
+```
+
+### Parameters
+
+| Parameter      | Default                 | Description                                      |
+|----------------|-------------------------|--------------------------------------------------|
+| `robot_model`  | `65b`                   | Robot arm variant: `65b` or `75b`                |
+| `world`        | `nav_empty.sdf`         | Full path to Gz Sim world SDF file               |
+| `mode`         | `slam`                  | `slam` for mapping, `localization` for saved map |
+| `map`          | *(empty)*               | Path to map YAML (required when `mode:=localization`) |
+| `use_rviz`     | `true`                  | Launch RViz2 with Nav2 view                      |
+| `nav2_params`  | `config/nav2_params.yaml` | Full path to Nav2 parameter file               |
+| `slam_params`  | `config/slam_toolbox_params.yaml` | Full path to SLAM Toolbox parameter file |
+
+### Examples
+
+```bash
+# SLAM mode (default) – map an unknown environment
+ros2 launch dual_rm_navigation bringup_sim.launch.py
+
+# Localization mode – navigate a previously saved map
+ros2 launch dual_rm_navigation bringup_sim.launch.py \
+  mode:=localization map:=/path/to/map.yaml
+
+# Headless (no RViz)
+ros2 launch dual_rm_navigation bringup_sim.launch.py use_rviz:=false
+```
+
+### Save a map
+
+While in SLAM mode, once you've explored the environment:
+
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/maps/my_map
+```
+
+### Send a navigation goal
+
+In RViz, use the **Nav2 Goal** tool (green arrow in toolbar) to click a
+destination on the map.
+
+---
+
+## 4. Full Stack – Nav2 + MoveIt2 (Unified Bringup)
+
+Starts **everything**: Gazebo simulation, Nav2 navigation, MoveIt2 arm planning,
+and a combined RViz view with both Nav2 panels and MoveIt MotionPlanning plugin.
+
+```bash
+ros2 launch r2d3_bringup bringup_sim.launch.py
+```
+
+### Parameters
+
+| Parameter      | Default         | Description                                      |
+|----------------|-----------------|--------------------------------------------------|
+| `robot_model`  | `65b`           | Robot arm variant: `65b` or `75b`                |
+| `world`        | `nav_empty.sdf` | Full path to Gz Sim world SDF file               |
+| `mode`         | `slam`          | `slam` for mapping, `localization` for saved map |
+| `map`          | *(empty)*       | Path to map YAML (required when `mode:=localization`) |
+| `use_rviz`     | `true`          | Launch combined Nav2 + MoveIt RViz               |
+| `use_moveit`   | `true`          | Launch MoveIt2 move_group for arm planning       |
+
+### Examples
+
+```bash
+# Full stack with defaults
+ros2 launch r2d3_bringup bringup_sim.launch.py
+
+# Navigation only (no arm planning)
+ros2 launch r2d3_bringup bringup_sim.launch.py use_moveit:=false
+
+# Headless (no RViz, useful for CI or remote testing)
+ros2 launch r2d3_bringup bringup_sim.launch.py use_rviz:=false
+```
+
+### Using RViz with the full stack
+
+The combined RViz window provides:
+
+- **Nav2 Goal tool** – click on the map to send the AGV to a location
+- **2D Pose Estimate tool** – set initial pose for localization mode
+- **MotionPlanning panel** – plan and execute arm motions
+  - Select a planning group (`left_arm`, `right_arm`, or `platform`)
+  - Drag the interactive markers to set a target pose
+  - Click **Plan** then **Execute** (or **Plan & Execute**)
+- **Map / Costmap displays** – live map, local and global costmaps
+- **Path displays** – green = global plan, blue = local plan
+- **LaserScan** – red dots showing LiDAR readings
+
+---
+
+## Package Architecture
+
+```
+dual_rm_simulation      Gazebo sim, URDF, controllers, sensor bridge
+dual_rm_navigation      Nav2 stack, SLAM, localization, nav params
+r2d3_bringup            Unified bringup (Nav2 + MoveIt2 + combined RViz)
+r2d3_test_nodes         Simple test executables for AGV and arm motion
+```
+
+| What you want to do                  | Launch command                                          |
+|--------------------------------------|---------------------------------------------------------|
+| Gazebo + controllers only            | `ros2 launch dual_rm_simulation gz_sim.launch.py`       |
+| Gazebo + Nav2 (AGV navigation)       | `ros2 launch dual_rm_navigation bringup_sim.launch.py`  |
+| Gazebo + Nav2 + MoveIt2 (full stack) | `ros2 launch r2d3_bringup bringup_sim.launch.py`        |
+| Test AGV motion                      | `ros2 run r2d3_test_nodes test_agv_motion`              |
+| Test arm motion                      | `ros2 run r2d3_test_nodes test_arm_motion`              |
+| Teleop (keyboard)                    | See teleop command in Section 1                         |
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| `Waiting messages on topic [robot_description]` | DDS discovery delay | Wait ~5s; the spawn uses `-string` to bypass this |
+| `jump back in time` warnings | Non-monotonic `/clock` from multiple bridges | Ensure only one `ros_gz_bridge` is running |
+| Map distorted on rotation | LiDAR self-detection | Already mitigated: `min_range: 0.55` in lidar + SLAM + costmaps |
+| `libEGL warning: egl: failed to create dri2 screen` | GPU driver issue | Harmless; simulation runs with headless software rendering |
+| Robot not moving in Gazebo but moves in RViz | Wheel collision geometry mismatch | Already fixed: cylinder primitives for drive wheels |
+| Nav2 lifecycle manager fails to bring up nodes | Race condition at startup | Relaunch; transient issue with sim clock settling |
