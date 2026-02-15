@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>r2d3_bringup</name>
+  <version>0.1.0</version>
+  <description> Unified bringup for R2D3: Gazebo Harmonic simulation + Nav2 navigation + MoveIt2 arm
+    planning. </description>
+  <maintainer email="nitinmaurya2606@gmail.com">Nitin Maurya</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>dual_rm_simulation</exec_depend>
+  <exec_depend>dual_rm_navigation</exec_depend>
+
+  <exec_depend>moveit_configs_utils</exec_depend>
+  <exec_depend>moveit_ros_move_group</exec_depend>
+  <exec_depend>dual_rm_65b_moveit_config</exec_depend>
+
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>nav2_rviz_plugins</exec_depend>
+  <exec_depend>moveit_ros_visualization</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
