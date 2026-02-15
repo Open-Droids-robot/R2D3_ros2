@@ -42,7 +42,7 @@ ros2 launch dual_rm_simulation gz_sim.launch.py robot_model:=75b gz_verbosity:=2
 |-----------------------------|-------------------------------------------|
 | `gazebo` (Gz Sim)           | Physics simulation (headless rendering)   |
 | `robot_state_publisher`     | Publishes `/robot_description` and `/tf`  |
-| `ros_gz_bridge`             | Bridges `/clock`, `/scan`, `/imu`         |
+| `ros_gz_bridge`             | Bridges `/clock`, `/scan`, `/imu`, `/camera/*` |
 | `joint_state_broadcaster`   | Publishes `/joint_states`                 |
 | `diff_drive_controller`     | AGV base velocity control                 |
 | `left_arm_controller`       | Left arm joint trajectory control         |
@@ -86,7 +86,7 @@ ros2 run r2d3_test_nodes test_arm_motion --ros-args -p use_sim_time:=true
 
 ## 3. Navigation Only (Gazebo + Nav2)
 
-Starts the full simulation **plus** SLAM Toolbox and the Nav2 navigation stack.
+Starts the full simulation **plus** a SLAM backend and the Nav2 navigation stack.
 No MoveIt arm planning.
 
 ```bash
@@ -95,25 +95,45 @@ ros2 launch dual_rm_navigation bringup_sim.launch.py
 
 ### Parameters
 
-| Parameter      | Default                 | Description                                      |
-|----------------|-------------------------|--------------------------------------------------|
-| `robot_model`  | `65b`                   | Robot arm variant: `65b` or `75b`                |
-| `world`        | `nav_empty.sdf`         | Full path to Gz Sim world SDF file               |
-| `mode`         | `slam`                  | `slam` for mapping, `localization` for saved map |
-| `map`          | *(empty)*               | Path to map YAML (required when `mode:=localization`) |
-| `use_rviz`     | `true`                  | Launch RViz2 with Nav2 view                      |
-| `nav2_params`  | `config/nav2_params.yaml` | Full path to Nav2 parameter file               |
-| `slam_params`  | `config/slam_toolbox_params.yaml` | Full path to SLAM Toolbox parameter file |
+| Parameter        | Default                            | Description                                      |
+|------------------|------------------------------------|--------------------------------------------------|
+| `robot_model`    | `65b`                              | Robot arm variant: `65b` or `75b`                |
+| `world`          | `nav_empty.sdf`                    | Full path to Gz Sim world SDF file               |
+| `mode`           | `slam`                             | `slam` for mapping, `localization` for saved map |
+| `slam_type`      | `slam_toolbox`                     | SLAM backend (see table below)                   |
+| `map`            | *(empty)*                          | Path to map YAML (required for localization with slam_toolbox) |
+| `use_rviz`       | `true`                             | Launch RViz2 with Nav2 view                      |
+| `nav2_params`    | `config/nav2_params.yaml`          | Full path to Nav2 parameter file                 |
+| `slam_params`    | `config/slam_toolbox_params.yaml`  | Full path to SLAM Toolbox parameter file         |
+| `rtabmap_params` | `config/rtabmap_params.yaml`       | Full path to RTAB-Map parameter file             |
+
+### SLAM Backends
+
+| `slam_type` value    | Sensors used         | Registration method | Best for                          |
+|----------------------|----------------------|---------------------|-----------------------------------|
+| `slam_toolbox`       | 2D LiDAR             | Scan matching       | Fast 2D mapping, lightweight      |
+| `rtabmap`            | RGB-D + 2D LiDAR     | ICP (LiDAR-based)   | Rich mapping with loop closure    |
+| `rtabmap_depth_only` | RGB-D only           | Visual features     | When no LiDAR is available        |
 
 ### Examples
 
 ```bash
-# SLAM mode (default) – map an unknown environment
+# SLAM Toolbox (default) – 2D LiDAR-based mapping
 ros2 launch dual_rm_navigation bringup_sim.launch.py
 
-# Localization mode – navigate a previously saved map
+# RTAB-Map with RGB-D + LiDAR fusion
+ros2 launch dual_rm_navigation bringup_sim.launch.py slam_type:=rtabmap
+
+# RTAB-Map depth camera only (no LiDAR)
+ros2 launch dual_rm_navigation bringup_sim.launch.py slam_type:=rtabmap_depth_only
+
+# Localization mode (slam_toolbox) – navigate a previously saved map
 ros2 launch dual_rm_navigation bringup_sim.launch.py \
   mode:=localization map:=/path/to/map.yaml
+
+# Localization mode (RTAB-Map) – uses previously built RTAB-Map database
+ros2 launch dual_rm_navigation bringup_sim.launch.py \
+  mode:=localization slam_type:=rtabmap
 
 # Headless (no RViz)
 ros2 launch dual_rm_navigation bringup_sim.launch.py use_rviz:=false
@@ -124,8 +144,12 @@ ros2 launch dual_rm_navigation bringup_sim.launch.py use_rviz:=false
 While in SLAM mode, once you've explored the environment:
 
 ```bash
+# Save 2D occupancy grid (works with any SLAM backend)
 ros2 run nav2_map_server map_saver_cli -f ~/maps/my_map
 ```
+
+> **Note:** RTAB-Map also saves its own database (`~/.ros/rtabmap.db`) automatically.
+> This database is reused when launching in localization mode with `slam_type:=rtabmap`.
 
 ### Send a navigation goal
 
@@ -180,26 +204,29 @@ The combined RViz window provides:
 - **Map / Costmap displays** – live map, local and global costmaps
 - **Path displays** – green = global plan, blue = local plan
 - **LaserScan** – red dots showing LiDAR readings
+- **Camera** – RGB and depth images from the head-mounted depth camera
 
 ---
 
 ## Package Architecture
 
 ```
-dual_rm_simulation      Gazebo sim, URDF, controllers, sensor bridge
-dual_rm_navigation      Nav2 stack, SLAM, localization, nav params
+dual_rm_simulation      Gazebo sim, URDF, controllers, sensor bridge (LiDAR + IMU + depth camera)
+dual_rm_navigation      Nav2 stack, SLAM (slam_toolbox / RTAB-Map), localization, nav params
 r2d3_bringup            Unified bringup (Nav2 + MoveIt2 + combined RViz)
 r2d3_test_nodes         Simple test executables for AGV and arm motion
 ```
 
-| What you want to do                  | Launch command                                          |
-|--------------------------------------|---------------------------------------------------------|
-| Gazebo + controllers only            | `ros2 launch dual_rm_simulation gz_sim.launch.py`       |
-| Gazebo + Nav2 (AGV navigation)       | `ros2 launch dual_rm_navigation bringup_sim.launch.py`  |
-| Gazebo + Nav2 + MoveIt2 (full stack) | `ros2 launch r2d3_bringup bringup_sim.launch.py`        |
-| Test AGV motion                      | `ros2 run r2d3_test_nodes test_agv_motion`              |
-| Test arm motion                      | `ros2 run r2d3_test_nodes test_arm_motion`              |
-| Teleop (keyboard)                    | See teleop command in Section 1                         |
+| What you want to do                     | Launch command                                                            |
+|-----------------------------------------|---------------------------------------------------------------------------|
+| Gazebo + controllers only               | `ros2 launch dual_rm_simulation gz_sim.launch.py`                         |
+| Gazebo + Nav2 (SLAM Toolbox)            | `ros2 launch dual_rm_navigation bringup_sim.launch.py`                    |
+| Gazebo + Nav2 (RTAB-Map + LiDAR)        | `ros2 launch dual_rm_navigation bringup_sim.launch.py slam_type:=rtabmap` |
+| Gazebo + Nav2 (RTAB-Map depth only)     | `ros2 launch dual_rm_navigation bringup_sim.launch.py slam_type:=rtabmap_depth_only` |
+| Gazebo + Nav2 + MoveIt2 (full stack)    | `ros2 launch r2d3_bringup bringup_sim.launch.py`                         |
+| Test AGV motion                         | `ros2 run r2d3_test_nodes test_agv_motion`                                |
+| Test arm motion                         | `ros2 run r2d3_test_nodes test_arm_motion`                                |
+| Teleop (keyboard)                       | See teleop command in Section 1                                           |
 
 ---
 
@@ -213,3 +240,5 @@ r2d3_test_nodes         Simple test executables for AGV and arm motion
 | `libEGL warning: egl: failed to create dri2 screen` | GPU driver issue | Harmless; simulation runs with headless software rendering |
 | Robot not moving in Gazebo but moves in RViz | Wheel collision geometry mismatch | Already fixed: cylinder primitives for drive wheels |
 | Nav2 lifecycle manager fails to bring up nodes | Race condition at startup | Relaunch; transient issue with sim clock settling |
+| RTAB-Map: `Waiting for data on topic ...` | Camera topics not bridged or not publishing | Verify `ros2 topic hz /camera/image` and `/camera/depth_image` |
+| RTAB-Map: no map generated | Textureless environment (depth_only mode) | Use `slam_type:=rtabmap` (adds LiDAR) or add visual features to the world |
