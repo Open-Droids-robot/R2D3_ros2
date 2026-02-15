@@ -1,0 +1,42 @@
+# RTAB-Map SLAM parameters — depth camera only (no LiDAR).
+# Uses RGB-D data from the depth camera + wheel odometry.
+
+rtabmap:
+  ros__parameters:
+    frame_id: base_footprint
+    odom_frame_id: odom
+    map_frame_id: map
+
+    subscribe_depth: true
+    subscribe_rgbd: false
+    subscribe_scan: false         # no LiDAR — depth camera only
+    subscribe_odom_info: false
+    approx_sync: true
+    queue_size: 10
+
+    publish_tf: true              # publish map → odom TF
+
+    Reg/Force3DoF: "true"         # constrain to X, Y, theta
+    Optimizer/Slam2D: "true"
+
+  
+    Reg/Strategy: "0"
+
+    Vis/MinInliers: "15"
+    Vis/InlierDistance: "0.1"
+    Vis/FeatureType: "8"          # GFTT/BRIEF (fast, good for indoor)
+    Vis/MaxFeatures: "500"
+
+    Mem/IncrementalMemory: "true"     # SLAM mode (false = localization)
+    Mem/InitWMWithAllNodes: "false"
+
+    RGBD/ProximityBySpace: "true"
+    RGBD/NeighborLinkRefining: "true"
+    RGBD/OptimizeFromGraphEnd: "false"
+
+    Grid/FromDepth: "true"
+    Grid/RangeMax: "5.0"
+    Grid/CellSize: "0.05"
+    Grid/MaxGroundHeight: "0.02"
+    Grid/MaxObstacleHeight: "1.5"
+    Grid/NormalsSegmentation: "true"

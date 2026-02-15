@@ -1,0 +1,43 @@
+# RTAB-Map SLAM parameters for R2D3 navigation simulation.
+# Uses RGB-D data from the depth camera + wheel odometry.
+
+rtabmap:
+  ros__parameters:
+    frame_id: base_footprint
+    odom_frame_id: odom
+    map_frame_id: map
+
+    subscribe_depth: true
+    subscribe_rgbd: false
+    subscribe_scan: true          # fuse LiDAR for better 2D mapping
+    subscribe_odom_info: false
+    approx_sync: true
+    queue_size: 10
+
+    publish_tf: true              # publish map → odom TF
+
+    Reg/Force3DoF: "true"         # constrain to X, Y, theta
+    Optimizer/Slam2D: "true"
+
+    Reg/Strategy: "1"
+
+    Icp/VoxelSize: "0.05"
+    Icp/MaxCorrespondenceDistance: "0.1"
+    Icp/PointToPlane: "true"
+
+    Mem/IncrementalMemory: "true"     # SLAM mode (false = localization)
+    Mem/InitWMWithAllNodes: "false"
+
+    RGBD/ProximityBySpace: "true"
+    RGBD/NeighborLinkRefining: "true"
+    RGBD/OptimizeFromGraphEnd: "false"
+
+    Vis/MinInliers: "15"
+    Vis/InlierDistance: "0.1"
+
+    Grid/FromDepth: "true"
+    Grid/RangeMax: "5.0"
+    Grid/CellSize: "0.05"
+    Grid/MaxGroundHeight: "0.02"
+    Grid/MaxObstacleHeight: "1.5"
+    Grid/NormalsSegmentation: "true"

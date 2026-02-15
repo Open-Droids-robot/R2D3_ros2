@@ -14,6 +14,7 @@
     <!-- ── Modular includes ──────────────────────────────────── -->
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/lidar.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/imu.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/depth_camera.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/gazebo/sim_gazebo.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/ros2_control/sim_ros2_control.urdf.xacro"/>
 
@@ -36,6 +37,9 @@
     <!-- IMU: centre of AGV chassis -->
     <xacro:imu_sensor parent_link="base_link_underpan"
                       xyz="0 0 0" rpy="0 0 0"/>
+
+    <!-- Depth camera -->
+    <xacro:depth_camera_sensor/>
 
     <!-- ── 4. Gazebo physics properties ──────────────────────── -->
     <xacro:sim_gazebo_properties arm_dof="${arm_dof}"/>

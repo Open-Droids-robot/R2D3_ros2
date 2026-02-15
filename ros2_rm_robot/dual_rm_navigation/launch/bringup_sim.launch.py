@@ -38,9 +38,15 @@ def generate_launch_description():
         'mode', default_value='slam',
         description="'slam' for mapping, 'localization' for existing map",
     )
+    declare_slam_type = DeclareLaunchArgument(
+        'slam_type', default_value='slam_toolbox',
+        description="SLAM backend: 'slam_toolbox' (2D LiDAR), "
+                    "'rtabmap' (RGB-D + LiDAR), or "
+                    "'rtabmap_depth_only' (RGB-D only, no LiDAR)",
+    )
     declare_map = DeclareLaunchArgument(
         'map', default_value='',
-        description='Path to map YAML (required for localization mode)',
+        description='Path to map YAML (required for localization mode with slam_toolbox)',
     )
     declare_use_rviz = DeclareLaunchArgument(
         'use_rviz', default_value='true',
@@ -54,14 +60,20 @@ def generate_launch_description():
         'slam_params',
         default_value=os.path.join(pkg_nav, 'config', 'slam_toolbox_params.yaml'),
     )
+    declare_rtabmap_params = DeclareLaunchArgument(
+        'rtabmap_params',
+        default_value=os.path.join(pkg_nav, 'config', 'rtabmap_params.yaml'),
+    )
 
     robot_model = LaunchConfiguration('robot_model')
     world = LaunchConfiguration('world')
     mode = LaunchConfiguration('mode')
+    slam_type = LaunchConfiguration('slam_type')
     map_yaml = LaunchConfiguration('map')
     use_rviz = LaunchConfiguration('use_rviz')
     nav2_params = LaunchConfiguration('nav2_params')
     slam_params = LaunchConfiguration('slam_params')
+    rtabmap_params = LaunchConfiguration('rtabmap_params')
 
     # ── 1. Simulation (Gz Sim + robot + controllers + bridge) ────
     gz_sim_launch = IncludeLaunchDescription(
@@ -84,9 +96,8 @@ def generate_launch_description():
         condition=IfCondition(use_rviz),
     )
 
-    # ── 3. SLAM Toolbox (mapping mode) ───────────────────────────
-    #    Delayed to let Gz Sim, sensors, and controllers start first.
-    slam_launch = TimerAction(
+    # ── 3a. SLAM Toolbox (mapping mode, 2D LiDAR-based) ──────────
+    slam_toolbox_launch = TimerAction(
         period=10.0,   # controllers ready by ~6s; SLAM needs odom→base_footprint TF
         actions=[
             IncludeLaunchDescription(
@@ -98,13 +109,101 @@ def generate_launch_description():
                     'params_file': slam_params,
                 }.items(),
                 condition=IfCondition(
-                    PythonExpression(["'", mode, "' == 'slam'"]),
+                    PythonExpression([
+                        "'", mode, "' == 'slam' and '", slam_type, "' == 'slam_toolbox'"
+                    ]),
                 ),
             ),
         ],
     )
 
-    # ── 4. Localization (AMCL + map_server) ──────────────────────
+    # ── 3b. RTAB-Map SLAM (mapping mode, RGB-D + LiDAR) ──────────
+    rtabmap_slam_launch = TimerAction(
+        period=10.0,
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(pkg_nav, 'launch', 'rtabmap.launch.py')
+                ),
+                launch_arguments={
+                    'use_sim_time': 'true',
+                    'params_file': rtabmap_params,
+                    'localization': 'false',
+                }.items(),
+                condition=IfCondition(
+                    PythonExpression([
+                        "'", mode, "' == 'slam' and '", slam_type, "' == 'rtabmap'"
+                    ]),
+                ),
+            ),
+        ],
+    )
+
+    # ── 3c. RTAB-Map Localization (existing map, RGB-D + LiDAR) ────
+    rtabmap_loc_launch = TimerAction(
+        period=10.0,
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(pkg_nav, 'launch', 'rtabmap.launch.py')
+                ),
+                launch_arguments={
+                    'use_sim_time': 'true',
+                    'params_file': rtabmap_params,
+                    'localization': 'true',
+                }.items(),
+                condition=IfCondition(
+                    PythonExpression([
+                        "'", mode, "' == 'localization' and '", slam_type, "' == 'rtabmap'"
+                    ]),
+                ),
+            ),
+        ],
+    )
+
+    # ── 3d. RTAB-Map Depth-Only SLAM (RGB-D only, no LiDAR) ──────
+    rtabmap_depth_slam_launch = TimerAction(
+        period=10.0,
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(pkg_nav, 'launch', 'rtabmap_depth_only.launch.py')
+                ),
+                launch_arguments={
+                    'use_sim_time': 'true',
+                    'localization': 'false',
+                }.items(),
+                condition=IfCondition(
+                    PythonExpression([
+                        "'", mode, "' == 'slam' and '", slam_type, "' == 'rtabmap_depth_only'"
+                    ]),
+                ),
+            ),
+        ],
+    )
+
+    # ── 3e. RTAB-Map Depth-Only Localization (existing map) ───────
+    rtabmap_depth_loc_launch = TimerAction(
+        period=10.0,
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(pkg_nav, 'launch', 'rtabmap_depth_only.launch.py')
+                ),
+                launch_arguments={
+                    'use_sim_time': 'true',
+                    'localization': 'true',
+                }.items(),
+                condition=IfCondition(
+                    PythonExpression([
+                        "'", mode, "' == 'localization' and '", slam_type, "' == 'rtabmap_depth_only'"
+                    ]),
+                ),
+            ),
+        ],
+    )
+
+    # ── 4. Localization with AMCL + map_server (slam_toolbox backend) ──
     localization_launch = TimerAction(
         period=10.0,
         actions=[
@@ -118,14 +217,15 @@ def generate_launch_description():
                     'map': map_yaml,
                 }.items(),
                 condition=IfCondition(
-                    PythonExpression(["'", mode, "' == 'localization'"]),
+                    PythonExpression([
+                        "'", mode, "' == 'localization' and '", slam_type, "' == 'slam_toolbox'"
+                    ]),
                 ),
             ),
         ],
     )
 
     # ── 5. Nav2 navigation stack ─────────────────────────────────
-    #    Delayed further to let SLAM/localization establish the map→odom TF.
     nav2_launch = TimerAction(
         period=10.0,  # same as SLAM; lifecycle_manager waits for all services
         actions=[
@@ -145,14 +245,20 @@ def generate_launch_description():
         declare_robot_model,
         declare_world,
         declare_mode,
+        declare_slam_type,
         declare_map,
         declare_use_rviz,
         declare_nav2_params,
         declare_slam_params,
+        declare_rtabmap_params,
 
         gz_sim_launch,
         rviz_node,
-        slam_launch,
+        slam_toolbox_launch,
+        rtabmap_slam_launch,
+        rtabmap_loc_launch,
+        rtabmap_depth_slam_launch,
+        rtabmap_depth_loc_launch,
         localization_launch,
         nav2_launch,
     ])

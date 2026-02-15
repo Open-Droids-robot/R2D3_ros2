@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!--
+  RGB-D depth camera sensor macro for R2D3 simulation (Gz Sim / Harmonic).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="depth_camera_sensor">
+
+        <!-- ── Optical frame (Z-forward, X-right, Y-down per REP-103) ── -->
+        <link name="camera_optical_frame"/>
+        <joint name="camera_optical_joint" type="fixed">
+            <parent link="camera_link"/>
+            <child link="camera_optical_frame"/>
+            <!-- Rotate from body frame (X-fwd) to optical frame (Z-fwd) -->
+            <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+        </joint>
+
+        <!-- ── Gazebo physics ──────────────────────────────────────── -->
+        <gazebo reference="camera_link">
+            <self_collide>false</self_collide>
+        </gazebo>
+
+        <!-- ── Gz Sim RGBD Camera sensor ───────────────────────────── -->
+        <gazebo reference="camera_link">
+            <sensor name="depth_camera" type="rgbd_camera">
+                <always_on>true</always_on>
+                <update_rate>15</update_rate>
+                <topic>camera</topic>
+                <gz_frame_id>camera_optical_frame</gz_frame_id>
+
+                <camera name="depth_camera">
+                    <horizontal_fov>1.047</horizontal_fov>  <!-- ~60° like D435 -->
+                    <image>
+                        <width>640</width>
+                        <height>480</height>
+                        <format>R8G8B8</format>
+                    </image>
+                    <depth_camera>
+                        <clip>
+                            <near>0.3</near>
+                            <far>10.0</far>
+                        </clip>
+                    </depth_camera>
+                    <clip>
+                        <near>0.3</near>
+                        <far>10.0</far>
+                    </clip>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.007</stddev>
+                    </noise>
+                </camera>
+            </sensor>
+        </gazebo>
+
+    </xacro:macro>
+
+</robot>

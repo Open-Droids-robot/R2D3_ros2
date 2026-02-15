@@ -4,7 +4,7 @@
   <name>dual_rm_navigation</name>
   <version>0.1.0</version>
   <description>Nav2 navigation stack for R2D3 dual-arm mobile robot</description>
-  <maintainer email="knight@todo.com">knight</maintainer>
+  <maintainer email="nitinmaurya2606@gmail.com">Nitin Maurya</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -26,6 +26,10 @@
 
   <!-- SLAM -->
   <exec_depend>slam_toolbox</exec_depend>
+
+  <!-- RTAB-Map SLAM (RGB-D + LiDAR) -->
+  <exec_depend>rtabmap_slam</exec_depend>
+  <exec_depend>rtabmap_viz</exec_depend>
 
   <!-- Visualization -->
   <exec_depend>tf2_ros</exec_depend>
