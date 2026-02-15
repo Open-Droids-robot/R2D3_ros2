@@ -87,7 +87,7 @@ def generate_launch_description():
     # ── 3. SLAM Toolbox (mapping mode) ───────────────────────────
     #    Delayed to let Gz Sim, sensors, and controllers start first.
     slam_launch = TimerAction(
-        period=20.0,   #TODO One can adjust time accordingly, I have taken max safe time
+        period=10.0,   # controllers ready by ~6s; SLAM needs odom→base_footprint TF
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
@@ -106,7 +106,7 @@ def generate_launch_description():
 
     # ── 4. Localization (AMCL + map_server) ──────────────────────
     localization_launch = TimerAction(
-        period=20.0,
+        period=10.0,
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
@@ -127,7 +127,7 @@ def generate_launch_description():
     # ── 5. Nav2 navigation stack ─────────────────────────────────
     #    Delayed further to let SLAM/localization establish the map→odom TF.
     nav2_launch = TimerAction(
-        period=30.0,  #TODO One can adjust time accordingly, I have taken max safe time
+        period=10.0,  # same as SLAM; lifecycle_manager waits for all services
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(

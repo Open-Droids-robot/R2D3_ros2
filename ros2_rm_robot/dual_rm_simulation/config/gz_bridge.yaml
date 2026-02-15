@@ -1,13 +1,3 @@
-# ros_gz_bridge YAML config for R2D3 navigation simulation.
-# Direction: GZ_TO_ROS means Gz Sim publishes, ROS2 subscribes.
-#            ROS_TO_GZ means ROS2 publishes, Gz Sim subscribes.
-
-# Simulation clock
-- topic_name: "/clock"
-  ros_type_name: "rosgraph_msgs/msg/Clock"
-  gz_type_name: "gz.msgs.Clock"
-  direction: GZ_TO_ROS
-
 # LiDAR sensor
 - topic_name: "scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"

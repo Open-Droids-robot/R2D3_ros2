@@ -44,7 +44,6 @@ def generate_launch_description():
         'gz_verbosity', default_value='1',
         description='Gz Sim verbosity level (0-4)',
     )
-
     robot_model = LaunchConfiguration('robot_model')
     world = LaunchConfiguration('world')
     gz_verbosity = LaunchConfiguration('gz_verbosity')
@@ -56,14 +55,12 @@ def generate_launch_description():
     ])
 
     # ── Process xacro → robot_description ────────────────────────
-    robot_description_content = ParameterValue(
-        Command([
-            PathJoinSubstitution([FindExecutable(name='xacro')]),
-            ' ', urdf_xacro_path,
-            ' arm_model:=', robot_model,
-        ]),
-        value_type=str,
-    )
+    xacro_cmd = Command([
+        PathJoinSubstitution([FindExecutable(name='xacro')]),
+        ' ', urdf_xacro_path,
+        ' arm_model:=', robot_model,
+    ])
+    robot_description_content = ParameterValue(xacro_cmd, value_type=str)
     robot_description = {'robot_description': robot_description_content}
 
     # ── GZ_SIM_RESOURCE_PATH ─────────────────────────────────────
@@ -79,6 +76,8 @@ def generate_launch_description():
         'GZ_SIM_RESOURCE_PATH', os.path.join(pkg_sim, 'worlds'))
 
     # ── Launch Gz Sim ────────────────────────────────────────────
+    # --headless-rendering: no GUI window but sensors (gpu_lidar) still render.
+    # Avoids GPU driver issues (libEGL errors) that cause non-monotonic sim clock.
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -87,7 +86,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            'gz_args': ['-r -v ', gz_verbosity, ' ', world],
+            'gz_args': ['-r --headless-rendering -v ', gz_verbosity, ' ', world],
         }.items(),
     )
 
@@ -109,22 +108,24 @@ def generate_launch_description():
         executable='create',
         output='screen',
         arguments=[
-            '-topic', 'robot_description',
+            '-string', xacro_cmd,
             '-name', 'r2d3_robot',
             '-x', '0.0', '-y', '0.0', '-z', '0.01',
             '-allow_renaming', 'true',
         ],
     )
 
-    # ── ros_gz_bridge (YAML config) ──────────────────────────────
+    # ── ros_gz_bridge ──────────────────────────────────────────
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         name='ros_gz_bridge',
-        parameters=[{
-            'config_file': os.path.join(pkg_sim, 'config', 'gz_bridge.yaml'),
-            'use_sim_time': True,
-        }],
+        arguments=[
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+        ],
+        parameters=[{'use_sim_time': False}],
         output='screen',
     )
 
