@@ -101,7 +101,7 @@ Resolved after reading the AIC reference template, inspecting `pic/dual_lift_rob
 
 ### Gripper joint model — see [architecture.md](architecture.md#gripper-joint-model)
 Two **prismatic finger joints with mimic constraint** per gripper:
-- Parent: `{l,r}_hand_base_link`
+- Parent: `l_hand_link` (LEFT) / `r_hand` (RIGHT) — **asymmetric naming in the upstream URDF**. The mesh files are `l_hand_base_link.STL` / `r_hand_base_link.STL` (which is what the initial audit noted), but the link *names* that reference them are different. Verified 2026-05-19 by grepping `<link name=` in the rendered 75b URDF.
 - Joint names: `{l,r}_finger_drive` (driven), `{l,r}_finger_mimic` (mimic, multiplier −1)
 - Stroke per finger: **0.0 – 0.035 m** (total opening 70 mm, matches `Gripperset` mapping `1..1000 → 0..70 mm` confirmed in `ros2_total_demo/scripts/catch2object_gripper.py:83`)
 - Velocity limit: **≤ 0.05 m/s**

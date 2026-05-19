@@ -24,13 +24,23 @@
          params parent *origin name:=camera use_nominal_extrinsics:=false add_plug:=false use_mesh:=true
   -->
   <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro"/>
-  <xacro:sensor_d435 parent="head_link2" name="head_camera" use_nominal_extrinsics="false" use_mesh="true">
+  <!-- use_mesh="false" sidesteps a Collada parsing failure in
+       urdf_usd_converter 0.1.0 on realsense2_description's d435.dae. Kinematic
+       frames + bounding-box geometry are still authored; only the photorealistic
+       mesh is omitted. Switch to "true" once the converter accepts the .dae
+       (or replace with an .stl). -->
+  <xacro:sensor_d435 parent="head_link2" name="head_camera" use_nominal_extrinsics="false" use_mesh="false">
     <origin xyz="0.05 0.0 0.0" rpy="0 0 0"/>
   </xacro:sensor_d435>
 
-  <!-- 3) Parallel grippers on both hands -->
+  <!-- 3) Parallel grippers on both hands.
+       NOTE: the upstream 75b URDF uses asymmetric link names — the LEFT hand
+       is `l_hand_link`, the RIGHT hand is `r_hand`. The mesh files happen to
+       be named `*_hand_base_link.STL` but the link names that reference them
+       are not. Verified 2026-05-19 against
+       ros2_rm_robot/.../dual_rm_75b_description.urdf (rendered). -->
   <xacro:include filename="parallel_gripper.urdf.xacro"/>
-  <xacro:parallel_gripper prefix="l_" parent="l_hand_base_link"/>
-  <xacro:parallel_gripper prefix="r_" parent="r_hand_base_link"/>
+  <xacro:parallel_gripper prefix="l_" parent="l_hand_link"/>
+  <xacro:parallel_gripper prefix="r_" parent="r_hand"/>
 
 </robot>

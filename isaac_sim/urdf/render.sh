@@ -28,6 +28,28 @@ fi
 echo "rendering: $IN"
 echo "        -> $OUT"
 xacro "$IN" -o "$OUT"
+
+# Upstream 75b URDF contains 34 <material name=""> tags (empty name). The
+# urdf_usd_converter (Isaac Sim 6.0) refuses to handle anonymous materials —
+# its NameCache.find_unique_names() gets None and raises. Post-process the
+# rendered URDF to give each anonymous material a unique placeholder name.
+# This is purely cosmetic from URDF's perspective (anonymous materials are
+# rarely referenced by name) but lets the converter author the asset.
+python3 - "$OUT" <<'PYEOF'
+import re, sys
+p = sys.argv[1]
+with open(p) as f:
+    text = f.read()
+counter = {"n": 0}
+def repl(m):
+    counter["n"] += 1
+    return f'<material name="unnamed_{counter["n"]:03d}">'
+text = re.sub(r'<material\s+name=""\s*>', repl, text)
+with open(p, "w") as f:
+    f.write(text)
+print(f"[render] renamed {counter['n']} unnamed materials")
+PYEOF
+
 echo
 echo "Done. Verify the rendered URDF parses:"
 echo "  python3 -c 'from lxml import etree; etree.parse(\"$OUT\")'"
