@@ -90,3 +90,35 @@ In order:
 3. Decide on **camera mounting** — head, wrist, or both.
 4. Pick the **URDF→USD conversion tool**: Isaac Sim's built-in `urdf_importer` extension is the obvious default; `urdf-to-usd` (CLI) is an alternative.
 5. Generate the first USD asset and visually inspect in Isaac Sim. Iterate on mesh scale, axes, and link/joint mapping until it matches expectations in RViz.
+
+## Decisions locked (2026-05-19)
+
+Resolved after reading the AIC reference template, inspecting `pic/dual_lift_robot.jpg`, and tracing `catch2object_gripper.py` + `dual_rm_driver`:
+
+### Robot variant
+- **Use `dual_rm_75b_description`** (2× 7-DOF arms). Per primer.
+- `dual_rm_65b_description` stays in tree but is unused for V1.
+
+### Gripper joint model — see [architecture.md](architecture.md#gripper-joint-model)
+Two **prismatic finger joints with mimic constraint** per gripper:
+- Parent: `{l,r}_hand_base_link`
+- Joint names: `{l,r}_finger_drive` (driven), `{l,r}_finger_mimic` (mimic, multiplier −1)
+- Stroke per finger: **0.0 – 0.035 m** (total opening 70 mm, matches `Gripperset` mapping `1..1000 → 0..70 mm` confirmed in `ros2_total_demo/scripts/catch2object_gripper.py:83`)
+- Velocity limit: **≤ 0.05 m/s**
+- Effort: **≈ 100 N** *(estimate; revise when RealMan datasheet confirms)*
+- ROS2 surface preserved: a Python bridge node maps `Gripperset.position` (1–1000) → drive-joint target — identical input contract to the real robot.
+
+### D435 camera mounting — see [architecture.md](architecture.md#d435-mounting)
+- **Single head-mounted D435**, matches real hardware (`pic/dual_lift_robot.jpg`).
+- Parent: `head_link2` (camera follows head pan + tilt)
+- Pose: +0.05 m along head's local +X, forward-facing
+- Reuse `ros2_realsense2/realsense2_description/urdf/_d435.urdf.xacro` macro
+- **No wrist cameras for V1** — not present on real hardware.
+
+### AGV chassis treatment
+- **Keep AGV links/joints in the USD asset** (preserves V2 upgrade path).
+- **Lock wheel joints** in the Isaac scene (`drive_mode=OFF`, equal upper/lower limits).
+- **Disable physics** on the AGV chassis subtree to prevent lift reaction forces from moving it.
+
+### Hand variant
+- **V1 = parallel grippers only.** Dexterous hands (`ros2_total_demo/scripts/catch2object_aoyi_hand.py` exists but uses `Handangle`/`Handposture` from `rm_ros_interfaces`) **deferred to V2**.

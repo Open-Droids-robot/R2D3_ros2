@@ -1,0 +1,92 @@
+# tasks/pick_and_place.yaml
+#
+# V1 Task 1 of 4: Single-arm Pick and Place.
+# Pick a 4 cm red cube from a randomized location on the table and place it
+# in a fixed target zone.
+#
+# See SCHEMA.md for the YAML key reference.
+
+id: pick_and_place
+display_name: "Single-arm Pick and Place"
+description: |
+  Probes basic grasping and placement with a single arm. The cube spawns
+  anywhere in a 20 cm × 40 cm region on the table; the target zone is a
+  fixed 10 cm × 10 cm patch on the right of the table. Success requires
+  the cube to remain inside the zone for one second.
+version: "0.1.0"
+time_limit_seconds: 60
+
+robot:
+  arms_used: [right_arm]
+  home:
+    body_lift_mm: 1200
+    # Both arms tucked; right arm pre-positioned near the workspace.
+    left_arm_joints:  [0.0, -0.5, 0.0, -1.2, 0.0,  0.7, 0.0]
+    right_arm_joints: [0.0, -0.5, 0.0, -1.2, 0.0,  0.7, 0.0]
+    head:
+      pan_rad: 0.0
+      tilt_rad: -0.20   # ~11° down, so the head camera sees the table
+  start_gripper_position:
+    left: 1000          # fully open
+    right: 1000
+
+scene:
+  ground_plane: true
+  table:
+    name: workbench
+    # Table top at z = 0.74 m (matches body_lift_mm = 1200 reach envelope).
+    pose: { x: 0.55, y: 0.0, z: 0.74, roll: 0, pitch: 0, yaw: 0 }
+    size: { x: 1.0, y: 0.6, z: 0.05 }
+    material: wood_oak
+  objects:
+    - name: cube_red
+      type: primitive_cube
+      size: 0.04
+      mass: 0.05
+      friction: 0.8
+      restitution: 0.0
+      color: red
+      spawn:
+        type: uniform
+        seed_source: task_seed
+        # Spawn region: 20 cm × 40 cm rectangle on the LEFT side of the table
+        # (so the right arm has to actually traverse to pick it up).
+        x: [0.40, 0.60]
+        y: [-0.20, 0.05]
+        z: 0.765      # rest on table (table_top_z + half cube_size)
+        yaw: [-1.57, 1.57]
+
+goal:
+  type: object_in_zone
+  object: cube_red
+  zone:
+    # Target zone: 10 cm × 10 cm patch on the RIGHT of the table.
+    pose: { x: 0.65, y: 0.20, z: 0.765 }
+    tolerance_xy: 0.05    # 10 cm square
+    tolerance_z: 0.02
+  hold_seconds: 1.0
+
+scoring:
+  tier1:
+    min_observation_rate_hz: 10
+    min_command_rate_hz: 5
+    max_observation_gap_seconds: 1
+    activate_within_seconds: 5
+  tier2:
+    success_bonus: 100
+    penalties:
+      completion_time:
+        weight: -0.5      # gentler than the default; this task should be fast
+        unit: s
+      path_length:
+        weight: -0.5
+        unit: m
+        target_arm: right_arm
+      max_grip_force:
+        weight: -0.1
+        unit: N
+        cap: 50
+      off_limit_contact:
+        weight: -25.0
+        pairs:
+          - [robot, workbench]    # graze the table at your peril
