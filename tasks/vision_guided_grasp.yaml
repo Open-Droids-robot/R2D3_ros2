@@ -1,0 +1,100 @@
+# tasks/vision_guided_grasp.yaml
+#
+# V1 Task 4 of 4: Vision-Guided Grasp.
+# Grasp a randomly posed object somewhere in the workspace. The object
+# pose is NOT given to the policy — only the D435 RGB-D feed. Probes
+# perception-driven grasping with full SE(2) pose uncertainty.
+#
+# See SCHEMA.md for the YAML key reference.
+
+id: vision_guided_grasp
+display_name: "Vision-Guided Grasp"
+description: |
+  A 5 cm yellow cube spawns anywhere in a 30 cm × 40 cm workspace region
+  with a random yaw rotation. The right arm must grasp and lift the cube
+  at least 10 cm off the table within 30 seconds, and hold it for 1 s
+  to count as success.
+
+  Unlike the other tasks, the object pose is NOT communicated to the
+  policy via privileged channels. The policy is expected to localize
+  the object from the head D435 RGB-D stream alone. This is a rule
+  on the policy side, not a schema constraint — all tasks technically
+  share the same Observation message, but submissions caught using
+  ground-truth pose lookups in this task fail Tier 2.
+version: "0.1.0"
+time_limit_seconds: 30
+
+robot:
+  arms_used: [right_arm]
+  home:
+    body_lift_mm: 1200
+    left_arm_joints:  [0.0, -0.5, 0.0, -1.2, 0.0, 0.7, 0.0]
+    right_arm_joints: [0.0, -0.5, 0.0, -1.2, 0.0, 0.7, 0.0]
+    head:
+      pan_rad: 0.0
+      tilt_rad: -0.25     # slightly more down-tilt to see the wider region
+  start_gripper_position:
+    left: 1000
+    right: 1000
+
+scene:
+  ground_plane: true
+  table:
+    name: workbench
+    pose: { x: 0.55, y: 0.0, z: 0.74, roll: 0, pitch: 0, yaw: 0 }
+    size: { x: 1.0, y: 0.6, z: 0.05 }
+    material: wood_oak
+  objects:
+    - name: cube_yellow
+      type: primitive_cube
+      size: 0.05            # slightly bigger than the other tasks — easier
+                            # in absolute terms, harder because of unknown pose
+      mass: 0.08
+      friction: 0.8
+      restitution: 0.0
+      color: yellow
+      spawn:
+        type: uniform
+        seed_source: task_seed
+        # Wide spawn region — full table width on the X axis, most of the
+        # depth on the Y axis. Forces the policy to use vision.
+        x: [0.35, 0.75]
+        y: [-0.22, 0.18]
+        z: 0.770            # rest on table (table_top_z + half cube_size)
+        yaw: [-3.14, 3.14]  # full yaw randomization — any orientation
+
+goal:
+  type: held_by_arm
+  object: cube_yellow
+  arm: right_arm
+  hold_seconds: 1.0
+  # Custom predicate addition: also require the cube CoM to be ≥ 10 cm
+  # above the table top. Implemented in r2d3_sim/goal_predicates.py as a
+  # post-hold height check (V1 hard-codes; V2 extends `held_by_arm`
+  # predicate signature with `min_height_above` field).
+  min_height_above_table: 0.10
+
+scoring:
+  tier1:
+    min_observation_rate_hz: 10
+    min_command_rate_hz: 5
+    max_observation_gap_seconds: 1
+    activate_within_seconds: 5
+  tier2:
+    success_bonus: 100
+    penalties:
+      completion_time:
+        weight: -1.0            # heavier — speed matters more when scope is small
+        unit: s
+      path_length:
+        weight: -0.5
+        unit: m
+        target_arm: right_arm
+      max_grip_force:
+        weight: -0.1
+        unit: N
+        cap: 50
+      off_limit_contact:
+        weight: -25.0
+        pairs:
+          - [robot, workbench]

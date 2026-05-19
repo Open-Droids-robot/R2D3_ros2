@@ -1,0 +1,119 @@
+# tasks/stacking.yaml
+#
+# V1 Task 2 of 4: Single-arm Stacking.
+# Stack three distinguishable cubes in a specified order, with the bottom
+# cube on a target spot. Probes sequential pick-place + spatial alignment.
+#
+# See SCHEMA.md for the YAML key reference.
+
+id: stacking
+display_name: "Single-arm Stacking (3 cubes)"
+description: |
+  Three 4 cm cubes (red, green, blue) start in a row on the left of the
+  table. The robot must stack them on a target marker on the right of the
+  table, with red on the bottom, green in the middle, blue on top. The
+  stack must remain upright for 1 s to count as success. Probes
+  sequential grasping, height-aware placement, and spatial alignment
+  between successive cubes.
+version: "0.1.0"
+time_limit_seconds: 120
+
+robot:
+  arms_used: [right_arm]
+  home:
+    body_lift_mm: 1200
+    left_arm_joints:  [0.0, -0.5, 0.0, -1.2, 0.0, 0.7, 0.0]
+    right_arm_joints: [0.0, -0.5, 0.0, -1.2, 0.0, 0.7, 0.0]
+    head:
+      pan_rad: 0.0
+      tilt_rad: -0.20
+  start_gripper_position:
+    left: 1000
+    right: 1000
+
+scene:
+  ground_plane: true
+  table:
+    name: workbench
+    pose: { x: 0.55, y: 0.0, z: 0.74, roll: 0, pitch: 0, yaw: 0 }
+    size: { x: 1.0, y: 0.6, z: 0.05 }
+    material: wood_oak
+  objects:
+    - name: cube_red
+      type: primitive_cube
+      size: 0.04
+      mass: 0.05
+      friction: 0.8
+      restitution: 0.0
+      color: red
+      spawn:
+        type: uniform
+        seed_source: task_seed
+        # Left-side spawn lane; each cube gets a y-band so they don't overlap.
+        x: [0.42, 0.50]
+        y: [-0.22, -0.16]
+        z: 0.765
+        yaw: [-0.39, 0.39]      # ±22.5° to keep grasping tractable
+    - name: cube_green
+      type: primitive_cube
+      size: 0.04
+      mass: 0.05
+      friction: 0.8
+      restitution: 0.0
+      color: green
+      spawn:
+        type: uniform
+        seed_source: task_seed
+        x: [0.42, 0.50]
+        y: [-0.08, -0.02]
+        z: 0.765
+        yaw: [-0.39, 0.39]
+    - name: cube_blue
+      type: primitive_cube
+      size: 0.04
+      mass: 0.05
+      friction: 0.8
+      restitution: 0.0
+      color: blue
+      spawn:
+        type: uniform
+        seed_source: task_seed
+        x: [0.42, 0.50]
+        y: [0.06, 0.12]
+        z: 0.765
+        yaw: [-0.39, 0.39]
+
+goal:
+  type: stacked
+  # Order is bottom-to-top.
+  order: [cube_red, cube_green, cube_blue]
+  # Successive cubes must align within 2 cm horizontally.
+  alignment_tolerance: 0.02
+  hold_seconds: 1.0
+
+scoring:
+  tier1:
+    min_observation_rate_hz: 10
+    min_command_rate_hz: 5
+    max_observation_gap_seconds: 1
+    activate_within_seconds: 5
+  tier2:
+    success_bonus: 100
+    penalties:
+      completion_time:
+        weight: -0.5
+        unit: s
+      path_length:
+        weight: -0.3
+        unit: m
+        target_arm: right_arm
+      max_grip_force:
+        weight: -0.1
+        unit: N
+        cap: 50
+      off_limit_contact:
+        weight: -25.0
+        pairs:
+          - [robot, workbench]
+          # NOTE: cube-cube contact is intentionally NOT penalized — the
+          # whole task is stacking cubes on each other.

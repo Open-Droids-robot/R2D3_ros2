@@ -1,0 +1,94 @@
+# tasks/bimanual_handoff.yaml
+#
+# V1 Task 3 of 4: Bimanual Handoff.
+# Pick an object with the right arm, then transfer it to the left arm.
+# Probes bilateral coordination + handoff timing.
+#
+# See SCHEMA.md for the YAML key reference.
+
+id: bimanual_handoff
+display_name: "Bimanual Handoff"
+description: |
+  A 4 cm red cube spawns on the right side of the table. The right arm
+  must pick it up, then the left arm must take it from the right arm
+  (handoff) without the cube touching the table. The left arm must
+  hold the cube for 1 s after the handoff for success to be credited.
+  Probes bilateral coordination, mutual gripper timing, and spatial
+  reasoning across the body midline.
+version: "0.1.0"
+time_limit_seconds: 90
+
+robot:
+  arms_used: [left_arm, right_arm]
+  home:
+    body_lift_mm: 1200
+    # Symmetric start pose: both arms forward of the torso, ready to meet
+    # at the midline.
+    left_arm_joints:  [ 0.40, -0.6, 0.0, -1.2, 0.0, 0.6, 0.0]
+    right_arm_joints: [-0.40, -0.6, 0.0, -1.2, 0.0, 0.6, 0.0]
+    head:
+      pan_rad: 0.0
+      tilt_rad: -0.20
+  start_gripper_position:
+    left: 1000
+    right: 1000
+
+scene:
+  ground_plane: true
+  table:
+    name: workbench
+    pose: { x: 0.55, y: 0.0, z: 0.74, roll: 0, pitch: 0, yaw: 0 }
+    size: { x: 1.0, y: 0.6, z: 0.05 }
+    material: wood_oak
+  objects:
+    - name: cube_red
+      type: primitive_cube
+      size: 0.04
+      mass: 0.05
+      friction: 0.9          # slightly tackier so handoff is forgiving
+      restitution: 0.0
+      color: red
+      spawn:
+        type: uniform
+        seed_source: task_seed
+        # Right-side spawn — clearly inside the right arm's workspace.
+        x: [0.45, 0.55]
+        y: [-0.22, -0.14]
+        z: 0.765
+        yaw: [-0.39, 0.39]
+
+goal:
+  type: bimanual_handoff
+  object: cube_red
+  start_arm: right_arm
+  end_arm: left_arm
+  intermediate_hold_seconds: 0.5   # right_arm must hold for at least 0.5 s
+  end_hold_seconds: 1.0            # then left_arm must hold for 1.0 s
+
+scoring:
+  tier1:
+    min_observation_rate_hz: 10
+    min_command_rate_hz: 5
+    max_observation_gap_seconds: 1
+    activate_within_seconds: 5
+  tier2:
+    success_bonus: 100
+    penalties:
+      completion_time:
+        weight: -0.5
+        unit: s
+      path_length:
+        weight: -0.25
+        unit: m
+        target_arm: right_arm     # primary motion arm
+      max_grip_force:
+        weight: -0.1
+        unit: N
+        cap: 50
+      off_limit_contact:
+        weight: -25.0
+        pairs:
+          - [robot, workbench]
+          # Dropping the cube on the table mid-handoff is the primary
+          # failure mode — counted via this contact pair (table↔cube).
+          - [workbench, cube_red]
