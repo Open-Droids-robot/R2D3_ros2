@@ -38,8 +38,7 @@ echo "Starting TurboVNC on $DISPLAY_NUM @ $GEOMETRY..."
   -geometry "$GEOMETRY" \
   -depth 24 \
   -localhost \
-  -nohttpd \
-  -SecurityTypes VncAuth
+  -SecurityTypes vnc
 
 cat <<EOF
 
