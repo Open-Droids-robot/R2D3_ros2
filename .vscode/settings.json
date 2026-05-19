@@ -1,0 +1,84 @@
+{
+  // ----- Python (host-side r2d3 env) -----
+  "python.defaultInterpreterPath": "/usr1/home/semathew/miniforge3/envs/r2d3/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["isaac_sim/tests"],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.diagnosticMode": "openFilesOnly",
+  // We import omni.* / isaacsim.* from container-only code; suppress unresolvable-import
+  // warnings for them on the host so pyright doesn't flood the editor with red squiggles.
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none"
+  },
+
+  // ----- File associations -----
+  "files.associations": {
+    "*.urdf": "xml",
+    "*.urdf.xacro": "xml",
+    "*.xacro": "xml",
+    "*.sdf": "xml",
+    "*.world": "xml",
+    "*.launch.py": "python",
+    "*.usda": "plaintext",
+    "*.usd": "plaintext",
+    "*.usdc": "plaintext",
+    "Dockerfile.*": "dockerfile",
+    "compose.*.yaml": "yaml",
+    "compose.*.yml": "yaml"
+  },
+
+  // ----- YAML / XML -----
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json": [
+      "Docker/**/compose*.yaml",
+      "Docker/**/compose*.yml",
+      "Docker/**/docker-compose*.yml"
+    ]
+  },
+  "xml.format.splitAttributes": "preserve",
+
+  // ----- Search / files -----
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/build": true,
+    "**/install": true,
+    "**/log": true
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/.git": true,
+    "**/build": true,
+    "**/install": true,
+    "**/log": true,
+    "**/*.STL": true,
+    "**/*.stl": true,
+    "**/*.dae": true,
+    "**/*.usdc": true
+  },
+
+  // ----- Editor -----
+  "editor.rulers": [100],
+  "editor.formatOnSave": false,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4
+  },
+  "[yaml]": { "editor.tabSize": 2 },
+  "[json]": { "editor.tabSize": 2 },
+
+  // ----- Terminal -----
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.env.linux": {
+    "MAMBA_ROOT_PREFIX": "/usr1/home/semathew/miniforge3"
+  },
+
+  // ----- Git -----
+  "git.autofetch": true,
+  "git.branchProtection": ["main"]
+}

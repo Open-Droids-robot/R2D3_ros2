@@ -1,0 +1,28 @@
+{
+  // Workspace-recommended extensions. VS Code / Cursor will offer to install these on first open.
+  "recommendations": [
+    // Python
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "ms-python.black-formatter",
+    // ROS2 / URDF
+    "ms-iot.vscode-ros",
+    "smilerobotics.urdf",
+    // C++ (for diving into ros2_rm_robot / dual_rm_driver source)
+    "ms-vscode.cpptools",
+    "twxs.cmake",
+    "ms-vscode.cmake-tools",
+    // Containers / Docker
+    "ms-azuretools.vscode-docker",
+    "ms-vscode-remote.remote-containers",
+    // Languages we'll touch a lot
+    "redhat.vscode-yaml",
+    "redhat.vscode-xml",
+    // Quality of life
+    "eamodio.gitlens",
+    "tamasfe.even-better-toml",
+    "streetsidesoftware.code-spell-checker",
+    "ms-vscode.makefile-tools"
+  ]
+}

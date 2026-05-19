@@ -1,0 +1,41 @@
+# syntax=docker/dockerfile:1.6
+#
+# R2D3 Isaac Sim image — extends NVIDIA's stock Isaac Sim 5.1.0 base.
+#
+# This is a *thin* extension: it installs a small set of host-side Python tools into
+# Isaac's bundled Python so our r2d3_sim wrapper code can `import yaml`, `trimesh`, etc.
+# The project code itself is bind-mounted at runtime (see compose.isaac.yaml), so you
+# can edit Python on the host and re-run inside the container without rebuilding.
+#
+# Build: from the repo root,
+#   docker compose -f Docker/isaac/compose.isaac.yaml build isaac-sim
+# Or directly:
+#   docker build -f Docker/isaac/Dockerfile.isaac-sim --build-arg ISAAC_SIM_VERSION=5.1.0 \
+#     -t r2d3-isaac-sim:dev .
+#
+# Prerequisite: docker login nvcr.io   (NGC API key — see nvidia.env.example)
+
+ARG ISAAC_SIM_VERSION=5.1.0
+FROM nvcr.io/nvidia/isaac-sim:${ISAAC_SIM_VERSION}
+
+# Isaac Sim ships its own Python at /isaac-sim/python.sh. Install our extras there
+# rather than into the system python — Isaac's runtime won't see system-pip installs.
+RUN /isaac-sim/python.sh -m pip install --no-cache-dir \
+      pyyaml \
+      lxml \
+      trimesh \
+      pydantic \
+      typer[all] \
+      rich \
+      pytest
+
+# Workspace mount point. Project source is bind-mounted at runtime; this just
+# creates the directory so the container starts with a sane CWD.
+WORKDIR /workspace/r2d3_isaac
+RUN mkdir -p /workspace/r2d3_isaac
+
+# Default to an interactive shell — explicit launcher chosen by user / compose:
+#   /isaac-sim/isaac-sim.sh           (GUI window; needs DISPLAY)
+#   /isaac-sim/runheadless.native.sh  (WebRTC streaming; no X needed)
+#   /isaac-sim/python.sh <script.py>  (run a Python script with Isaac's Python)
+CMD ["/bin/bash"]

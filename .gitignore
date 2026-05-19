@@ -1,0 +1,72 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# --- Virtual envs (project-local only; system miniforge lives outside repo) ---
+.venv/
+venv/
+env/
+
+# --- ROS2 colcon build artifacts ---
+# Scoped under package dirs so we don't accidentally ignore source dirs named "build" higher up.
+**/install/
+**/log/
+**/.colcon/
+# colcon-style build dirs inside package subtrees:
+ros2_*/build/
+ros2_*/install/
+ros2_*/log/
+
+# --- Isaac Sim / Omniverse local caches ---
+isaac_sim/.cache/
+isaac_sim/**/.thumbnails/
+isaac_sim/**/_thumbnails/
+*.usdc.tmp
+*.kit.log
+omniverse-cache/
+kit-cache/
+.nv/
+.nvidia-cuda-mps/
+
+# --- USD large binaries (we'll commit .usda text, gate binaries via LFS later if needed) ---
+# (intentionally NOT ignoring *.usd/*.usda/*.usdc here — we want them tracked.
+#  If they grow large, switch to git-lfs.)
+
+# --- Docker (local-only artifacts; their tracked .env at Docker/.env is kept) ---
+# Don't ignore Docker/.env — it's tracked by upstream.
+.env.local
+*.env.local
+
+# --- Editors / IDEs (keep .vscode/ tracked for shared settings) ---
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+.history/
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- Logs / scratch ---
+*.log
+logs/
+tmp/
+scratch/
+
+# --- TurboVNC state (if user runs vncserver from inside repo by accident) ---
+.vnc/
+*.vnc.log
