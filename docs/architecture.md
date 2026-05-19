@@ -62,6 +62,10 @@ r2d3_isaac/                            # = Open-Droids-robot/R2D3_ros2 @ isaac-s
 │   │   ├── gripper_bridge.py          # Gripperset (1-1000) -> finger joint commands
 │   │   ├── engine.py                  # Trial state machine
 │   │   └── scoring.py                 # Tier 1 + Tier 2 evaluators
+│   ├── urdf/                          # V1 wrapper xacros (75b + D435 + grippers)
+│   │   ├── r2d3_v1.urdf.xacro         # composition wrapper
+│   │   ├── parallel_gripper.urdf.xacro
+│   │   └── render.sh                  # xacro -> flat URDF (run in Humble container)
 │   ├── usd/                           # R2D3 USD asset (output of URDF -> USD pipeline)
 │   ├── scenes/                        # One scene script per task (loads task YAML)
 │   └── tests/
@@ -75,12 +79,25 @@ r2d3_isaac/                            # = Open-Droids-robot/R2D3_ros2 @ isaac-s
 │   ├── __init__.py
 │   ├── cli.py                         # `r2d3-eval <task> --policy <image>` entry
 │   └── report.py                      # JSON report writer
-├── r2d3_model/                        # Submission template (separate ROS2 package)
+├── r2d3_model/                        # Submission template (Lifecycle Node, ament_python)
 │   ├── package.xml
 │   ├── setup.py
-│   └── r2d3_model/
-│       ├── r2d3_model.py              # LifecycleNode handling RunTask action
-│       └── policy.py                  # Stub policy class participants override
+│   ├── setup.cfg
+│   ├── resource/r2d3_model
+│   ├── r2d3_model/
+│   │   ├── __init__.py
+│   │   ├── r2d3_model.py              # LifecycleNode hosting RunTask action server
+│   │   └── policy.py                  # Policy base class (participants subclass)
+│   └── test/
+│       └── test_lifecycle.py
+├── r2d3_task_interfaces/              # RunTask.action (ament_cmake interfaces pkg)
+│   ├── package.xml
+│   ├── CMakeLists.txt
+│   └── action/RunTask.action
+├── r2d3_model_interfaces/             # Observation.msg (ament_cmake interfaces pkg)
+│   ├── package.xml
+│   ├── CMakeLists.txt
+│   └── msg/Observation.msg
 ├── Docker/                            # Existing upstream Docker/docker/* untouched
 │   ├── docker/                        # ROS2 Foxy/Humble/Jazzy (upstream)
 │   └── isaac/                         # Our Isaac Sim 5.1 image + compose

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>r2d3_task_interfaces</name>
+  <version>0.1.0</version>
+  <description>
+    ROS2 action and message definitions for R2D3 V1 Isaac Sim task execution.
+    Defines the RunTask action used by the engine to dispatch one of the four
+    V1 task types (pick_and_place, stacking, bimanual_handoff, vision_guided_grasp)
+    to a participant lifecycle node.
+  </description>
+  <maintainer email="semathew@andrew.cmu.edu">Sam Mathew</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>rosidl_default_generators</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

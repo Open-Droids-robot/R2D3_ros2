@@ -1,0 +1,55 @@
+# RunTask.action — dispatch one task trial to the participant lifecycle node.
+#
+# The engine sends a RunTask goal once the scene is spawned and the model is
+# in the lifecycle 'active' state. The participant model implements the action
+# server and runs its policy until the goal predicate is satisfied, the time
+# limit elapses, or the goal is cancelled.
+
+# ===== Goal =====
+# Slug of the task being run; must match a tasks/<slug>.yaml definition.
+string task_id
+
+# Seed for deterministic scene spawning. The engine uses this to position
+# objects identically across runs of the same (task_id, task_seed).
+uint64 task_seed
+
+# 0..N index of this trial within a multi-trial run of the same task.
+# Useful when the policy wants to vary behavior across deterministic trials
+# (e.g., for randomized policies that consume the seed).
+uint32 trial_index
+
+---
+
+# ===== Result =====
+# True iff the task's goal predicate was satisfied within time_limit_seconds.
+bool success
+
+# Score from Tier 1 (liveness/validity). Always populated; in [0.0, 1.0].
+float64 tier1_score
+
+# Score from Tier 2 (task quality). Only meaningful if Tier 1 passes.
+float64 tier2_score
+
+# Final weighted score per the task YAML's scoring spec. Reported on the
+# leaderboard.
+float64 total_score
+
+# Human-readable summary message for logs.
+string message
+
+# JSON blob containing the full per-metric breakdown (completion_time,
+# path_length, max_grip_force, collision_count, ...). Schema documented in
+# tasks/SCHEMA.md.
+string metrics_json
+
+---
+
+# ===== Feedback =====
+# Coarse phase of the trial: "setup" | "running" | "scoring".
+string phase
+
+# Progress estimate in [0.0, 1.0] if estimable; -1.0 otherwise.
+float32 progress
+
+# Free-form human-readable message for logs / dashboards.
+string message

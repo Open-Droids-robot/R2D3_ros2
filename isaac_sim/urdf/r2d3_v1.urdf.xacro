@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  r2d3_v1.urdf.xacro
+
+  V1 composition wrapper for Isaac Sim. Combines:
+    - the upstream dual_rm_75b_description URDF (arms + lift + AGV + hands)
+    - one head-mounted Intel RealSense D435 (head_link2, +0.05 m forward)
+    - two parallel grippers at {l,r}_hand_base_link (custom finger sub-assembly)
+
+  Render via `render.sh` (or directly: `xacro r2d3_v1.urdf.xacro -o r2d3_v1.urdf`)
+  from inside a ROS2 environment where dual_rm_75b_description and
+  realsense2_description are findable by `$(find ...)`.
+
+  The rendered output is consumed by scripts/urdf_to_usd.py inside the
+  Isaac Sim container.
+-->
+<robot name="r2d3_v1" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- 1) The upstream R2D3 (dual RM75-B arms + body lift + head + AGV + hand bodies) -->
+  <xacro:include filename="$(find dual_rm_75b_description)/urdf/dual_rm_75b_description.urdf.xacro"/>
+
+  <!-- 2) Head-mounted Intel RealSense D435.
+       sensor_d435 macro signature:
+         params parent *origin name:=camera use_nominal_extrinsics:=false add_plug:=false use_mesh:=true
+  -->
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro"/>
+  <xacro:sensor_d435 parent="head_link2" name="head_camera" use_nominal_extrinsics="false" use_mesh="true">
+    <origin xyz="0.05 0.0 0.0" rpy="0 0 0"/>
+  </xacro:sensor_d435>
+
+  <!-- 3) Parallel grippers on both hands -->
+  <xacro:include filename="parallel_gripper.urdf.xacro"/>
+  <xacro:parallel_gripper prefix="l_" parent="l_hand_base_link"/>
+  <xacro:parallel_gripper prefix="r_" parent="r_hand_base_link"/>
+
+</robot>

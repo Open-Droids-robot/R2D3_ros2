@@ -18,7 +18,12 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_URDF = (
+# Default to the V1 wrapper URDF (75b + D435 + parallel grippers). Generated
+# by `isaac_sim/urdf/render.sh` from r2d3_v1.urdf.xacro. Falls back to the
+# bare 75b URDF if the wrapper hasn't been rendered yet (useful for early
+# sanity checks before the gripper/camera composition is wired up).
+DEFAULT_URDF = REPO_ROOT / "isaac_sim/urdf/r2d3_v1.urdf"
+FALLBACK_URDF = (
     REPO_ROOT
     / "ros2_rm_robot/dual_rm_description/dual_rm_75b_description"
     / "urdf/dual_rm_75b_description.urdf"
@@ -53,8 +58,19 @@ def main() -> int:
     args = parser.parse_args()
 
     if not args.urdf.is_file():
-        print(f"error: URDF not found: {args.urdf}", file=sys.stderr)
-        return 1
+        # Allow falling back to the bare upstream URDF if the rendered
+        # wrapper isn't built yet. Warn loudly — we don't want this to be
+        # silent in a real run.
+        if args.urdf == DEFAULT_URDF and FALLBACK_URDF.is_file():
+            print(
+                f"warn: {args.urdf} not rendered yet; falling back to bare 75b URDF "
+                f"({FALLBACK_URDF}). Gripper and D435 will be MISSING from the USD.",
+                file=sys.stderr,
+            )
+            args.urdf = FALLBACK_URDF
+        else:
+            print(f"error: URDF not found: {args.urdf}", file=sys.stderr)
+            return 1
     args.usd.parent.mkdir(parents=True, exist_ok=True)
     if args.usd.exists():
         print(f"warn: {args.usd} exists; deleting (importer is non-idempotent).")

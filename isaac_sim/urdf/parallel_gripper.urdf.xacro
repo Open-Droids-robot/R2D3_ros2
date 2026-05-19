@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<!--
+  parallel_gripper.urdf.xacro
+
+  Parallel-jaw gripper macro for the R2D3 V1 Isaac Sim asset. Two prismatic
+  finger joints (one driven, one mimicked) attached to {l,r}_hand_base_link.
+  Total opening: 0.0–0.070 m (matches the real gripper's 0–70 mm stroke
+  per rm_ros_interfaces/Gripperset, position 1..1000).
+
+  The driven joint moves the LEFT finger in +Y; the mimic moves the RIGHT
+  finger in -Y. Both joints share the same range [0, 0.035] so each finger
+  travels up to 35 mm from the palm centerline. When drive = 0 the fingers
+  meet at the centerline (closed). When drive = 0.035 the finger gap = 70 mm.
+
+  Usage:
+    <xacro:include filename="parallel_gripper.urdf.xacro"/>
+    <xacro:parallel_gripper prefix="l_" parent="l_hand_base_link"/>
+    <xacro:parallel_gripper prefix="r_" parent="r_hand_base_link"/>
+-->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="parallel_gripper" params="prefix parent">
+
+    <!--
+      Finger geometry (simple boxes):
+        - X axis (out of palm) : 0.05 m   length of the finger
+        - Y axis (closing axis): 0.01 m   finger thickness
+        - Z axis (vertical)    : 0.02 m   finger height
+
+      Mass per finger: 50 g. Inertia computed for a uniform-density box:
+        ixx = m * (ly² + lz²) / 12 = 0.05 * (0.0001 + 0.0004) / 12 ≈ 2.08e-6
+        iyy = m * (lx² + lz²) / 12 = 0.05 * (0.0025 + 0.0004) / 12 ≈ 1.21e-5
+        izz = m * (lx² + ly²) / 12 = 0.05 * (0.0025 + 0.0001) / 12 ≈ 1.08e-5
+    -->
+
+    <!-- LEFT finger (the driven side; moves in +Y as drive increases) -->
+    <link name="${prefix}finger_left">
+      <inertial>
+        <origin xyz="0.025 0.005 0" rpy="0 0 0"/>
+        <mass value="0.05"/>
+        <inertia ixx="2.08e-6" ixy="0" ixz="0"
+                              iyy="1.21e-5" iyz="0"
+                                          izz="1.08e-5"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.025 0.005 0" rpy="0 0 0"/>
+        <geometry><box size="0.05 0.01 0.02"/></geometry>
+        <material name="${prefix}finger_left_material">
+          <color rgba="0.2 0.2 0.2 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0.025 0.005 0" rpy="0 0 0"/>
+        <geometry><box size="0.05 0.01 0.02"/></geometry>
+      </collision>
+    </link>
+
+    <!-- RIGHT finger (mirrors LEFT across the Y=0 plane; moves in -Y) -->
+    <link name="${prefix}finger_right">
+      <inertial>
+        <origin xyz="0.025 -0.005 0" rpy="0 0 0"/>
+        <mass value="0.05"/>
+        <inertia ixx="2.08e-6" ixy="0" ixz="0"
+                              iyy="1.21e-5" iyz="0"
+                                          izz="1.08e-5"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.025 -0.005 0" rpy="0 0 0"/>
+        <geometry><box size="0.05 0.01 0.02"/></geometry>
+        <material name="${prefix}finger_right_material">
+          <color rgba="0.2 0.2 0.2 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0.025 -0.005 0" rpy="0 0 0"/>
+        <geometry><box size="0.05 0.01 0.02"/></geometry>
+      </collision>
+    </link>
+
+    <!--
+      Driving joint. Axis +Y in the parent (hand_base_link) frame. Joint
+      value = distance LEFT finger has moved in +Y from the palm center.
+      Range [0, 0.035] m, velocity ≤ 0.05 m/s, effort ≈ 100 N.
+    -->
+    <joint name="${prefix}finger_drive" type="prismatic">
+      <parent link="${parent}"/>
+      <child  link="${prefix}finger_left"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="0.0" upper="0.035" velocity="0.05" effort="100"/>
+      <dynamics damping="1.0" friction="0.1"/>
+    </joint>
+
+    <!--
+      Mimic joint. Axis -Y so that the same positive joint value drives the
+      RIGHT finger in the OPPOSITE direction. Mimic multiplier = +1 so both
+      joints share their parameter; the axis sign delivers the symmetry.
+      This keeps both joints in [0, 0.035], satisfying their limits and
+      Isaac Sim's PhysX Tendon (parse_mimic=True) representation.
+    -->
+    <joint name="${prefix}finger_mimic" type="prismatic">
+      <parent link="${parent}"/>
+      <child  link="${prefix}finger_right"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="0.0" upper="0.035" velocity="0.05" effort="100"/>
+      <dynamics damping="1.0" friction="0.1"/>
+      <mimic joint="${prefix}finger_drive" multiplier="1.0" offset="0.0"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

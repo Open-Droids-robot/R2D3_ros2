@@ -70,3 +70,7 @@ scratch/
 # --- TurboVNC state (if user runs vncserver from inside repo by accident) ---
 .vnc/
 *.vnc.log
+
+# Rendered URDF (regenerable from r2d3_v1.urdf.xacro via render.sh)
+isaac_sim/urdf/r2d3_v1.urdf
+
