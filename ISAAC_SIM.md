@@ -26,7 +26,9 @@ This branch adds an **NVIDIA Isaac Sim** layer on top of the existing R2D3 ROS2 
 | `isaac_sim/tests/` | pytest suite for the Python wrappers |
 | `tasks/` | Task definitions (YAML/Python) for the eval suite |
 | `r2d3_eval/` | `r2d3-eval` CLI source |
-| `Docker/isaac/` | Isaac Sim Dockerfile + compose extension (alongside existing `Docker/docker/`) |
+| `scripts/isaacsim_ros2.sh` | Launcher: runs a script with the `isaac` env's Python and the `ros_humble` env's message libs |
+| `scripts/build_packages.sh` | Wrapper around `colcon build` with the CMake Python-finder hints pinned |
+| `scripts/urdf_to_usd.py` | Wrapper around `urdf_usd_converter` (Isaac Sim 6.0+) for URDF→USD conversion |
 | `docs/` | MkDocs source (setup, architecture, roadmap) |
 | `scripts/` | Local helpers: env check, VNC start, Isaac launch wrappers |
 | `.vscode/` | Workspace settings + recommended extensions |

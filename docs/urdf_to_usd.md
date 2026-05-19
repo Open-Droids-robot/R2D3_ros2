@@ -1,6 +1,13 @@
-# URDF → USD Conversion (Isaac Sim 5.1)
+# URDF → USD Conversion — Research Notes (HISTORICAL)
 
-> Research notes captured 2026-05-19, sourced from the `isaacsim.asset.importer.urdf` extension's public source on GitHub. Used to plan the conversion script — actual conversion can only run inside the Isaac Sim container, which is blocked on `/usr0` cleanup.
+> ⚠️ **Superseded.** As of Isaac Sim 6.0.0.0, NVIDIA ships a pure-Python `urdf_usd_converter` CLI from the Newton team that does NOT require bootstrapping SimulationApp/Kit. Our pipeline uses it instead of the `omni.kit.commands` approach this doc describes.
+>
+> Active reference: [`docs/setup.md`](setup.md) → "URDF → USD" section and `scripts/urdf_to_usd.py`.
+> Smoke-test result (2026-05-19): bare 75b URDF converts in ~3 s to a valid Atomic Component USD asset.
+>
+> This document is retained for historical context — it captures the API research we did back when 5.1 was our target and we expected to invoke `omni.kit.commands.execute("URDFParseAndImportFile", ...)` from inside a Dockerized Isaac Sim container.
+
+# URDF → USD Conversion (Isaac Sim 5.1) — historical research
 
 ## Extension namespace
 

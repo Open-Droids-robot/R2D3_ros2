@@ -11,43 +11,49 @@
 
 ## Components
 
+We deploy as **three colocated conda envs** under one Miniforge install — not as Docker containers. This is how Isaac Sim is actually run on Riddle by every user we've inspected (dameria, nmino). Containerization is preserved as an optional path for hackathon-submission packaging.
+
 ```
-┌────────────────────────────── host (Ubuntu 24.04, RTX 4090) ─────────────────────────────┐
-│                                                                                          │
-│  ┌──────────────────────────────────┐   ┌──────────────────────────────────────────────┐ │
-│  │ Isaac Sim 5.1 container          │   │ ROS 2 Humble side (separate container or     │ │
-│  │   image: r2d3-isaac-sim:dev      │   │   colocated; bridge talks DDS on host net)   │ │
-│  │                                  │   │                                              │ │
-│  │  ┌────────────────────────────┐  │   │  ┌──────────────────────────────────────┐    │ │
-│  │  │ isaac_sim/r2d3_sim/        │  │   │  │ r2d3_model  (Lifecycle Node)         │    │ │
-│  │  │   scene.py    world+assets │  │   │  │   ↳ participant submission           │    │ │
-│  │  │   robot.py    R2D3 art.    │  │   │  │   subscribes: /r2d3/observations     │    │ │
-│  │  │   sensors.py  D435 wrap    │  │   │  │   publishes: /right_arm_controller/  │    │ │
-│  │  │   bridge.py   ROS2 conf    │  │◄──┼──┤              rm_driver/*             │    │ │
-│  │  └────────────────────────────┘  │   │  └──────────────────────────────────────┘    │ │
-│  │                                  │   │                                              │ │
-│  │  ┌────────────────────────────┐  │   │  ┌──────────────────────────────────────┐    │ │
-│  │  │ r2d3_gripper_bridge        │  │   │  │ r2d3_eval  (CLI)                     │    │ │
-│  │  │   maps Gripperset (1-1000) │  │   │  │   loads tasks/<slug>.yaml            │    │ │
-│  │  │   → finger prismatic joints│  │   │  │   drives r2d3_engine                 │    │ │
-│  │  └────────────────────────────┘  │   │  │   emits JSON report                  │    │ │
-│  │                                  │   │  └──────────────────────────────────────┘    │ │
-│  │  ┌────────────────────────────┐  │   │                                              │ │
-│  │  │ r2d3_engine                │  │   │  ┌──────────────────────────────────────┐    │ │
-│  │  │   trial state machine      │  │   │  │ r2d3_scoring                         │    │ │
-│  │  │   spawn scene, reset robot │  │◄──┼──┤   Tier 1 (liveness) + Tier 2 (task)  │    │ │
-│  │  │   send RunTask action      │  │   │  └──────────────────────────────────────┘    │ │
-│  │  └────────────────────────────┘  │   │                                              │ │
-│  └──────────────────────────────────┘   └──────────────────────────────────────────────┘ │
-│                  ▲                                                                       │
-│                  │ GPU 1 (pinned)                                                        │
-│            ┌─────┴───────┐                                                               │
-│            │  RTX 4090   │                                                               │
-│            └─────────────┘                                                               │
-└──────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────── host (Ubuntu 24.04, RTX 4090) ─────────────────────────────────┐
+│  /usr1/home/semathew/miniforge3/envs/                                                            │
+│                                                                                                  │
+│  ┌──────────────────────────┐   ┌──────────────────────────┐   ┌──────────────────────────────┐  │
+│  │ isaac/      (Python 3.12)│   │ ros_humble/  (Py 3.11)   │   │ r2d3/        (Py 3.10)       │  │
+│  │  isaacsim==6.0.0.0       │   │  ros-humble-desktop      │   │  numpy/scipy/trimesh/        │  │
+│  │  isaacsim-ros2 bridge    │   │  colcon, rosdep          │   │  matplotlib/lxml/pytest      │  │
+│  │  urdf-usd-converter      │   │  CMake 3.31 + ament      │   │  (host-side eval & tooling)  │  │
+│  │  torch / cuda 12.8       │   │                          │   │                              │  │
+│  └──────────────────────────┘   └──────────────────────────┘   └──────────────────────────────┘  │
+│           ▲                              ▲                                                       │
+│           │  scripts/isaacsim_ros2.sh    │  scripts/build_packages.sh                            │
+│           │  bridges these two envs by   │  invokes colcon inside this env with the              │
+│           │  exporting AMENT_PREFIX_PATH │  CMake Python-finder workaround pinned.               │
+│           │  to the ros_humble prefix    │                                                       │
+│           │  + our local install/        │                                                       │
+│                                                                                                  │
+│  Project workspace (/usr1/home/semathew/r2d3_isaac/):                                            │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │  isaac_sim/r2d3_sim/   scene/robot/sensors/bridge — runs INSIDE isaac env via launcher     │  │
+│  │  isaac_sim/urdf/       xacro composition (75b + D435 + gripper fingers)                    │  │
+│  │  scripts/urdf_to_usd.py  thin wrapper around `python -m urdf_usd_converter`                │  │
+│  │  r2d3_model/           ROS2 Lifecycle Node — built into install/ by colcon                 │  │
+│  │  r2d3_task_interfaces/  Action / Observation msgs                                          │  │
+│  │  r2d3_model_interfaces/                                                                    │  │
+│  │  tasks/                4 YAML task definitions                                             │  │
+│  │  Docker/docker/        Upstream R2D3 Gazebo workflow (untouched)                           │  │
+│  └────────────────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                                  │
+│                       ▲                                                                          │
+│                       │  GPU 1 (CUDA_VISIBLE_DEVICES=1; GPU 0 reserved for other users)          │
+│                 ┌─────┴───────┐                                                                  │
+│                 │  RTX 4090   │                                                                  │
+│                 └─────────────┘                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Note that `r2d3_engine`, `r2d3_scoring`, `r2d3_gripper_bridge` start as Python modules under `isaac_sim/r2d3_sim/` and may graduate to standalone ROS2 packages later. **`r2d3_model` is a separate package by design** — it's the submission boundary.
+**Why three envs and not one?** Each project on Riddle pins a different Python: Isaac Sim 6.0 needs 3.12, RoboStack ROS 2 Humble was built for 3.11 (`np126py311`), our host-side eval tooling is happy on 3.10. Sourcing a single env into all three roles causes `ImportError` for `rclpy` and `omni.*` — see the comment at the top of `scripts/isaacsim_ros2.sh`.
+
+Note that `r2d3_engine`, `r2d3_scoring`, `r2d3_gripper_bridge` start as Python modules under `isaac_sim/r2d3_sim/` and may graduate to standalone ROS 2 packages later. **`r2d3_model` is a separate package by design** — it's the submission boundary.
 
 ## Repository layout (V1)
 
@@ -99,8 +105,7 @@ r2d3_isaac/                            # = Open-Droids-robot/R2D3_ros2 @ isaac-s
 │   ├── CMakeLists.txt
 │   └── msg/Observation.msg
 ├── Docker/                            # Existing upstream Docker/docker/* untouched
-│   ├── docker/                        # ROS2 Foxy/Humble/Jazzy (upstream)
-│   └── isaac/                         # Our Isaac Sim 5.1 image + compose
+│   └── docker/                        # ROS2 Foxy/Humble/Jazzy (upstream Gazebo workflow)
 ├── ros2_rm_robot/                     # Existing arm packages (untouched)
 ├── ros2_realsense2/                   # Existing camera packages (untouched)
 ├── ros2_servo_driver/                 # (untouched)
@@ -292,15 +297,17 @@ This is reversible — V2 just re-enables the joints and adds a controller.
 
 ## URDF → USD conversion
 
-Default tool: **Isaac Sim's built-in `urdf_importer` extension** (`omni.importer.urdf`). Workflow:
+Default tool: **`urdf_usd_converter` CLI** (shipped with `isaacsim==6.0.0.0`, from NVIDIA's Newton team). Pure-Python — does NOT bootstrap SimulationApp/Kit, so conversion is fast (~3 s for the 75b URDF on this box) and runs against just the `isaac` conda env.
 
-1. Render the xacro to URDF (already done — `dual_rm_75b_description.urdf` exists in tree)
-2. Compose a V1-only wrapper xacro that includes the 75b URDF + the `sensor_d435` macro mounted on `head_link2` + the gripper finger sub-assembly
-3. Re-render to a flat URDF
-4. Import via `urdf_importer` (Python API: `omni.importer.urdf.cmds.URDFParseAndImportFile`)
-5. Save USD to `isaac_sim/usd/r2d3.usd`
-6. In Isaac Sim, manually verify scale, axes, link colors, finger contact shapes
-7. Commit USD (if size permits) or set up git-lfs
+Workflow:
+1. Render the xacro to a flat URDF (`bash isaac_sim/urdf/render.sh` from inside the `ros_humble` env — needs `xacro`).
+2. Run `scripts/urdf_to_usd.py` — thin wrapper that auto-discovers `package://` references in the URDF and maps them to the right local directories via the converter's `--package` flag.
+3. Output lands in `isaac_sim/usd/`: `Contents.usda` + a `Payload/` directory containing `Geometry.usda`, `Materials.usda`, `Physics.usda`, plus `*.usdc` binary geometry/material libraries.
+4. Open in Isaac Sim Kit (interactively) to verify scale / axes / colors / collision shapes. Iterate if needed.
+
+`urdf_usd_converter --help` exposes useful knobs: `--no-layer-structure` (single USDC vs Atomic Component), `--no-physics-scene`, `--comment`, `--package PKG=PATH` (repeatable).
+
+The previously-considered `omni.importer.urdf` / `omni.kit.commands.execute("URDFParseAndImportFile", ...)` approach is **deprecated for our use** — the new CLI is the path of least resistance. The research doc at [`urdf_to_usd.md`](urdf_to_usd.md) is kept for historical context.
 
 ## Open questions / V2 candidates
 
