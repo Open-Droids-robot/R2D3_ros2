@@ -92,11 +92,11 @@
     </joint>
 
     <!--
-      Mimic joint. Axis -Y so that the same positive joint value drives the
-      RIGHT finger in the OPPOSITE direction. Mimic multiplier = +1 so both
-      joints share their parameter; the axis sign delivers the symmetry.
-      This keeps both joints in [0, 0.035], satisfying their limits and
-      Isaac Sim's PhysX Tendon (parse_mimic=True) representation.
+      Mimic joint. Authored as a plain prismatic (no <mimic> element) so the
+      URDF→USD converter doesn't apply NewtonMimicAPI — the default PhysX
+      solver in Isaac Sim 6.0 doesn't honor it and the articulation goes NaN.
+      Symmetric closure is enforced in robot.set_finger(): both finger_drive
+      and finger_mimic are commanded to the same scalar.
     -->
     <joint name="${prefix}finger_mimic" type="prismatic">
       <parent link="${parent}"/>
@@ -105,7 +105,6 @@
       <axis xyz="0 -1 0"/>
       <limit lower="0.0" upper="0.035" velocity="0.05" effort="100"/>
       <dynamics damping="1.0" friction="0.1"/>
-      <mimic joint="${prefix}finger_drive" multiplier="1.0" offset="0.0"/>
     </joint>
 
   </xacro:macro>

@@ -78,3 +78,6 @@ isaac_sim/urdf/r2d3_v1.urdf
 # Generated USD assets (regenerable from scripts/urdf_to_usd.py)
 isaac_sim/usd/*
 !isaac_sim/usd/.gitkeep
+
+# Rendered capture frames (regenerable from isaac_sim/r2d3_sim/capture.py)
+isaac_sim/tests/captures/

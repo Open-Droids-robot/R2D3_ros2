@@ -28,7 +28,10 @@ CMAKE_ARGS=(
 
 PACKAGES=("$@")
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
-  PACKAGES=(rm_ros_interfaces r2d3_task_interfaces r2d3_model_interfaces r2d3_model)
+  PACKAGES=(
+    rm_ros_interfaces r2d3_task_interfaces r2d3_model_interfaces
+    r2d3_model r2d3_humble_bridge
+  )
 fi
 
 cd "$REPO_ROOT"

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>r2d3_humble_bridge</name>
+  <version>0.1.0</version>
+  <description>Translates between the participant-facing rm_ros_interfaces /
+    r2d3_model_interfaces topic surface and the standard-message surface
+    Isaac Sim exposes under /r2d3/sim/*. Runs in the ros_humble (Python 3.11)
+    env where the custom interface packages are buildable; Isaac never has to
+    import them.</description>
+
+  <maintainer email="semathew@andrew.cmu.edu">Sam Mathew</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>rm_ros_interfaces</exec_depend>
+  <exec_depend>r2d3_model_interfaces</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

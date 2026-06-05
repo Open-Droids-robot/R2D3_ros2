@@ -29,7 +29,11 @@
        frames + bounding-box geometry are still authored; only the photorealistic
        mesh is omitted. Switch to "true" once the converter accepts the .dae
        (or replace with an .stl). -->
-  <xacro:sensor_d435 parent="head_link2" name="head_camera" use_nominal_extrinsics="false" use_mesh="false">
+  <!-- use_nominal_extrinsics="true" authors the REP-103 optical frames
+       (head_camera_color_optical_frame, head_camera_depth_optical_frame, ...)
+       so the camera's published frame_ids actually exist in the TF tree.
+       use_mesh stays false (the .dae still trips the converter). -->
+  <xacro:sensor_d435 parent="head_link2" name="head_camera" use_nominal_extrinsics="true" use_mesh="false">
     <origin xyz="0.05 0.0 0.0" rpy="0 0 0"/>
   </xacro:sensor_d435>
 
