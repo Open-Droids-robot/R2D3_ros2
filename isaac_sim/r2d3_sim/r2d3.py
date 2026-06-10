@@ -89,6 +89,14 @@ class R2D3:
 
         self._t = t
         self.end_effector = end_effector
+        if t.EE_TYPE != end_effector:
+            raise RuntimeError(
+                f"r2d3_sim.sim_topics was already imported with end_effector="
+                f"{t.EE_TYPE!r}, but R2D3(end_effector={end_effector!r}) was requested. "
+                f"The end-effector is locked at first import of the r2d3_sim submodules — "
+                f"construct R2D3 (or set R2D3_EE) BEFORE importing sim_topics/scene/robot, "
+                f"and don't construct two R2D3s with different end-effectors in one process."
+            )
         self.mobile = mobile
         self._scene = scene_mod
         self.world = World(stage_units_in_meters=stage_units_m)
