@@ -32,6 +32,14 @@ Assets are streamed from NVIDIA's **cloud** asset server (`get_assets_root_path(
 so the machine needs internet — no local Nucleus required. First load of the
 warehouse takes a minute (it pulls many sub-assets).
 
+> **Robot framing in the warehouse:** the prebuilt warehouse is large, densely
+> racked, and its floor isn't at z=0, which makes a *headless, blind* third-person
+> screenshot of the robot inside it finicky (the robot settles on the floor fine,
+> but origin is occluded by racks and good camera/spawn coordinates are best picked
+> interactively in the GUI). The kitchen + living-room screenshots show the robot
+> clearly; for the warehouse, tune `scenes.load_warehouse`'s `spawn`/`look`/`eye`
+> (or view it in the Kit UI with `headless=False`) to a clear aisle.
+
 ### Asset note (kitchen)
 
 The kitchen cabinetry is built from primitives rather than the
