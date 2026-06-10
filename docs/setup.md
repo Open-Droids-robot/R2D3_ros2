@@ -4,6 +4,34 @@
 
 The deployment uses **three colocated conda envs** under one Miniforge install — not Docker containers. See [`architecture.md`](architecture.md) for the rationale.
 
+## Quick start (one command)
+
+With [Miniforge](https://github.com/conda-forge/miniforge) (or any conda/mamba)
+installed, this creates the `isaac` env, installs Isaac Sim 6.0 + the SDK
+(editable), and runs the smoke test:
+
+```bash
+git clone https://github.com/Open-Droids-robot/R2D3_ros2.git r2d3_isaac
+cd r2d3_isaac && git checkout isaac-sim-v1
+bash scripts/bootstrap.sh
+```
+
+Then run anything:
+
+```bash
+scripts/isaacsim_ros2.sh isaac_sim/examples/01_hello_robot.py
+```
+
+That is all you need for the **in-process Python SDK** (RL / VLM / teleop /
+scripted control — see [run.md](run.md), [api.md](api.md), [platform.md](platform.md)).
+The robot USD assets ship in the repo. The `ros_humble` env + ROS packages in the
+manual section below are needed ONLY for the ROS bridge ([bridge.md](bridge.md)).
+
+Paths auto-detect; override with `R2D3_CONDA_BASE` / `R2D3_ISAAC_ENV` /
+`R2D3_ISAAC_PY` if conda lives somewhere unusual.
+
+## Manual / advanced setup
+
 ## Prerequisites
 
 - NVIDIA driver ≥ 535 (`nvidia-smi` works)
@@ -37,11 +65,13 @@ bash miniforge.sh -b -p "$HOME/miniforge3"
 ```bash
 ~/miniforge3/bin/mamba create -n isaac -y python=3.12 pip cmake git pkg-config
 ~/miniforge3/envs/isaac/bin/python -m pip install --no-input \
-    "isaacsim[all]==6.0.0.0" \
+    "isaacsim[all,extscache]==6.0.0.0" \
     --extra-index-url https://pypi.nvidia.com
 ```
 
-~10 GB. Includes `isaacsim-ros2` (bundled bridge), `urdf-usd-converter` (CLI), and PyTorch with CUDA 12.8.
+~16 GB. The `extscache` extra (~5.7 GB) is **required** — without it `SimulationApp()`
+fails at boot ("No versions of isaacsim.anim.robot.schema"). Includes `isaacsim-ros2`
+(bundled bridge), `urdf-usd-converter` (CLI), and PyTorch with CUDA 12.8.
 
 Verify:
 

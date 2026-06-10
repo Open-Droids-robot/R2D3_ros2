@@ -42,10 +42,19 @@ CMD_HEAD         = f"{NS}/cmd/head"            # sensor_msgs/JointState   (head_
 CLOCK                  = "/clock"
 TF                     = "/tf"
 TF_STATIC              = "/tf_static"
-CAMERA_COLOR_IMAGE     = "/camera/color/image_raw"
+CAMERA_COLOR_IMAGE     = "/camera/color/image_raw"          # head D435
 CAMERA_DEPTH_IMAGE     = "/camera/depth/image_raw"
 CAMERA_COLOR_INFO      = "/camera/color/camera_info"
 CAMERA_DEPTH_INFO      = "/camera/depth/camera_info"
+# wrist (in-hand) D435s, one per arm
+L_WRIST_COLOR_IMAGE    = "/l_wrist_camera/color/image_raw"
+L_WRIST_DEPTH_IMAGE    = "/l_wrist_camera/depth/image_raw"
+L_WRIST_COLOR_INFO     = "/l_wrist_camera/color/camera_info"
+L_WRIST_DEPTH_INFO     = "/l_wrist_camera/depth/camera_info"
+R_WRIST_COLOR_IMAGE    = "/r_wrist_camera/color/image_raw"
+R_WRIST_DEPTH_IMAGE    = "/r_wrist_camera/depth/image_raw"
+R_WRIST_COLOR_INFO     = "/r_wrist_camera/color/camera_info"
+R_WRIST_DEPTH_INFO     = "/r_wrist_camera/depth/camera_info"
 
 # ---------------------------------------------------------------------------
 # Frame IDs (TF)
@@ -56,6 +65,10 @@ RIGHT_EE_FRAME          = "r_link7"
 CAMERA_LINK_FRAME       = "head_camera_link"
 CAMERA_COLOR_OPT_FRAME  = "head_camera_color_optical_frame"
 CAMERA_DEPTH_OPT_FRAME  = "head_camera_depth_optical_frame"
+L_WRIST_COLOR_OPT_FRAME = "l_wrist_camera_color_optical_frame"
+L_WRIST_DEPTH_OPT_FRAME = "l_wrist_camera_depth_optical_frame"
+R_WRIST_COLOR_OPT_FRAME = "r_wrist_camera_color_optical_frame"
+R_WRIST_DEPTH_OPT_FRAME = "r_wrist_camera_depth_optical_frame"
 
 # ---------------------------------------------------------------------------
 # Joint names (must match USD authoring at /r2d3_v1/Physics/*)
@@ -65,10 +78,35 @@ RIGHT_ARM_JOINTS = [f"r_joint{i}" for i in range(1, 8)]   # 7 DOF
 HEAD_JOINTS      = ["head_joint1", "head_joint2"]
 LIFT_JOINT       = "platform_joint"                       # prismatic, 0..1 m
 
-LEFT_FINGER_DRIVE = "l_finger_drive"
-LEFT_FINGER_MIMIC = "l_finger_mimic"
-RIGHT_FINGER_DRIVE = "r_finger_drive"
-RIGHT_FINGER_MIMIC = "r_finger_mimic"
+# ---------------------------------------------------------------------------
+# End-effector selection. R2D3_EE = "dexterous" (Inspire RH56 hand, default) or
+# "gripper" (2-finger parallel gripper). Selects the USD variant + the actuated
+# hand/finger joints. Set R2D3_EE BEFORE importing r2d3_sim (the grasp demo's
+# --ee flag does this); a USD per variant is built by scripts/build_robot.sh.
+# ---------------------------------------------------------------------------
+import os
+EE_TYPE = os.environ.get("R2D3_EE", "dexterous").strip().lower()
+if EE_TYPE not in ("dexterous", "gripper"):
+    EE_TYPE = "dexterous"
+
+# Inspire RH56 dexterous hand: 12 revolute joints per side (prefix l_dex_/r_dex_).
+# The 4 "proximal" flex joints + the thumb pitch/yaw are the actuated DOFs; the
+# "intermediate" + thumb distal follow (driven together here for a power grasp).
+_HAND_JOINT_SUFFIXES = [
+    "thumb_proximal_yaw_joint", "thumb_proximal_pitch_joint",
+    "thumb_intermediate_joint", "thumb_distal_joint",
+    "index_proximal_joint", "index_intermediate_joint",
+    "middle_proximal_joint", "middle_intermediate_joint",
+    "ring_proximal_joint", "ring_intermediate_joint",
+    "pinky_proximal_joint", "pinky_intermediate_joint",
+]
+if EE_TYPE == "gripper":
+    # parallel gripper: 2 prismatic finger joints per side (drive + mimic)
+    LEFT_HAND_JOINTS = ["l_finger_drive", "l_finger_mimic"]
+    RIGHT_HAND_JOINTS = ["r_finger_drive", "r_finger_mimic"]
+else:
+    LEFT_HAND_JOINTS = [f"l_dex_{s}" for s in _HAND_JOINT_SUFFIXES]
+    RIGHT_HAND_JOINTS = [f"r_dex_{s}" for s in _HAND_JOINT_SUFFIXES]
 
 # AGV — locked at init time, never commanded after that
 AGV_WHEEL_JOINTS = [
@@ -98,7 +136,9 @@ DRIVE_GAINS = {
     "arm":    (2000.0, 200.0),
     "head":   (400.0, 40.0),
     "lift":   (80000.0, 8000.0),
-    "finger": (400.0, 40.0),
+    "hand":   (30.0, 3.0),       # light dexterous-hand fingers (revolute, N·m/rad)
+    "finger": (400.0, 40.0),     # parallel-gripper fingers (prismatic, N/m)
+    "wheel":  (200.0, 20.0),     # AGV wheels in the "mobile" build (revolute)
 }
 DRIVE_MAX_FORCE = 1.0e6          # generous; don't let maxForce limit tracking
 
@@ -110,10 +150,13 @@ def drive_group(name: str) -> str:
         return "head"
     if name == LIFT_JOINT:
         return "lift"
-    return "finger"
+    if "wheel" in name:
+        return "wheel"    # AGV wheels (revolute in the "mobile" build)
+    if "finger" in name:
+        return "finger"   # parallel-gripper prismatic finger joints
+    return "hand"   # l_dex_* / r_dex_* dexterous-hand revolute joints
 
-# Convenience: name → group
 ALL_ACTUATED_JOINTS = (
     LEFT_ARM_JOINTS + RIGHT_ARM_JOINTS + HEAD_JOINTS + [LIFT_JOINT] +
-    [LEFT_FINGER_DRIVE, LEFT_FINGER_MIMIC, RIGHT_FINGER_DRIVE, RIGHT_FINGER_MIMIC]
-)  # 23 DOFs
+    LEFT_HAND_JOINTS + RIGHT_HAND_JOINTS
+)  # 7+7+2+1 + 12+12 = 41 DOFs

@@ -1,0 +1,2927 @@
+#usda 1.0
+(
+    "R2D3 V1 (dexterous end-effector)"
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.0"
+    }
+    defaultPrim = "r2d3_v1"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "r2d3_v1"
+{
+    def Scope "Geometry"
+    {
+        def Xform "base_link_underpan"
+        {
+            def Mesh "base_link_underpan" (
+                prepend references = @./GeometryLibrary.usdc@</Geometry/base_link_underpan>
+            )
+            {
+                quatf xformOp:orient = (1, 0, 0, 0)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+            }
+
+            def Mesh "base_link_underpan_1" (
+                displayName = "base_link_underpan"
+                prepend references = @./GeometryLibrary.usdc@</Geometry/base_link_underpan>
+            )
+            {
+                uniform token purpose = "guide"
+                quatf xformOp:orient = (1, 0, 0, 0)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+            }
+
+            def Xform "link_right_wheel"
+            {
+                quatf xformOp:orient = (1, 0, 0, 0)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (-0.148, 0.015574, -0.153)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                def Mesh "link_right_wheel" (
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_right_wheel>
+                )
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Mesh "link_right_wheel_1" (
+                    displayName = "link_right_wheel"
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_right_wheel>
+                )
+                {
+                    uniform token purpose = "guide"
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+            }
+
+            def Xform "link_left_wheel"
+            {
+                quatf xformOp:orient = (1, 0, 0, 0)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (0.148, 0.015574, -0.153)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                def Mesh "link_left_wheel" (
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_left_wheel>
+                )
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Mesh "link_left_wheel_1" (
+                    displayName = "link_left_wheel"
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_left_wheel>
+                )
+                {
+                    uniform token purpose = "guide"
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+            }
+
+            def Xform "link_swivel_wheel_1_1"
+            {
+                quatf xformOp:orient = (1, 0, 0, 0)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (0.124, -0.17843, -0.16254)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                def Mesh "link_swivel_wheel_1_1" (
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_1_1>
+                )
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Mesh "link_swivel_wheel_1_1_1" (
+                    displayName = "link_swivel_wheel_1_1"
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_1_1>
+                )
+                {
+                    uniform token purpose = "guide"
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Xform "link_swivel_wheel_1_2"
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (-0.0035, -0.022, -0.04516)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                    def Mesh "link_swivel_wheel_1_2" (
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_1_2>
+                    )
+                    {
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+
+                    def Mesh "link_swivel_wheel_1_2_1" (
+                        displayName = "link_swivel_wheel_1_2"
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_1_2>
+                    )
+                    {
+                        uniform token purpose = "guide"
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+                }
+            }
+
+            def Xform "link_swivel_wheel_2_1"
+            {
+                quatf xformOp:orient = (1, 0, 0, 0)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (-0.126, 0.22157, -0.16254)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                def Mesh "link_swivel_wheel_2_1" (
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_2_1>
+                )
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Mesh "link_swivel_wheel_2_1_1" (
+                    displayName = "link_swivel_wheel_2_1"
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_2_1>
+                )
+                {
+                    uniform token purpose = "guide"
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Xform "link_swivel_wheel_2_2"
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (-0.0035, -0.022, -0.04516)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                    def Mesh "link_swivel_wheel_2_2" (
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_2_2>
+                    )
+                    {
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+
+                    def Mesh "link_swivel_wheel_2_2_1" (
+                        displayName = "link_swivel_wheel_2_2"
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_2_2>
+                    )
+                    {
+                        uniform token purpose = "guide"
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+                }
+            }
+
+            def Xform "link_swivel_wheel_3_1"
+            {
+                quatf xformOp:orient = (1, 0, 0, 0)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (0.124, 0.22157, -0.16254)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                def Mesh "link_swivel_wheel_3_1" (
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_3_1>
+                )
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Mesh "link_swivel_wheel_3_1_1" (
+                    displayName = "link_swivel_wheel_3_1"
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_3_1>
+                )
+                {
+                    uniform token purpose = "guide"
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Xform "link_swivel_wheel_3_2"
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (-0.0035, -0.022, -0.04516)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                    def Mesh "link_swivel_wheel_3_2" (
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_3_2>
+                    )
+                    {
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+
+                    def Mesh "link_swivel_wheel_3_2_1" (
+                        displayName = "link_swivel_wheel_3_2"
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_3_2>
+                    )
+                    {
+                        uniform token purpose = "guide"
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+                }
+            }
+
+            def Xform "link_swivel_wheel_4_1"
+            {
+                quatf xformOp:orient = (1, 0, 0, 0)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (-0.126, -0.17843, -0.1665)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                def Mesh "link_swivel_wheel_4_1" (
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_4_1>
+                )
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Mesh "link_swivel_wheel_4_1_1" (
+                    displayName = "link_swivel_wheel_4_1"
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_4_1>
+                )
+                {
+                    uniform token purpose = "guide"
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Xform "link_swivel_wheel_4_2"
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (-0.0035, -0.022, -0.0412)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                    def Mesh "link_swivel_wheel_4_2" (
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_4_2>
+                    )
+                    {
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+
+                    def Mesh "link_swivel_wheel_4_2_1" (
+                        displayName = "link_swivel_wheel_4_2"
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/link_swivel_wheel_4_2>
+                    )
+                    {
+                        uniform token purpose = "guide"
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+                }
+            }
+
+            def Xform "body_base_link"
+            {
+                quatf xformOp:orient = (1, 0, 0, 0)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                def Mesh "body_base_link" (
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/body_base_link>
+                )
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Mesh "body_base_link_1" (
+                    displayName = "body_base_link"
+                    prepend references = @./GeometryLibrary.usdc@</Geometry/body_base_link>
+                )
+                {
+                    uniform token purpose = "guide"
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+
+                def Xform "platform_base_link"
+                {
+                    quatf xformOp:orient = (1, 0, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, -0.11663, 0.271)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                    def Mesh "platform_base_link" (
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/platform_base_link>
+                    )
+                    {
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+
+                    def Mesh "platform_base_link_1" (
+                        displayName = "platform_base_link"
+                        prepend references = @./GeometryLibrary.usdc@</Geometry/platform_base_link>
+                    )
+                    {
+                        uniform token purpose = "guide"
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, 0, 0)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                    }
+
+                    def Xform "head_link1"
+                    {
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0, -0.1018, 0.126)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                        def Mesh "head_link1" (
+                            prepend references = @./GeometryLibrary.usdc@</Geometry/head_link1>
+                        )
+                        {
+                            quatf xformOp:orient = (1, 0, 0, 0)
+                            float3 xformOp:scale = (1, 1, 1)
+                            double3 xformOp:translate = (0, 0, 0)
+                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                        }
+
+                        def Mesh "head_link1_1" (
+                            displayName = "head_link1"
+                            prepend references = @./GeometryLibrary.usdc@</Geometry/head_link1>
+                        )
+                        {
+                            uniform token purpose = "guide"
+                            quatf xformOp:orient = (1, 0, 0, 0)
+                            float3 xformOp:scale = (1, 1, 1)
+                            double3 xformOp:translate = (0, 0, 0)
+                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                        }
+
+                        def Xform "head_link2"
+                        {
+                            quatf xformOp:orient = (1, 0, 0, 0)
+                            float3 xformOp:scale = (1, 1, 1)
+                            double3 xformOp:translate = (0, -0.02, 0.044)
+                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                            def Mesh "head_link2" (
+                                prepend references = @./GeometryLibrary.usdc@</Geometry/head_link2>
+                            )
+                            {
+                                quatf xformOp:orient = (1, 0, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (0, 0, 0)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                            }
+
+                            def Mesh "head_link2_1" (
+                                displayName = "head_link2"
+                                prepend references = @./GeometryLibrary.usdc@</Geometry/head_link2>
+                            )
+                            {
+                                uniform token purpose = "guide"
+                                quatf xformOp:orient = (1, 0, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (0, 0, 0)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                            }
+
+                            def Xform "camera_link"
+                            {
+                                quatf xformOp:orient = (1, 0, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (-0.0032391, -0.051866, 0.061606)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                def Mesh "camera_link" (
+                                    prepend references = @./GeometryLibrary.usdc@</Geometry/camera_link>
+                                )
+                                {
+                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                    float3 xformOp:scale = (1, 1, 1)
+                                    double3 xformOp:translate = (0, 0, 0)
+                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                }
+
+                                def Mesh "camera_link_1" (
+                                    displayName = "camera_link"
+                                    prepend references = @./GeometryLibrary.usdc@</Geometry/camera_link>
+                                )
+                                {
+                                    uniform token purpose = "guide"
+                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                    float3 xformOp:scale = (1, 1, 1)
+                                    double3 xformOp:translate = (0, 0, 0)
+                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                }
+                            }
+
+                            def Xform "head_camera_bottom_screw_frame"
+                            {
+                                quatf xformOp:orient = (1, 0, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (-0.0138391, -0.069366, 0.049106)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                def Xform "head_camera_link"
+                                {
+                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                    float3 xformOp:scale = (1, 1, 1)
+                                    double3 xformOp:translate = (0.010600000000000002, 0.0175, 0.0125)
+                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                    def Cube "box"
+                                    {
+                                        float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                        double size = 1
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (0.02505, 0.09, 0.025)
+                                        double3 xformOp:translate = (0, -0.0175, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                    }
+
+                                    def Cube "box_1" (
+                                        displayName = "box"
+                                    )
+                                    {
+                                        float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                        uniform token purpose = "guide"
+                                        double size = 1
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (0.02505, 0.09, 0.025)
+                                        double3 xformOp:translate = (0, -0.0175, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                    }
+
+                                    def Xform "head_camera_depth_frame"
+                                    {
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, 0, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                        def Xform "head_camera_depth_optical_frame"
+                                        {
+                                            quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, 0, 0)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                        }
+                                    }
+
+                                    def Xform "head_camera_infra1_frame"
+                                    {
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, 0, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                        def Xform "head_camera_infra1_optical_frame"
+                                        {
+                                            quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, 0, 0)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                        }
+                                    }
+
+                                    def Xform "head_camera_infra2_frame"
+                                    {
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, -0.05, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                        def Xform "head_camera_infra2_optical_frame"
+                                        {
+                                            quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, 0, 0)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                        }
+                                    }
+
+                                    def Xform "head_camera_color_frame"
+                                    {
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, 0.015, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                        def Xform "head_camera_color_optical_frame"
+                                        {
+                                            quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, 0, 0)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    def Xform "r_base_link1"
+                    {
+                        quatf xformOp:orient = (0.9238792, 0, -0.38268423, 0)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (-0.1, -0.1103, 0.031645)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                        def Mesh "r_base_link1" (
+                            prepend references = @./GeometryLibrary.usdc@</Geometry/r_base_link1>
+                        )
+                        {
+                            quatf xformOp:orient = (1, 0, 0, 0)
+                            float3 xformOp:scale = (1, 1, 1)
+                            double3 xformOp:translate = (0, 0, 0)
+                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                        }
+
+                        def Mesh "r_base_link1_1" (
+                            displayName = "r_base_link1"
+                            prepend references = @./GeometryLibrary.usdc@</Geometry/r_base_link1>
+                        )
+                        {
+                            uniform token purpose = "guide"
+                            quatf xformOp:orient = (1, 0, 0, 0)
+                            float3 xformOp:scale = (1, 1, 1)
+                            double3 xformOp:translate = (0, 0, 0)
+                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                        }
+
+                        def Xform "r_link1"
+                        {
+                            quatf xformOp:orient = (-0.00003275793, 0.00003275805, 0.7071081, -0.70710546)
+                            float3 xformOp:scale = (1, 1, 1)
+                            double3 xformOp:translate = (0, 0, 0.187)
+                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                            def Mesh "r_link1" (
+                                prepend references = @./GeometryLibrary.usdc@</Geometry/r_link1>
+                            )
+                            {
+                                quatf xformOp:orient = (1, 0, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (0, 0, 0)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                            }
+
+                            def Mesh "r_link1_1" (
+                                displayName = "r_link1"
+                                prepend references = @./GeometryLibrary.usdc@</Geometry/r_link1>
+                            )
+                            {
+                                uniform token purpose = "guide"
+                                quatf xformOp:orient = (1, 0, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (0, 0, 0)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                            }
+
+                            def Xform "r_link2"
+                            {
+                                quatf xformOp:orient = (0.70710546, 0.7071081, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (0, 0, 0)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                def Mesh "r_link2" (
+                                    prepend references = @./GeometryLibrary.usdc@</Geometry/r_link2>
+                                )
+                                {
+                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                    float3 xformOp:scale = (1, 1, 1)
+                                    double3 xformOp:translate = (0, 0, 0)
+                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                }
+
+                                def Mesh "r_link2_1" (
+                                    displayName = "r_link2"
+                                    prepend references = @./GeometryLibrary.usdc@</Geometry/r_link2>
+                                )
+                                {
+                                    uniform token purpose = "guide"
+                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                    float3 xformOp:scale = (1, 1, 1)
+                                    double3 xformOp:translate = (0, 0, 0)
+                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                }
+
+                                def Xform "r_link3"
+                                {
+                                    quatf xformOp:orient = (-0.70710546, 0.7071081, 0, 0)
+                                    float3 xformOp:scale = (1, 1, 1)
+                                    double3 xformOp:translate = (0, 0, 0.256)
+                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                    def Mesh "r_link3" (
+                                        prepend references = @./GeometryLibrary.usdc@</Geometry/r_link3>
+                                    )
+                                    {
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, 0, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                    }
+
+                                    def Mesh "r_link3_1" (
+                                        displayName = "r_link3"
+                                        prepend references = @./GeometryLibrary.usdc@</Geometry/r_link3>
+                                    )
+                                    {
+                                        uniform token purpose = "guide"
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, 0, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                    }
+
+                                    def Xform "r_link4"
+                                    {
+                                        quatf xformOp:orient = (0.70710546, 0.7071081, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, 0, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                        def Mesh "r_link4" (
+                                            prepend references = @./GeometryLibrary.usdc@</Geometry/r_link4>
+                                        )
+                                        {
+                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, 0, 0)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                        }
+
+                                        def Mesh "r_link4_1" (
+                                            displayName = "r_link4"
+                                            prepend references = @./GeometryLibrary.usdc@</Geometry/r_link4>
+                                        )
+                                        {
+                                            uniform token purpose = "guide"
+                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, 0, 0)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                        }
+
+                                        def Xform "r_link5"
+                                        {
+                                            quatf xformOp:orient = (-0.70710546, 0.7071081, 0, 0)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, -0.00030007, 0.21)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                            def Mesh "r_link5" (
+                                                prepend references = @./GeometryLibrary.usdc@</Geometry/r_link5>
+                                            )
+                                            {
+                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                float3 xformOp:scale = (1, 1, 1)
+                                                double3 xformOp:translate = (0, 0, 0)
+                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                            }
+
+                                            def Mesh "r_link5_1" (
+                                                displayName = "r_link5"
+                                                prepend references = @./GeometryLibrary.usdc@</Geometry/r_link5>
+                                            )
+                                            {
+                                                uniform token purpose = "guide"
+                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                float3 xformOp:scale = (1, 1, 1)
+                                                double3 xformOp:translate = (0, 0, 0)
+                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                            }
+
+                                            def Xform "r_link6"
+                                            {
+                                                quatf xformOp:orient = (0.7070701, 0.7071434, 0, 0)
+                                                float3 xformOp:scale = (1, 1, 1)
+                                                double3 xformOp:translate = (0, 0, 0)
+                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                def Mesh "r_link6" (
+                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/r_link6>
+                                                )
+                                                {
+                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                    float3 xformOp:scale = (1, 1, 1)
+                                                    double3 xformOp:translate = (0, 0, 0)
+                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                }
+
+                                                def Mesh "r_link6_1" (
+                                                    displayName = "r_link6"
+                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/r_link6>
+                                                )
+                                                {
+                                                    uniform token purpose = "guide"
+                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                    float3 xformOp:scale = (1, 1, 1)
+                                                    double3 xformOp:translate = (0, 0, 0)
+                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                }
+
+                                                def Xform "r_link7"
+                                                {
+                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                    float3 xformOp:scale = (1, 1, 1)
+                                                    double3 xformOp:translate = (0, -0.00028182, 0.117)
+                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                    def Mesh "r_link7" (
+                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/r_link7>
+                                                    )
+                                                    {
+                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                        float3 xformOp:scale = (1, 1, 1)
+                                                        double3 xformOp:translate = (0, 0, 0)
+                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                    }
+
+                                                    def Mesh "r_link7_1" (
+                                                        displayName = "r_link7"
+                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/r_link7>
+                                                    )
+                                                    {
+                                                        uniform token purpose = "guide"
+                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                        float3 xformOp:scale = (1, 1, 1)
+                                                        double3 xformOp:translate = (0, 0, 0)
+                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                    }
+
+                                                    def Xform "r_hand"
+                                                    {
+                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                        float3 xformOp:scale = (1, 1, 1)
+                                                        double3 xformOp:translate = (0, 0, 0.0445)
+                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                        def Mesh "r_hand_base_link" (
+                                                            prepend references = @./GeometryLibrary.usdc@</Geometry/r_hand_base_link>
+                                                        )
+                                                        {
+                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                            float3 xformOp:scale = (1, 1, 1)
+                                                            double3 xformOp:translate = (0, 0, 0)
+                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                        }
+
+                                                        def Mesh "r_hand_base_link_1" (
+                                                            displayName = "r_hand_base_link"
+                                                            prepend references = @./GeometryLibrary.usdc@</Geometry/r_hand_base_link>
+                                                        )
+                                                        {
+                                                            uniform token purpose = "guide"
+                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                            float3 xformOp:scale = (1, 1, 1)
+                                                            double3 xformOp:translate = (0, 0, 0)
+                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                        }
+
+                                                        def Xform "r_dex_hand_base_link"
+                                                        {
+                                                            quatf xformOp:orient = (-9.381857e-7, 9.381857e-7, 0.70710677, -0.70710677)
+                                                            float3 xformOp:scale = (1, 1, 1)
+                                                            double3 xformOp:translate = (0, 0, 0)
+                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                            def Mesh "right_base_link" (
+                                                                prepend references = @./GeometryLibrary.usdc@</Geometry/right_base_link>
+                                                            )
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cylinder "cylinder"
+                                                            {
+                                                                uniform token axis = "Z"
+                                                                float3[] extent = [(-0.028, -0.028, -0.0139), (0.028, 0.028, 0.0139)]
+                                                                double height = 0.0278
+                                                                uniform token purpose = "guide"
+                                                                double radius = 0.028
+                                                                quatf xformOp:orient = (0.70710903, 0.7071045, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, -0.0136, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box"
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0391, 0.0202, 0.0574)
+                                                                double3 xformOp:translate = (-0.0032, -0.038, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_1" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0391, 0.04, 0.0814)
+                                                                double3 xformOp:translate = (-0.0032, -0.0682, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_2" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0322, 0.04, 0.0814)
+                                                                double3 xformOp:translate = (0, -0.1081, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_3" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0125, 0.0111, 0.0089)
+                                                                double3 xformOp:translate = (-0.0016, -0.134, -0.0309)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_4" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0125, 0.0111, 0.0089)
+                                                                double3 xformOp:translate = (-0.0016, -0.134, -0.0118)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_5" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0125, 0.0111, 0.0089)
+                                                                double3 xformOp:translate = (-0.0016, -0.134, 0.007)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_6" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0125, 0.0111, 0.0089)
+                                                                double3 xformOp:translate = (-0.0016, -0.134, 0.0262)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Xform "r_dex_thumb_proximal_base"
+                                                            {
+                                                                quatf xformOp:orient = (0.49999815, 0.5, -0.5, 0.50000185)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (-0.01696, -0.0691, 0.02045)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "right_thumb_proximal_base" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_thumb_proximal_base>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "right_thumb_proximal_base_1" (
+                                                                    displayName = "right_thumb_proximal_base"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_thumb_proximal_base_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "r_dex_thumb_proximal"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.7045709, 0.70457345, 0.059816945, -0.059816726)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0.0099867, 0.0098242, -0.0089)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "right_thumb_proximal" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_thumb_proximal>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Mesh "right_thumb_proximal_1" (
+                                                                        displayName = "right_thumb_proximal"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_thumb_proximal_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "r_dex_thumb_intermediate"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0.04407, -0.034553, -0.0008)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                        def Mesh "right_thumb_intermediate" (
+                                                                            prepend references = @./GeometryLibrary.usdc@</Geometry/right_thumb_intermediate>
+                                                                        )
+                                                                        {
+                                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                                            float3 xformOp:scale = (1, 1, 1)
+                                                                            double3 xformOp:translate = (0, 0, 0)
+                                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                        }
+
+                                                                        def Mesh "right_thumb_intermediate_1" (
+                                                                            displayName = "right_thumb_intermediate"
+                                                                            prepend references = @./GeometryLibrary.usdc@</Geometry/right_thumb_intermediate_1>
+                                                                        )
+                                                                        {
+                                                                            uniform token purpose = "guide"
+                                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                                            float3 xformOp:scale = (1, 1, 1)
+                                                                            double3 xformOp:translate = (0, 0, 0)
+                                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                        }
+
+                                                                        def Xform "r_dex_thumb_distal"
+                                                                        {
+                                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                                            float3 xformOp:scale = (1, 1, 1)
+                                                                            double3 xformOp:translate = (0.020248, -0.010156, -0.0012)
+                                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                            def Mesh "right_thumb_distal" (
+                                                                                prepend references = @./GeometryLibrary.usdc@</Geometry/right_thumb_distal>
+                                                                            )
+                                                                            {
+                                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                            }
+
+                                                                            def Xform "right_thumb_distal_1" (
+                                                                                displayName = "right_thumb_distal"
+                                                                                prepend references = @./GeometryLibrary.usdc@</Geometry/right_thumb_distal_1>
+                                                                            )
+                                                                            {
+                                                                                uniform token purpose = "guide"
+                                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                            }
+
+                                                                            def Xform "r_dex_thumb_tip"
+                                                                            {
+                                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                                double3 xformOp:translate = (0.0202, -0.014, -0.006)
+                                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            def Xform "r_dex_index_proximal"
+                                                            {
+                                                                quatf xformOp:orient = (0.9998477, -0.017451549, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0.00028533, -0.13653, 0.032268)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "right_index_proximal" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_proximal>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "right_index_proximal_1" (
+                                                                    displayName = "right_index_proximal"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_proximal_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "r_dex_index_intermediate"
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (-0.0026138, -0.032026, -0.001)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "right_index_intermediate" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_intermediate>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "right_index_intermediate_1" (
+                                                                        displayName = "right_index_intermediate"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_intermediate_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "r_dex_index_tip"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (-0.0008, -0.045, -0.005)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            def Xform "r_dex_middle_proximal"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0.00028533, -0.1371, 0.01295)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "right_index_proximal" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_proximal>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "right_index_proximal_1" (
+                                                                    displayName = "right_index_proximal"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_proximal_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "r_dex_middle_intermediate"
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (-0.0024229, -0.032041, -0.001)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "right_middle_intermediate" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_middle_intermediate>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Mesh "right_middle_intermediate_1" (
+                                                                        displayName = "right_middle_intermediate"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_middle_intermediate_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "r_dex_middle_tip"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (-0.001, -0.048, -0.005)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            def Xform "r_dex_ring_proximal"
+                                                            {
+                                                                quatf xformOp:orient = (0.99965733, 0.026176646, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0.00028533, -0.13691, -0.0062872)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "right_index_proximal" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_proximal>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "right_index_proximal_1" (
+                                                                    displayName = "right_index_proximal"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_proximal_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "r_dex_ring_intermediate"
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (-0.0024229, -0.032041, -0.001)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "right_index_intermediate" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_intermediate>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "right_index_intermediate_1" (
+                                                                        displayName = "right_index_intermediate"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_intermediate_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "r_dex_ring_tip"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (-0.0008, -0.045, -0.005)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            def Xform "r_dex_pinky_proximal"
+                                                            {
+                                                                quatf xformOp:orient = (0.9986295, 0.05233642, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0.00028533, -0.13571, -0.025488)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "right_index_proximal" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_proximal>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "right_index_proximal_1" (
+                                                                    displayName = "right_index_proximal"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/right_index_proximal_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "r_dex_pinky_intermediate"
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (-0.0024229, -0.032041, -0.001)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "right_pinky_intermediate" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_pinky_intermediate>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Mesh "right_pinky_intermediate_1" (
+                                                                        displayName = "right_pinky_intermediate"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/right_pinky_intermediate_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "r_dex_pinky_tip"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (-0.0008, -0.037, -0.005)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    def Xform "r_wrist_camera_bottom_screw_frame"
+                                                    {
+                                                        quatf xformOp:orient = (-0.70710677, 0, 0.70710677, 0)
+                                                        float3 xformOp:scale = (1, 1, 1)
+                                                        double3 xformOp:translate = (0.05, 0, 0)
+                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                        def Xform "r_wrist_camera_link"
+                                                        {
+                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                            float3 xformOp:scale = (1, 1, 1)
+                                                            double3 xformOp:translate = (0.010600000000000002, 0.0175, 0.0125)
+                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                            def Cube "box"
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.02505, 0.09, 0.025)
+                                                                double3 xformOp:translate = (0, -0.0175, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_1" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.02505, 0.09, 0.025)
+                                                                double3 xformOp:translate = (0, -0.0175, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Xform "r_wrist_camera_depth_frame"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Xform "r_wrist_camera_depth_optical_frame"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+                                                            }
+
+                                                            def Xform "r_wrist_camera_infra1_frame"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Xform "r_wrist_camera_infra1_optical_frame"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+                                                            }
+
+                                                            def Xform "r_wrist_camera_infra2_frame"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, -0.05, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Xform "r_wrist_camera_infra2_optical_frame"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+                                                            }
+
+                                                            def Xform "r_wrist_camera_color_frame"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, 0.015, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Xform "r_wrist_camera_color_optical_frame"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    def Xform "l_base_link1"
+                    {
+                        quatf xformOp:orient = (-0.0000033935978, 0.3826843, 0.0000014056778, 0.9238792)
+                        float3 xformOp:scale = (1, 1, 1)
+                        double3 xformOp:translate = (0.1, -0.1103, 0.031645)
+                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                        def Mesh "l_base_link1" (
+                            prepend references = @./GeometryLibrary.usdc@</Geometry/l_base_link1>
+                        )
+                        {
+                            quatf xformOp:orient = (1, 0, 0, 0)
+                            float3 xformOp:scale = (1, 1, 1)
+                            double3 xformOp:translate = (0, 0, 0)
+                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                        }
+
+                        def Mesh "l_base_link1_1" (
+                            displayName = "l_base_link1"
+                            prepend references = @./GeometryLibrary.usdc@</Geometry/l_base_link1>
+                        )
+                        {
+                            uniform token purpose = "guide"
+                            quatf xformOp:orient = (1, 0, 0, 0)
+                            float3 xformOp:scale = (1, 1, 1)
+                            double3 xformOp:translate = (0, 0, 0)
+                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                        }
+
+                        def Xform "l_link1"
+                        {
+                            quatf xformOp:orient = (-0.70710546, 0.7071081, 0, 0)
+                            float3 xformOp:scale = (1, 1, 1)
+                            double3 xformOp:translate = (0, 0, 0.187)
+                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                            def Mesh "l_link1" (
+                                prepend references = @./GeometryLibrary.usdc@</Geometry/l_link1>
+                            )
+                            {
+                                quatf xformOp:orient = (1, 0, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (0, 0, 0)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                            }
+
+                            def Mesh "l_link1_1" (
+                                displayName = "l_link1"
+                                prepend references = @./GeometryLibrary.usdc@</Geometry/l_link1>
+                            )
+                            {
+                                uniform token purpose = "guide"
+                                quatf xformOp:orient = (1, 0, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (0, 0, 0)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                            }
+
+                            def Xform "l_link2"
+                            {
+                                quatf xformOp:orient = (0.70710546, 0.7071081, 0, 0)
+                                float3 xformOp:scale = (1, 1, 1)
+                                double3 xformOp:translate = (0, 0, 0)
+                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                def Mesh "l_link2" (
+                                    prepend references = @./GeometryLibrary.usdc@</Geometry/l_link2>
+                                )
+                                {
+                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                    float3 xformOp:scale = (1, 1, 1)
+                                    double3 xformOp:translate = (0, 0, 0)
+                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                }
+
+                                def Mesh "l_link2_1" (
+                                    displayName = "l_link2"
+                                    prepend references = @./GeometryLibrary.usdc@</Geometry/l_link2>
+                                )
+                                {
+                                    uniform token purpose = "guide"
+                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                    float3 xformOp:scale = (1, 1, 1)
+                                    double3 xformOp:translate = (0, 0, 0)
+                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                }
+
+                                def Xform "l_link3"
+                                {
+                                    quatf xformOp:orient = (-0.70710546, 0.7071081, 0, 0)
+                                    float3 xformOp:scale = (1, 1, 1)
+                                    double3 xformOp:translate = (0, 0, 0.256)
+                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                    def Mesh "l_link3" (
+                                        prepend references = @./GeometryLibrary.usdc@</Geometry/l_link3>
+                                    )
+                                    {
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, 0, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                    }
+
+                                    def Mesh "l_link3_1" (
+                                        displayName = "l_link3"
+                                        prepend references = @./GeometryLibrary.usdc@</Geometry/l_link3>
+                                    )
+                                    {
+                                        uniform token purpose = "guide"
+                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, 0, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                    }
+
+                                    def Xform "l_link4"
+                                    {
+                                        quatf xformOp:orient = (0.70710546, 0.7071081, 0, 0)
+                                        float3 xformOp:scale = (1, 1, 1)
+                                        double3 xformOp:translate = (0, 0, 0)
+                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                        def Mesh "l_link4" (
+                                            prepend references = @./GeometryLibrary.usdc@</Geometry/l_link4>
+                                        )
+                                        {
+                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, 0, 0)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                        }
+
+                                        def Mesh "l_link4_1" (
+                                            displayName = "l_link4"
+                                            prepend references = @./GeometryLibrary.usdc@</Geometry/l_link4>
+                                        )
+                                        {
+                                            uniform token purpose = "guide"
+                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, 0, 0)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                        }
+
+                                        def Xform "l_link5"
+                                        {
+                                            quatf xformOp:orient = (-0.70710546, 0.7071081, 0, 0)
+                                            float3 xformOp:scale = (1, 1, 1)
+                                            double3 xformOp:translate = (0, -0.00030001, 0.21)
+                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                            def Mesh "l_link5" (
+                                                prepend references = @./GeometryLibrary.usdc@</Geometry/l_link5>
+                                            )
+                                            {
+                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                float3 xformOp:scale = (1, 1, 1)
+                                                double3 xformOp:translate = (0, 0, 0)
+                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                            }
+
+                                            def Mesh "l_link5_1" (
+                                                displayName = "l_link5"
+                                                prepend references = @./GeometryLibrary.usdc@</Geometry/l_link5>
+                                            )
+                                            {
+                                                uniform token purpose = "guide"
+                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                float3 xformOp:scale = (1, 1, 1)
+                                                double3 xformOp:translate = (0, 0, 0)
+                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                            }
+
+                                            def Xform "l_link6"
+                                            {
+                                                quatf xformOp:orient = (0.70710546, 0.7071081, 0, 0)
+                                                float3 xformOp:scale = (1, 1, 1)
+                                                double3 xformOp:translate = (0, 0, 0)
+                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                def Mesh "l_link6" (
+                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/l_link6>
+                                                )
+                                                {
+                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                    float3 xformOp:scale = (1, 1, 1)
+                                                    double3 xformOp:translate = (0, 0, 0)
+                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                }
+
+                                                def Mesh "l_link6_1" (
+                                                    displayName = "l_link6"
+                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/l_link6>
+                                                )
+                                                {
+                                                    uniform token purpose = "guide"
+                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                    float3 xformOp:scale = (1, 1, 1)
+                                                    double3 xformOp:translate = (0, 0, 0)
+                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                }
+
+                                                def Xform "l_link7"
+                                                {
+                                                    quatf xformOp:orient = (0.0007963267, 0, 0, 0.9999997)
+                                                    float3 xformOp:scale = (1, 1, 1)
+                                                    double3 xformOp:translate = (0, -0.00029971, 0.115)
+                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                    def Mesh "l_link7" (
+                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/l_link7>
+                                                    )
+                                                    {
+                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                        float3 xformOp:scale = (1, 1, 1)
+                                                        double3 xformOp:translate = (0, 0, 0)
+                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                    }
+
+                                                    def Mesh "l_link7_1" (
+                                                        displayName = "l_link7"
+                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/l_link7>
+                                                    )
+                                                    {
+                                                        uniform token purpose = "guide"
+                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                        float3 xformOp:scale = (1, 1, 1)
+                                                        double3 xformOp:translate = (0, 0, 0)
+                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                    }
+
+                                                    def Xform "l_hand_link"
+                                                    {
+                                                        quatf xformOp:orient = (0.000046326793, 0, 0, 1)
+                                                        float3 xformOp:scale = (1, 1, 1)
+                                                        double3 xformOp:translate = (0, 0, 0.0445)
+                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                        def Mesh "l_hand_base_link" (
+                                                            prepend references = @./GeometryLibrary.usdc@</Geometry/l_hand_base_link>
+                                                        )
+                                                        {
+                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                            float3 xformOp:scale = (1, 1, 1)
+                                                            double3 xformOp:translate = (0, 0, 0)
+                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                        }
+
+                                                        def Mesh "l_hand_base_link_1" (
+                                                            displayName = "l_hand_base_link"
+                                                            prepend references = @./GeometryLibrary.usdc@</Geometry/l_hand_base_link>
+                                                        )
+                                                        {
+                                                            uniform token purpose = "guide"
+                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                            float3 xformOp:scale = (1, 1, 1)
+                                                            double3 xformOp:translate = (0, 0, 0)
+                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                        }
+
+                                                        def Xform "l_dex_hand_base_link"
+                                                        {
+                                                            quatf xformOp:orient = (-9.381857e-7, 9.381857e-7, 0.70710677, -0.70710677)
+                                                            float3 xformOp:scale = (1, 1, 1)
+                                                            double3 xformOp:translate = (0, 0, 0)
+                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                            def Mesh "left_base_link" (
+                                                                prepend references = @./GeometryLibrary.usdc@</Geometry/left_base_link>
+                                                            )
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cylinder "cylinder"
+                                                            {
+                                                                uniform token axis = "Z"
+                                                                float3[] extent = [(-0.028, -0.028, -0.0139), (0.028, 0.028, 0.0139)]
+                                                                double height = 0.0278
+                                                                uniform token purpose = "guide"
+                                                                double radius = 0.028
+                                                                quatf xformOp:orient = (0.70710903, 0.7071045, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, -0.0136, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box"
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0391, 0.0202, 0.0574)
+                                                                double3 xformOp:translate = (-0.0032, -0.038, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_1" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0391, 0.04, 0.0814)
+                                                                double3 xformOp:translate = (-0.0032, -0.0682, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_2" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0322, 0.04, 0.0814)
+                                                                double3 xformOp:translate = (0, -0.1081, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_3" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0125, 0.0111, 0.0089)
+                                                                double3 xformOp:translate = (-0.0016, -0.134, -0.0309)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_4" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0125, 0.0111, 0.0089)
+                                                                double3 xformOp:translate = (-0.0016, -0.134, -0.0118)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_5" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0125, 0.0111, 0.0089)
+                                                                double3 xformOp:translate = (-0.0016, -0.134, 0.007)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_6" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.0125, 0.0111, 0.0089)
+                                                                double3 xformOp:translate = (-0.0016, -0.134, 0.0262)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Xform "l_dex_thumb_proximal_base"
+                                                            {
+                                                                quatf xformOp:orient = (0.49999815, 0.5, -0.5, 0.50000185)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (-0.01696, -0.0691, 0.02045)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "left_thumb_proximal_base" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_thumb_proximal_base>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "left_thumb_proximal_base_1" (
+                                                                    displayName = "left_thumb_proximal_base"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_thumb_proximal_base_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "l_dex_thumb_proximal"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.7045709, 0.70457345, 0.059816945, -0.059816726)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0.0099867, 0.0098242, -0.0089)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "left_thumb_proximal" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_thumb_proximal>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Mesh "left_thumb_proximal_1" (
+                                                                        displayName = "left_thumb_proximal"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_thumb_proximal_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "l_dex_thumb_intermediate"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0.04407, -0.034553, -0.0008)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                        def Mesh "left_thumb_intermediate" (
+                                                                            prepend references = @./GeometryLibrary.usdc@</Geometry/left_thumb_intermediate>
+                                                                        )
+                                                                        {
+                                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                                            float3 xformOp:scale = (1, 1, 1)
+                                                                            double3 xformOp:translate = (0, 0, 0)
+                                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                        }
+
+                                                                        def Mesh "left_thumb_intermediate_1" (
+                                                                            displayName = "left_thumb_intermediate"
+                                                                            prepend references = @./GeometryLibrary.usdc@</Geometry/left_thumb_intermediate_1>
+                                                                        )
+                                                                        {
+                                                                            uniform token purpose = "guide"
+                                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                                            float3 xformOp:scale = (1, 1, 1)
+                                                                            double3 xformOp:translate = (0, 0, 0)
+                                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                        }
+
+                                                                        def Xform "l_dex_thumb_distal"
+                                                                        {
+                                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                                            float3 xformOp:scale = (1, 1, 1)
+                                                                            double3 xformOp:translate = (0.020248, -0.010156, -0.0012)
+                                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                            def Mesh "left_thumb_distal" (
+                                                                                prepend references = @./GeometryLibrary.usdc@</Geometry/left_thumb_distal>
+                                                                            )
+                                                                            {
+                                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                            }
+
+                                                                            def Xform "left_thumb_distal_1" (
+                                                                                displayName = "left_thumb_distal"
+                                                                                prepend references = @./GeometryLibrary.usdc@</Geometry/left_thumb_distal_1>
+                                                                            )
+                                                                            {
+                                                                                uniform token purpose = "guide"
+                                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                            }
+
+                                                                            def Xform "l_dex_thumb_tip"
+                                                                            {
+                                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                                double3 xformOp:translate = (0.0202, -0.014, -0.006)
+                                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            def Xform "l_dex_index_proximal"
+                                                            {
+                                                                quatf xformOp:orient = (0.9998477, -0.017451549, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0.00028533, -0.13653, 0.032268)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "left_index_proximal" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_proximal>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "left_index_proximal_1" (
+                                                                    displayName = "left_index_proximal"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_proximal_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "l_dex_index_intermediate"
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (-0.0026138, -0.032026, -0.001)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "left_index_intermediate" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_intermediate>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "left_index_intermediate_1" (
+                                                                        displayName = "left_index_intermediate"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_intermediate_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "l_dex_index_tip"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (-0.0008, -0.045, -0.005)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            def Xform "l_dex_middle_proximal"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0.00028533, -0.1371, 0.01295)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "left_index_proximal" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_proximal>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "left_index_proximal_1" (
+                                                                    displayName = "left_index_proximal"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_proximal_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "l_dex_middle_intermediate"
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (-0.0024229, -0.032041, -0.001)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "left_middle_intermediate" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_middle_intermediate>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Mesh "left_middle_intermediate_1" (
+                                                                        displayName = "left_middle_intermediate"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_middle_intermediate_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "l_dex_middle_tip"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (-0.001, -0.048, -0.005)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            def Xform "l_dex_ring_proximal"
+                                                            {
+                                                                quatf xformOp:orient = (0.99965733, 0.026176646, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0.00028533, -0.13691, -0.0062872)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "left_index_proximal" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_proximal>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "left_index_proximal_1" (
+                                                                    displayName = "left_index_proximal"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_proximal_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "l_dex_ring_intermediate"
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (-0.0024229, -0.032041, -0.001)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "left_index_intermediate" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_intermediate>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "left_index_intermediate_1" (
+                                                                        displayName = "left_index_intermediate"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_intermediate_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "l_dex_ring_tip"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (-0.0008, -0.045, -0.005)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            def Xform "l_dex_pinky_proximal"
+                                                            {
+                                                                quatf xformOp:orient = (0.9986295, 0.05233642, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0.00028533, -0.13571, -0.025488)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Mesh "left_index_proximal" (
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_proximal>
+                                                                )
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "left_index_proximal_1" (
+                                                                    displayName = "left_index_proximal"
+                                                                    prepend references = @./GeometryLibrary.usdc@</Geometry/left_index_proximal_1>
+                                                                )
+                                                                {
+                                                                    uniform token purpose = "guide"
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+
+                                                                def Xform "l_dex_pinky_intermediate"
+                                                                {
+                                                                    quatf xformOp:orient = (1, 0, 0, 0)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (-0.0024229, -0.032041, -0.001)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                    def Mesh "left_pinky_intermediate" (
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_pinky_intermediate>
+                                                                    )
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Mesh "left_pinky_intermediate_1" (
+                                                                        displayName = "left_pinky_intermediate"
+                                                                        prepend references = @./GeometryLibrary.usdc@</Geometry/left_pinky_intermediate_1>
+                                                                    )
+                                                                    {
+                                                                        uniform token purpose = "guide"
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (0, 0, 0)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+
+                                                                    def Xform "l_dex_pinky_tip"
+                                                                    {
+                                                                        quatf xformOp:orient = (1, 0, 0, 0)
+                                                                        float3 xformOp:scale = (1, 1, 1)
+                                                                        double3 xformOp:translate = (-0.0008, -0.037, -0.005)
+                                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    def Xform "l_wrist_camera_bottom_screw_frame"
+                                                    {
+                                                        quatf xformOp:orient = (-0.70710677, 0, 0.70710677, 0)
+                                                        float3 xformOp:scale = (1, 1, 1)
+                                                        double3 xformOp:translate = (0.05, 0, 0)
+                                                        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                        def Xform "l_wrist_camera_link"
+                                                        {
+                                                            quatf xformOp:orient = (1, 0, 0, 0)
+                                                            float3 xformOp:scale = (1, 1, 1)
+                                                            double3 xformOp:translate = (0.010600000000000002, 0.0175, 0.0125)
+                                                            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                            def Cube "box"
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.02505, 0.09, 0.025)
+                                                                double3 xformOp:translate = (0, -0.0175, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Cube "box_1" (
+                                                                displayName = "box"
+                                                            )
+                                                            {
+                                                                float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                                                                uniform token purpose = "guide"
+                                                                double size = 1
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (0.02505, 0.09, 0.025)
+                                                                double3 xformOp:translate = (0, -0.0175, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                            }
+
+                                                            def Xform "l_wrist_camera_depth_frame"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Xform "l_wrist_camera_depth_optical_frame"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+                                                            }
+
+                                                            def Xform "l_wrist_camera_infra1_frame"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, 0, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Xform "l_wrist_camera_infra1_optical_frame"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+                                                            }
+
+                                                            def Xform "l_wrist_camera_infra2_frame"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, -0.05, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Xform "l_wrist_camera_infra2_optical_frame"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+                                                            }
+
+                                                            def Xform "l_wrist_camera_color_frame"
+                                                            {
+                                                                quatf xformOp:orient = (1, 0, 0, 0)
+                                                                float3 xformOp:scale = (1, 1, 1)
+                                                                double3 xformOp:translate = (0, 0.015, 0)
+                                                                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+                                                                def Xform "l_wrist_camera_color_optical_frame"
+                                                                {
+                                                                    quatf xformOp:orient = (-0.5, 0.5, -0.5, 0.5)
+                                                                    float3 xformOp:scale = (1, 1, 1)
+                                                                    double3 xformOp:translate = (0, 0, 0)
+                                                                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        def Scope "custom"
+        {
+            def Scope "transmission"
+            {
+                custom string urdf:name = "l_joint1_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "l_joint1"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "l_joint1_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_1" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "l_joint2_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "l_joint2"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "l_joint2_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_2" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "l_joint3_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "l_joint3"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "l_joint3_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_3" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "l_joint4_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "l_joint4"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "l_joint4_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_4" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "l_joint5_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "l_joint5"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "l_joint5_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_5" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "l_joint6_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "l_joint6"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "l_joint6_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_6" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "l_joint7_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "l_joint7"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "l_joint7_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_7" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "r_joint1_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "r_joint1"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "r_joint1_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_8" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "r_joint2_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "r_joint2"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "r_joint2_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_9" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "r_joint3_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "r_joint3"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "r_joint3_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_10" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "r_joint4_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "r_joint4"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "r_joint4_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_11" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "r_joint5_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "r_joint5"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "r_joint5_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_12" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "r_joint6_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "r_joint6"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "r_joint6_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_13" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "r_joint7_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "r_joint7"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "r_joint7_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_14" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "platform_joint_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "platform_joint"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "platform_joint_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_15" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "head_joint1_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "head_joint1"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "head_joint1_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+
+            def Scope "transmission_16" (
+                displayName = "transmission"
+            )
+            {
+                custom string urdf:name = "head_joint2_trans"
+
+                def Scope "type"
+                {
+                    custom string urdf:text = "transmission_interface/SimpleTransmission"
+                }
+
+                def Scope "joint"
+                {
+                    custom string urdf:name = "head_joint2"
+
+                    def Scope "hardwareInterface"
+                    {
+                        custom string urdf:text = "PositionJointInterface"
+                    }
+                }
+
+                def Scope "actuator"
+                {
+                    custom string urdf:name = "head_joint2_motor"
+
+                    def Scope "mechanicalReduction"
+                    {
+                        custom string urdf:text = "1"
+                    }
+                }
+            }
+        }
+    }
+}
+

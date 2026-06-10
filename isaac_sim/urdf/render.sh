@@ -15,9 +15,16 @@
 # Output: isaac_sim/urdf/r2d3_v1.urdf  (committed for review; regenerable any time)
 set -euo pipefail
 
+# Usage: render.sh [end_effector] [weld_wheels]
+#   end_effector = dexterous | gripper   (default dexterous)
+#   weld_wheels  = 1 (default, AGV welded for stability) | 0 (mobile: wheels stay
+#                  revolute so they can roll; output tagged _mobile)
+EE="${1:-dexterous}"
+WELD="${2:-1}"
+TAG=""; [ "$WELD" = "0" ] && TAG="_mobile"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IN="$HERE/r2d3_v1.urdf.xacro"
-OUT="$HERE/r2d3_v1.urdf"
+OUT="$HERE/r2d3_v1_${EE}${TAG}.urdf"
 
 if ! command -v xacro >/dev/null; then
   echo "error: xacro not found on PATH. Run this inside a ROS2 environment." >&2
@@ -25,9 +32,9 @@ if ! command -v xacro >/dev/null; then
   exit 1
 fi
 
-echo "rendering: $IN"
+echo "rendering: $IN  (end_effector=$EE)"
 echo "        -> $OUT"
-xacro "$IN" -o "$OUT"
+xacro "$IN" "end_effector:=$EE" -o "$OUT"
 
 # Upstream 75b URDF contains 34 <material name=""> tags (empty name). The
 # urdf_usd_converter (Isaac Sim 6.0) refuses to handle anonymous materials —
@@ -42,9 +49,10 @@ xacro "$IN" -o "$OUT"
 # specified — that surfaces as `Illegal BroadPhaseUpdateData - non-finite
 # bounds` errors at every sim step. Inject a tiny inertial into any link
 # that has none.
-python3 - "$OUT" <<'PYEOF'
+python3 - "$OUT" "$WELD" <<'PYEOF'
 import re, sys
 p = sys.argv[1]
+weld_wheels = (len(sys.argv) < 3 or sys.argv[2] != "0")
 with open(p) as f:
     text = f.read()
 
@@ -78,15 +86,18 @@ print(f"[render] injected dummy inertial into {ic['n']} empty links")
 # in a single step and destabilize the whole tree). Welding removes 10 DOFs
 # and the instability. Reversible for V2: revert to continuous + add a wheel
 # controller.
-wc = {"n": 0}
-def weld(m):
-    name = m.group(1)
-    if "wheel" in name:
-        wc["n"] += 1
-        return m.group(0).replace('type="continuous"', 'type="fixed"')
-    return m.group(0)
-text = re.sub(r'<joint name="([^"]+)"[^>]*type="continuous"[^>]*>', weld, text)
-print(f"[render] welded {wc['n']} AGV wheel joints to fixed")
+if weld_wheels:
+    wc = {"n": 0}
+    def weld(m):
+        name = m.group(1)
+        if "wheel" in name:
+            wc["n"] += 1
+            return m.group(0).replace('type="continuous"', 'type="fixed"')
+        return m.group(0)
+    text = re.sub(r'<joint name="([^"]+)"[^>]*type="continuous"[^>]*>', weld, text)
+    print(f"[render] welded {wc['n']} AGV wheel joints to fixed")
+else:
+    print("[render] kept AGV wheels REVOLUTE (mobile build)")
 
 # Inject <dynamics damping="..." friction="..."/> into every joint that
 # doesn't already have one. The upstream URDF only damps the finger joints

@@ -71,8 +71,11 @@ scratch/
 .vnc/
 *.vnc.log
 
-# Rendered URDF (regenerable from r2d3_v1.urdf.xacro via render.sh)
+# Rendered URDFs (regenerable from r2d3_v1.urdf.xacro via scripts/build_robot.sh).
+# The built USD assets under isaac_sim/usd_<ee>/ ARE committed (the runtime asset);
+# these flat URDFs are just the intermediate.
 isaac_sim/urdf/r2d3_v1.urdf
+isaac_sim/urdf/r2d3_v1_*.urdf
 
 
 # Generated USD assets (regenerable from scripts/urdf_to_usd.py)

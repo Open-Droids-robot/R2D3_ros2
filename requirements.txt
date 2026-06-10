@@ -1,0 +1,10 @@
+# Plain-PyPI runtime deps for the R2D3 platform SDK, installed into the `isaac`
+# env. Isaac Sim itself installs separately (it needs the NVIDIA index) — see
+# scripts/bootstrap.sh:
+#   pip install 'isaacsim[all,extscache]==6.0.0.0' --extra-index-url https://pypi.nvidia.com
+numpy
+pillow
+
+# Optional — uncomment (or `pip install -e .[rl]`) for the RL env
+# (envs/rl_env.py / examples/04_rl_env.py):
+# gymnasium

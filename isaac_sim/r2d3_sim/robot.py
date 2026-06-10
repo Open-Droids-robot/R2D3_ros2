@@ -53,9 +53,16 @@ _SIDE_TO_ARM_JOINTS = {
     "left": t.LEFT_ARM_JOINTS,
     "right": t.RIGHT_ARM_JOINTS,
 }
-_SIDE_TO_FINGER_PAIR = {
-    "left":  (t.LEFT_FINGER_DRIVE,  t.LEFT_FINGER_MIMIC),
-    "right": (t.RIGHT_FINGER_DRIVE, t.RIGHT_FINGER_MIMIC),
+# Dexterous-hand close pose: joint angle (rad) when fully closed; open = 0.
+# set_finger maps the legacy drive_m in [0, FINGER_DRIVE_MAX_M] (0.035=open,
+# 0=closed) to a fraction of these, so the Gripperset interface still works.
+_HAND_CLOSE = {
+    "thumb_proximal_yaw_joint": 0.40, "thumb_proximal_pitch_joint": 0.55,
+    "thumb_intermediate_joint": 0.45, "thumb_distal_joint": 0.30,
+    "index_proximal_joint": 1.05, "index_intermediate_joint": 0.65,
+    "middle_proximal_joint": 1.05, "middle_intermediate_joint": 0.65,
+    "ring_proximal_joint": 1.05, "ring_intermediate_joint": 0.65,
+    "pinky_proximal_joint": 1.05, "pinky_intermediate_joint": 0.65,
 }
 
 
@@ -179,9 +186,26 @@ class Robot:
         self._apply(names, q)
 
     def set_finger(self, side: str, drive_m: float) -> None:
+        """Open/close the end-effector. drive_m in [0, FINGER_DRIVE_MAX_M]:
+        FINGER_DRIVE_MAX_M = open, 0 = closed (parallel-gripper units, kept so
+        the Gripperset bridge interface is unchanged for both end-effectors)."""
         drive_m = max(0.0, min(t.FINGER_DRIVE_MAX_M, float(drive_m)))
-        drive_name, mimic_name = _SIDE_TO_FINGER_PAIR[side]
-        self._apply([drive_name, mimic_name], [drive_m, drive_m])
+        if t.EE_TYPE == "gripper":
+            # parallel gripper: drive both prismatic finger joints to drive_m
+            prefix = "l_" if side == "left" else "r_"
+            self._apply([prefix + "finger_drive", prefix + "finger_mimic"],
+                        [drive_m, drive_m])
+            return
+        # dexterous hand: map drive_m -> close fraction over the hand joints
+        frac = 1.0 - drive_m / t.FINGER_DRIVE_MAX_M
+        prefix = "l_dex_" if side == "left" else "r_dex_"
+        names = [prefix + suf for suf in _HAND_CLOSE]
+        vals = [frac * v for v in _HAND_CLOSE.values()]
+        self._apply(names, vals)
+
+    def set_hand_close(self, side: str, frac: float) -> None:
+        """Directly set the dexterous hand close fraction (0=open, 1=closed)."""
+        self.set_finger(side, (1.0 - max(0.0, min(1.0, frac))) * t.FINGER_DRIVE_MAX_M)
 
     def set_lift_m(self, height_m: float) -> None:
         height_m = max(0.0, min(t.LIFT_MAX_M, float(height_m)))
@@ -244,6 +268,52 @@ class Robot:
     @property
     def num_dof(self) -> int:
         return self._art.num_dof if self._art is not None else 0
+
+    # ------------------------------------------------------ generic commanding
+    def set_joint_targets(self, targets: Dict[str, float]) -> None:
+        """Command position-drive targets for ARBITRARY joints by name.
+
+        Public entry point to the persistent target vector — use this for
+        joints without a dedicated setter (e.g. spinning the AGV wheels in the
+        mobile build, or scripting an unusual pose). ``targets`` maps joint name
+        -> target (radians for revolute, metres for prismatic).
+        """
+        self._apply(list(targets.keys()), list(targets.values()))
+
+    def set_base_pose(self, position, orientation_wxyz) -> None:
+        """Kinematically place the mobile base (articulation root) in world.
+
+        Requires a free base (the "mobile" build with ``root_joint`` disabled);
+        gravity is off on the robot, so the commanded pose holds. ``position``
+        is xyz (m), ``orientation_wxyz`` is a (w, x, y, z) quaternion.
+        """
+        import numpy as np
+        self._art.set_world_pose(position=np.asarray(position, dtype=float),
+                                 orientation=np.asarray(orientation_wxyz, dtype=float))
+
+    def get_base_pose(self):
+        """World pose of the base (articulation root): (xyz, quat_wxyz)."""
+        import numpy as np
+        p, q = self._art.get_world_pose()
+        return np.asarray(p, dtype=float), np.asarray(q, dtype=float)
+
+    def get_ee_pose(self, side: str):
+        """Forward-kinematics world pose of the arm end-effector link
+        (``l_link7`` / ``r_link7``) as (xyz, quat_wxyz)."""
+        import numpy as np
+        import omni.usd
+        from pxr import UsdGeom, Gf
+        link = self._WRIST_LINK[side]
+        stage = omni.usd.get_context().get_stage()
+        prim = next((p for p in stage.Traverse()
+                     if p.GetName() == link and p.GetTypeName() == "Xform"), None)
+        if prim is None:
+            return np.zeros(3), np.array([1.0, 0.0, 0.0, 0.0])
+        m = UsdGeom.XformCache().GetLocalToWorldTransform(prim)
+        o = m.Transform(Gf.Vec3d(0, 0, 0))
+        q = m.ExtractRotationQuat()
+        return (np.array([o[0], o[1], o[2]], dtype=float),
+                np.array([q.GetReal(), *q.GetImaginary()], dtype=float))
 
     # ----------------------------------------------------------------- helpers
     def _apply(self, names: list[str], values: list[float]) -> None:

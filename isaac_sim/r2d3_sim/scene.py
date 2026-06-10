@@ -18,8 +18,12 @@ logger = logging.getLogger(__name__)
 #   - Stage units are meters
 #   - World frame origin sits at the robot's base_link_underpan when the robot
 #     is loaded at the origin with no transform.
+from . import sim_topics as _t
+
+# Per-end-effector USD: scripts/build_robot.sh writes usd_<ee>/r2d3_v1.usda for
+# ee in {dexterous, gripper}. R2D3_EE (read in sim_topics) selects which loads.
 DEFAULT_USD = (
-    Path(__file__).resolve().parents[1] / "usd" / "r2d3_v1.usda"
+    Path(__file__).resolve().parents[1] / f"usd_{_t.EE_TYPE}" / "r2d3_v1.usda"
 )
 ROBOT_PRIM_PATH = "/r2d3_v1"
 
@@ -46,9 +50,10 @@ def assemble(world, *, usd_path: Optional[Path] = None) -> str:
     usd_path = Path(usd_path).resolve()
     if not usd_path.is_file():
         raise FileNotFoundError(
-            f"R2D3 USD not found at {usd_path}. "
-            f"Render it first with `bash isaac_sim/urdf/render.sh` "
-            f"then `scripts/urdf_to_usd.py`."
+            f"R2D3 USD not found at {usd_path}. The built assets ship in the repo; "
+            f"if they're missing, regenerate them with `bash scripts/build_robot.sh both` "
+            f"(needs the ros_humble env), or run `bash scripts/bootstrap.sh`. "
+            f"The mobile build is `bash scripts/build_robot.sh mobile`. See docs/run.md."
         )
 
     # NB: NO ground plane. The chassis is already fixed to world via
@@ -61,7 +66,47 @@ def assemble(world, *, usd_path: Optional[Path] = None) -> str:
 
     _add_lighting()
     configure_articulation_physics()
+    _hide_legacy_hand_flanges()
     return ROBOT_PRIM_PATH
+
+
+def _hide_legacy_hand_flanges() -> None:
+    """Hide the old RM hand-base meshes on l_hand_link / r_hand.
+
+    Those links still carry the upstream `*_hand_base_link.STL` (a hand-shaped
+    flange from when the arm had its own gripper). The Inspire dexterous hand is
+    now mounted on top, so the flange shows as a redundant second hand at each
+    wrist. Make it non-rendering AND non-colliding (it would otherwise interfere
+    with grasps). The l_hand_link frame itself is kept — it's the hand mount.
+    """
+    import omni.usd
+    from pxr import UsdGeom, UsdPhysics
+
+    stage = omni.usd.get_context().get_stage()
+    n = 0
+    # The RM hand-base flanges are only redundant under the dexterous hand (it
+    # replaces them). For the parallel gripper, the flange IS the visible hand
+    # base the gripper mounts on — keep it.
+    if _t.EE_TYPE == "dexterous":
+        for prim in stage.Traverse():
+            if prim.GetTypeName() != "Mesh":
+                continue
+            if prim.GetName().startswith(("l_hand_base_link", "r_hand_base_link")):
+                UsdGeom.Imageable(prim).MakeInvisible()
+                if prim.HasAPI(UsdPhysics.CollisionAPI):
+                    UsdPhysics.CollisionAPI(prim).GetCollisionEnabledAttr().Set(False)
+                n += 1
+        logger.info("hid %d legacy hand-flange meshes", n)
+    # The HEAD camera is the upstream `camera_link` D435 (kept visible). Our
+    # head_camera frames are co-located with it for the ROS sensor, so hide our
+    # redundant D435 body box — only camera_link shows on the head. The WRIST
+    # camera boxes (l_/r_wrist_camera) stay visible: they ARE the wrist cameras.
+    for prim in stage.Traverse():
+        if prim.GetName() == "head_camera_link":
+            for child in prim.GetChildren():
+                if child.GetName() == "box":
+                    UsdGeom.Imageable(child).MakeInvisible()
+            break
 
 
 # Articulation root prim (carries PhysicsArticulationRootAPI in the USD).

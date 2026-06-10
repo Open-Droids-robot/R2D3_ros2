@@ -31,6 +31,15 @@ D435_RGB_WIDTH = 640
 D435_RGB_HEIGHT = 480
 D435_HFOV_DEG = 69.0
 
+# Forward offset (m) of the head camera LENS only (invisible UsdGeom.Camera),
+# NOT the camera body. The head camera is now co-located with the upstream
+# `camera_link` D435, which sits recessed ~0.08 m inside the head_link2 shroud —
+# a lens there images the inside of the housing (black). 0.10 m pushes the lens
+# just past the head's front face so it sees forward, while the visible camera
+# body (camera_link mesh) stays at its real recessed mount. No visible float
+# (the offset prim has no geometry).
+HEAD_CAMERA_FWD_OFFSET_M = 0.10
+
 # Camera prim path the URDF→USD converter writes for the head D435.
 HEAD_CAMERA_LINK = (
     "/r2d3_v1/Geometry/base_link_underpan/body_base_link/platform_base_link/"
@@ -44,50 +53,91 @@ ROBOT_PRIM = "/r2d3_v1"
 # ---------------------------------------------------------------------------
 # Camera prim authoring
 # ---------------------------------------------------------------------------
-def _ensure_camera_prim() -> str:
-    """Create a UsdGeom.Camera at ``HEAD_CAMERA_PRIM`` if it isn't there yet.
+# All cameras: head D435 (at the upstream camera_link, lens pushed forward to
+# clear the head shroud) + a wrist D435 per arm. Each entry drives both the
+# Camera-prim authoring and the OmniGraph ROS publishers. Wrist cameras keep
+# their body box visible (it IS the visible wrist camera); only the head hides
+# its box (the visible head camera is camera_link's mesh).
+CAMERAS = (
+    dict(name="head", link="head_camera_link", fwd=HEAD_CAMERA_FWD_OFFSET_M, hide_box=True,
+         color=t.CAMERA_COLOR_IMAGE, depth=t.CAMERA_DEPTH_IMAGE,
+         color_info=t.CAMERA_COLOR_INFO, depth_info=t.CAMERA_DEPTH_INFO,
+         color_frame=t.CAMERA_COLOR_OPT_FRAME, depth_frame=t.CAMERA_DEPTH_OPT_FRAME),
+    dict(name="l_wrist", link="l_wrist_camera_link", fwd=0.0, hide_box=False,
+         color=t.L_WRIST_COLOR_IMAGE, depth=t.L_WRIST_DEPTH_IMAGE,
+         color_info=t.L_WRIST_COLOR_INFO, depth_info=t.L_WRIST_DEPTH_INFO,
+         color_frame=t.L_WRIST_COLOR_OPT_FRAME, depth_frame=t.L_WRIST_DEPTH_OPT_FRAME),
+    dict(name="r_wrist", link="r_wrist_camera_link", fwd=0.0, hide_box=False,
+         color=t.R_WRIST_COLOR_IMAGE, depth=t.R_WRIST_DEPTH_IMAGE,
+         color_info=t.R_WRIST_COLOR_INFO, depth_info=t.R_WRIST_DEPTH_INFO,
+         color_frame=t.R_WRIST_COLOR_OPT_FRAME, depth_frame=t.R_WRIST_DEPTH_OPT_FRAME),
+)
 
-    The urdf_usd_converter authors the head_camera_link as a plain Xform
-    with cube visuals — it doesn't insert a Camera prim. ROS 2 image
-    publishers need an actual Camera to render through.
+
+def _find_link_path(name: str):
+    import omni.usd
+    stage = omni.usd.get_context().get_stage()
+    for p in stage.Traverse():
+        if p.GetName() == name and p.GetTypeName() == "Xform":
+            return p.GetPath().pathString
+    return None
+
+
+def _make_camera_prim(link_path: str, fwd: float = 0.0, hide_box: bool = False) -> str:
+    """Create a D435 UsdGeom.Camera under ``link_path`` (looks down link +X).
+
+    The converter writes camera links as plain Xforms with cube visuals — ROS 2
+    image publishers need an actual Camera prim to render through. ``fwd`` pushes
+    the (invisible) lens forward along link +X (used for the head, whose
+    camera_link is recessed inside the shroud). ``hide_box`` makes the D435 body
+    box non-rendering (head only — its visible body is camera_link's own mesh).
     """
     import omni.usd
     from pxr import Gf, UsdGeom
 
     stage = omni.usd.get_context().get_stage()
-    if not stage.GetPrimAtPath(HEAD_CAMERA_LINK):
-        raise RuntimeError(
-            f"head_camera_link not found at {HEAD_CAMERA_LINK} — has the "
-            f"USD been re-rendered with the head D435 macro?"
-        )
+    if hide_box:
+        box = stage.GetPrimAtPath(f"{link_path}/box")
+        if box:
+            UsdGeom.Imageable(box).MakeInvisible()
+    prim_path = f"{link_path}/Camera"
+    if stage.GetPrimAtPath(prim_path):
+        return prim_path
 
-    if stage.GetPrimAtPath(HEAD_CAMERA_PRIM):
-        logger.info("camera prim already exists at %s", HEAD_CAMERA_PRIM)
-        return HEAD_CAMERA_PRIM
-
-    cam = UsdGeom.Camera.Define(stage, HEAD_CAMERA_PRIM)
-    # D435 RGB intrinsics expressed via the standard pinhole knobs.
-    # Pair an 18.8 mm focal length with a 36 mm horizontal aperture to get
-    # ~69 deg HFOV (the real D435 RGB).
-    cam.GetFocalLengthAttr().Set(18.8)
+    cam = UsdGeom.Camera.Define(stage, prim_path)
+    # D435 RGB intrinsics: focal 26 mm + 36 mm h-aperture -> 69.4 deg HFOV (the
+    # real D435 *color* FOV); 27 mm v-aperture keeps 4:3 square pixels.
+    cam.GetFocalLengthAttr().Set(26.0)
     cam.GetHorizontalApertureAttr().Set(36.0)
     cam.GetVerticalApertureAttr().Set(27.0)
-    cam.GetClippingRangeAttr().Set(Gf.Vec2f(0.05, 100.0))
-
-    # A USD camera looks down its local -Z with up = +Y. The head_camera_link
-    # frame has the robot's forward along +X and up along +Z. We need the
-    # camera's view direction (-Z_cam) to point along +X_link and the camera
-    # up (+Y_cam) along +Z_link. The rotation whose columns are the camera
-    # basis expressed in the link frame is
-    #     X_cam = (0,-1, 0)   Y_cam = (0, 0, 1)   Z_cam = (-1, 0, 0)
-    # which yields the quaternion (w,x,y,z) = (0.5, 0.5, -0.5, -0.5).
-    # (head_joint2's tilt is applied above this prim, so commanding tilt
-    # pitches the camera down to see the workspace.)
+    cam.GetClippingRangeAttr().Set(Gf.Vec2f(0.02, 100.0))
+    # USD camera looks down -Z (up +Y); aim its view (-Z_cam) along link +X (the
+    # D435 forward, set per-camera by the mount rpy) with up along link +Z:
+    #   X_cam=(0,-1,0) Y_cam=(0,0,1) Z_cam=(-1,0,0) -> quat (0.5,0.5,-0.5,-0.5).
     xform = UsdGeom.Xformable(cam)
     xform.ClearXformOpOrder()
+    xform.AddTranslateOp().Set(Gf.Vec3d(fwd, 0.0, 0.0))
     xform.AddOrientOp().Set(Gf.Quatf(0.5, Gf.Vec3f(0.5, -0.5, -0.5)))
-    logger.info("authored Camera at %s (forward = link +X)", HEAD_CAMERA_PRIM)
-    return HEAD_CAMERA_PRIM
+    logger.info("authored Camera at %s (lens +%.2f m along link +X)", prim_path, fwd)
+    return prim_path
+
+
+def ensure_camera_prims() -> dict:
+    """Author Camera prims for every entry in CAMERAS. Returns {name: prim_path}
+    for the cameras whose link exists in the stage (skips missing ones)."""
+    out = {}
+    for c in CAMERAS:
+        lp = _find_link_path(c["link"])
+        if lp is None:
+            logger.warning("camera link %s not in stage — skipping %s", c["link"], c["name"])
+            continue
+        out[c["name"]] = _make_camera_prim(lp, c["fwd"], c["hide_box"])
+    return out
+
+
+def _ensure_camera_prim() -> str:
+    """Back-compat: author + return the HEAD camera prim only."""
+    return _make_camera_prim(HEAD_CAMERA_LINK, HEAD_CAMERA_FWD_OFFSET_M, hide_box=True)
 
 
 # ---------------------------------------------------------------------------
@@ -223,22 +273,19 @@ def build_action_graph(
     """
     import omni.graph.core as og
 
-    camera_prim_path: Optional[str] = None
-    render_product_path: Optional[str] = None
-
+    # One render product per camera (head + l/r wrist).
+    camera_products = []  # list of (camera_dict, render_product_path)
     if publish_camera:
-        camera_prim_path = _ensure_camera_prim()
-        # Render product = the per-camera viewport pipeline that produces
-        # RGB / depth annotators. omni.replicator.core owns these.
         import omni.replicator.core as rep
-        render_product = rep.create.render_product(
-            camera_prim_path, camera_resolution
-        )
-        # rep.create.render_product returns a Replicator product object;
-        # the OmniGraph nodes want its USD prim path.
-        render_product_path = render_product.path
-        logger.info("camera render product: %s @ %s", render_product_path,
-                    camera_resolution)
+        prims = ensure_camera_prims()
+        for c in CAMERAS:
+            ppath = prims.get(c["name"])
+            if not ppath:
+                continue
+            rprod = rep.create.render_product(ppath, camera_resolution)
+            camera_products.append((c, rprod.path))
+        logger.info("camera render products: %s @ %s",
+                    [c["name"] for c, _ in camera_products], camera_resolution)
 
     create_nodes = [
         ("OnPlaybackTick", "omni.graph.action.OnPlaybackTick"),
@@ -274,43 +321,37 @@ def build_action_graph(
             ("PublishTf.inputs:targetPrims", [sdf.Path(ROBOT_PRIM)]),
         ]
 
-    if publish_camera and render_product_path is not None:
+    for c, rpath in camera_products:
+        nm = c["name"]
+        rgb, dep = f"Rgb_{nm}", f"Depth_{nm}"
+        ic, idp = f"InfoColor_{nm}", f"InfoDepth_{nm}"
         create_nodes += [
-            ("CameraRgb",  "isaacsim.ros2.bridge.ROS2CameraHelper"),
-            ("CameraDepth", "isaacsim.ros2.bridge.ROS2CameraHelper"),
-            ("CameraInfoColor", "isaacsim.ros2.bridge.ROS2CameraInfoHelper"),
-            ("CameraInfoDepth", "isaacsim.ros2.bridge.ROS2CameraInfoHelper"),
+            (rgb, "isaacsim.ros2.bridge.ROS2CameraHelper"),
+            (dep, "isaacsim.ros2.bridge.ROS2CameraHelper"),
+            (ic,  "isaacsim.ros2.bridge.ROS2CameraInfoHelper"),
+            (idp, "isaacsim.ros2.bridge.ROS2CameraInfoHelper"),
         ]
-        connections += [
-            ("OnPlaybackTick.outputs:tick", "CameraRgb.inputs:execIn"),
-            ("OnPlaybackTick.outputs:tick", "CameraDepth.inputs:execIn"),
-            ("OnPlaybackTick.outputs:tick", "CameraInfoColor.inputs:execIn"),
-            ("OnPlaybackTick.outputs:tick", "CameraInfoDepth.inputs:execIn"),
-            ("Ros2Context.outputs:context", "CameraRgb.inputs:context"),
-            ("Ros2Context.outputs:context", "CameraDepth.inputs:context"),
-            ("Ros2Context.outputs:context", "CameraInfoColor.inputs:context"),
-            ("Ros2Context.outputs:context", "CameraInfoDepth.inputs:context"),
-        ]
+        for node in (rgb, dep, ic, idp):
+            connections += [
+                ("OnPlaybackTick.outputs:tick", f"{node}.inputs:execIn"),
+                ("Ros2Context.outputs:context", f"{node}.inputs:context"),
+            ]
         set_values += [
-            # RGB
-            ("CameraRgb.inputs:renderProductPath", render_product_path),
-            ("CameraRgb.inputs:topicName",         t.CAMERA_COLOR_IMAGE),
-            ("CameraRgb.inputs:type",              "rgb"),
-            ("CameraRgb.inputs:frameId",           t.CAMERA_COLOR_OPT_FRAME),
-            # Depth
-            ("CameraDepth.inputs:renderProductPath", render_product_path),
-            ("CameraDepth.inputs:topicName",         t.CAMERA_DEPTH_IMAGE),
-            ("CameraDepth.inputs:type",              "depth"),
-            ("CameraDepth.inputs:frameId",           t.CAMERA_DEPTH_OPT_FRAME),
-            # CameraInfo — color
-            ("CameraInfoColor.inputs:renderProductPath", render_product_path),
-            ("CameraInfoColor.inputs:topicName",         t.CAMERA_COLOR_INFO),
-            ("CameraInfoColor.inputs:frameId",           t.CAMERA_COLOR_OPT_FRAME),
-            # CameraInfo — depth (same intrinsics for V1; the D435 aligns
-            # depth to color, so the depth optical frame shares the K matrix)
-            ("CameraInfoDepth.inputs:renderProductPath", render_product_path),
-            ("CameraInfoDepth.inputs:topicName",         t.CAMERA_DEPTH_INFO),
-            ("CameraInfoDepth.inputs:frameId",           t.CAMERA_DEPTH_OPT_FRAME),
+            (f"{rgb}.inputs:renderProductPath", rpath),
+            (f"{rgb}.inputs:topicName",         c["color"]),
+            (f"{rgb}.inputs:type",              "rgb"),
+            (f"{rgb}.inputs:frameId",           c["color_frame"]),
+            (f"{dep}.inputs:renderProductPath", rpath),
+            (f"{dep}.inputs:topicName",         c["depth"]),
+            (f"{dep}.inputs:type",              "depth"),
+            (f"{dep}.inputs:frameId",           c["depth_frame"]),
+            (f"{ic}.inputs:renderProductPath",  rpath),
+            (f"{ic}.inputs:topicName",          c["color_info"]),
+            (f"{ic}.inputs:frameId",            c["color_frame"]),
+            # depth shares the color K matrix (D435 aligns depth to color in V1)
+            (f"{idp}.inputs:renderProductPath", rpath),
+            (f"{idp}.inputs:topicName",         c["depth_info"]),
+            (f"{idp}.inputs:frameId",           c["depth_frame"]),
         ]
 
     og.Controller.edit(

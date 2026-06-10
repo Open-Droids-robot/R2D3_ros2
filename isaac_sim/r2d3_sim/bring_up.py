@@ -59,6 +59,11 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         "--max-steps", type=int, default=0,
         help="Stop after this many physics steps (0 = run forever).",
     )
+    p.add_argument(
+        "--demo-workspace", action="store_true",
+        help="Place a table+cube in front + a front fill light and tilt the "
+             "head down, for capturing the live head-D435 view of a workspace.",
+    )
     return p
 
 
@@ -184,6 +189,43 @@ def main() -> int:
         robot.go_home()
         print(f"[bring_up] commanded home; position drives converging "
               f"(lift target={HOME_LIFT_M:.3f} m)", flush=True)
+
+        if args.demo_workspace:
+            # Table+cube in front (clear of the body), a front fill light so the
+            # camera-facing faces aren't black, and head tilted down to look at
+            # it. Rendered via the LIVE ROS camera (correct tonemapping), unlike
+            # the offline replicator path which washes out.
+            import numpy as np
+            from pxr import UsdLux, UsdGeom, Sdf, Gf
+            import omni.usd as _ou
+            _stage = _ou.get_context().get_stage()
+            ground_z = float(scene_mod.world_range(robot_prim_path)[0][2])
+            # Darken the scene lights so the bright dome background doesn't drive
+            # the camera's auto-exposure to wash out the lit workspace.
+            for _ln, _i in (("/DomeLight", 80.0), ("/KeyLight", 600.0), ("/FillLight", 300.0)):
+                _lp = _stage.GetPrimAtPath(_ln)
+                if _lp:
+                    UsdLux.LightAPI(_lp).GetIntensityAttr().Set(_i)
+            _cube = (1.05, -0.22, 0.46)        # forward of the robot, low
+            _top = _cube[2] - 0.03
+            scene_mod.add_visual_box("/Preview/ground", (0.6, -0.22, ground_z - 0.01),
+                                     (8.0, 8.0, 0.02), (0.32, 0.36, 0.44))
+            scene_mod.add_visual_box("/Preview/bench",
+                                     (_cube[0], _cube[1], ground_z + (_top - ground_z) / 2),
+                                     (0.34, 0.34, _top - ground_z), (0.62, 0.46, 0.30))
+            scene_mod.add_visual_box("/Preview/cube", _cube, (0.06, 0.06, 0.06),
+                                     (0.90, 0.12, 0.12))
+            _fl = UsdLux.SphereLight.Define(_stage, Sdf.Path("/Preview/WorkFront"))
+            _fl.CreateIntensityAttr(6.0e4); _fl.CreateRadiusAttr(0.18)
+            _fx = UsdGeom.Xformable(_fl.GetPrim()); _fx.ClearXformOpOrder()
+            _fx.AddTranslateOp().Set(Gf.Vec3d(_cube[0] - 0.45, _cube[1], _top + 0.30))
+            _tl = UsdLux.SphereLight.Define(_stage, Sdf.Path("/Preview/WorkTop"))
+            _tl.CreateIntensityAttr(3.0e4); _tl.CreateRadiusAttr(0.18)
+            _tx = UsdGeom.Xformable(_tl.GetPrim()); _tx.ClearXformOpOrder()
+            _tx.AddTranslateOp().Set(Gf.Vec3d(_cube[0], _cube[1], _top + 0.6))
+            robot.set_head(0.0, -0.45)
+            print("[bring_up] --demo-workspace: props + front light placed, head down.",
+                  flush=True)
 
         step = 0
         while sim_app.is_running():

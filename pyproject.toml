@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "r2d3-isaac"
+version = "0.1.0"
+description = "R2D3 dual-arm composite-lifting mobile manipulator — Isaac Sim 6.0 platform SDK"
+readme = "README.md"
+requires-python = ">=3.10"
+# NOTE: isaacsim itself is NOT listed here — it installs from the NVIDIA index
+# (`pip install 'isaacsim[all,extscache]==6.0.0.0' --extra-index-url https://pypi.nvidia.com`,
+# done by scripts/bootstrap.sh). These are the plain-PyPI runtime deps.
+dependencies = ["numpy", "pillow"]
+
+[project.optional-dependencies]
+rl = ["gymnasium"]            # for envs/rl_env.py (R2D3Env) + examples/04_rl_env.py
+
+[tool.setuptools]
+# Install editable (`pip install -e .`); assets under isaac_sim/usd_*/ and urdf/
+# are read in place via __file__, so no package-data copy is needed.
+packages = ["isaac_sim", "isaac_sim.r2d3_sim", "isaac_sim.r2d3_sim.envs"]

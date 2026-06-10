@@ -37,12 +37,20 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Where to find the isaac env's Python (the converter is a pip-installed module
-# living in that env). Fall back to $PATH so we don't hard-fail in CI.
-ISAAC_PY = Path("/usr1/home/semathew/miniforge3/envs/isaac/bin/python")
-if not ISAAC_PY.is_file():
-    fallback = shutil.which("python")
-    if fallback:
-        ISAAC_PY = Path(fallback)
+# living in that env). Honor R2D3_ISAAC_PY first, then common install locations,
+# then $PATH — so this isn't tied to one machine.
+ISAAC_PY = None
+for _cand in (
+    os.environ.get("R2D3_ISAAC_PY"),
+    str(Path.home() / "miniforge3" / "envs" / "isaac" / "bin" / "python"),
+    str(Path.home() / "mambaforge" / "envs" / "isaac" / "bin" / "python"),
+    str(Path.home() / "miniconda3" / "envs" / "isaac" / "bin" / "python"),
+):
+    if _cand and Path(_cand).is_file():
+        ISAAC_PY = Path(_cand)
+        break
+if ISAAC_PY is None:
+    ISAAC_PY = Path(shutil.which("python") or "python")
 
 # Default V1 wrapper (rendered output of isaac_sim/urdf/render.sh).
 DEFAULT_URDF = REPO_ROOT / "isaac_sim/urdf/r2d3_v1.urdf"
