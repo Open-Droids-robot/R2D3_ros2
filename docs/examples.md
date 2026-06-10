@@ -17,10 +17,10 @@ scripts/isaacsim_ros2.sh isaac_sim/examples/01_hello_robot.py
 | 06 | `06_drive_base.py` | drive the mobile base, wheels rolling | needs the `usd_mobile` build |
 | 07 | `07_grasp_cube.py` | full IK grasp-and-lift of a cube | uses the `setup` hook + a weld |
 
-Full demos with GIF capture (the polished, lower-level versions) live in
-`isaac_sim/tests/`: `grasp_lift_ik.py`, `move_task.py`, `capture_cameras.py`,
-`realtime_camera_demo.py`. One-off probes have been archived under
-`isaac_sim/tests/diagnostics/`.
+GIF-capturing demos + the verification suite live in `isaac_sim/tests/`
+(`grasp_lift_ik.py`, `move_task.py`, `smoke_sdk.py`, `diag_all_joints.py`,
+`diag_motion_gif.py` — see [`tests/README`](../isaac_sim/tests/README.md)).
+~27 one-off bring-up probes are archived under `isaac_sim/tests/diagnostics/`.
 
 See [api.md](api.md) for the SDK reference and [platform.md](platform.md) for the
 RL / VLM / teleop patterns these examples instantiate.

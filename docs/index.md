@@ -26,8 +26,11 @@ with R2D3(end_effector="dexterous") as sim:
 ## Under the hood
 - **[Architecture](architecture.md)** — design, dynamics, gripper-mimic decisions
 - **[ROS bridge](bridge.md)** — the two-process custom-message path (`/r2d3/sim/*`, `/r2d3/observations`)
+- **[ROS 2 packages](ros2_packages.md)** — the upstream real-robot driver stack
 - **[URDF → USD](urdf_to_usd.md)** · **[URDF audit](urdf_audit.md)** — the asset pipeline
 - **[Roadmap](roadmap.md)** — what's V1 vs V2
+
+For AI coding agents: **[AGENTS.md](../AGENTS.md)** (run, control, swap parts, build, verify).
 
 ## Capabilities (V1)
 Dual 7-DOF arms · switchable Inspire 5-finger hand / parallel gripper · body lift ·
