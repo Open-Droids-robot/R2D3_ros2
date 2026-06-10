@@ -21,6 +21,7 @@ with R2D3(end_effector="dexterous") as sim:
 
 ## Build on it
 - **[Platform guide](platform.md)** — RL (`R2D3Env`), VLM (`PerceptionLoop`), teleop (`TeleopServer`), custom task scenes
+- **[Training scenes](scenes.md)** — warehouse / kitchen / living room + recommended environments
 - **[Examples](examples.md)** — 7 runnable demos in `isaac_sim/examples/`
 
 ## Under the hood
