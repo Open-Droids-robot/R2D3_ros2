@@ -6,12 +6,17 @@ Replace the scripted submit() calls with your input source (keyboard, gamepad,
 VR controller, leader arm, network socket). Use use_ros=True to drive it from
 the /r2d3/sim/cmd/* ROS topics instead.
 """
+import argparse
+
 from isaac_sim.r2d3_sim import R2D3
 from isaac_sim.r2d3_sim.envs.teleop import TeleopServer
 
 
 def main() -> int:
-    with R2D3(end_effector="dexterous", headless=True) as sim:
+    ap = argparse.ArgumentParser(description="Teleop (switchable end-effector)")
+    ap.add_argument("--ee", choices=["dexterous", "gripper"], default="dexterous")
+    ee = ap.parse_args().ee
+    with R2D3(end_effector=ee, headless=True) as sim:
         sim.reset()
         tele = TeleopServer(sim, use_ros=False)
 

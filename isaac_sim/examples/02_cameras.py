@@ -2,6 +2,7 @@
 
     scripts/isaacsim_ros2.sh isaac_sim/examples/02_cameras.py
 """
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -12,8 +13,11 @@ OUT = Path(__file__).resolve().parents[1] / "tests" / "captures"
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description="Grab cameras (switchable end-effector)")
+    ap.add_argument("--ee", choices=["dexterous", "gripper"], default="dexterous")
+    ee = ap.parse_args().ee
     OUT.mkdir(parents=True, exist_ok=True)
-    with R2D3(end_effector="dexterous", headless=True, enable_cameras=True) as sim:
+    with R2D3(end_effector=ee, headless=True, enable_cameras=True) as sim:
         sim.reset()
         sim.set_head(0.0, -0.3)      # look down at the workspace
         sim.step(n=20)

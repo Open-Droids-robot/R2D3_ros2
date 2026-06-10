@@ -6,6 +6,8 @@
 grasp, emit a high-level action). Here it's a stub that nudges the arm toward a
 fixed point so the loop is runnable offline.
 """
+import argparse
+
 import numpy as np
 from isaac_sim.r2d3_sim import R2D3
 from isaac_sim.r2d3_sim.envs.vlm_loop import PerceptionLoop
@@ -22,7 +24,10 @@ def stub_policy(rgb: np.ndarray, obs) -> dict:
 
 
 def main() -> int:
-    with R2D3(end_effector="dexterous", headless=True, enable_cameras=True) as sim:
+    ap = argparse.ArgumentParser(description="Perception loop (switchable end-effector)")
+    ap.add_argument("--ee", choices=["dexterous", "gripper"], default="dexterous")
+    ee = ap.parse_args().ee
+    with R2D3(end_effector=ee, headless=True, enable_cameras=True) as sim:
         sim.reset()
         sim.set_head(0.0, -0.3)
         loop = PerceptionLoop(sim, stub_policy, camera="head")

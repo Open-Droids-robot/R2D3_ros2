@@ -6,6 +6,8 @@
 Plug your own reward_fn / done_fn (callables over the R2D3 Observation) and hand
 the env to any RL library (SB3, CleanRL, rllib, ...).
 """
+import argparse
+
 import numpy as np
 
 
@@ -16,8 +18,11 @@ def reach_reward(obs):
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description="RL rollout (switchable end-effector)")
+    ap.add_argument("--ee", choices=["dexterous", "gripper"], default="dexterous")
+    ee = ap.parse_args().ee
     from isaac_sim.r2d3_sim.envs.rl_env import R2D3Env
-    env = R2D3Env(control="ee_delta", max_steps=20, reward_fn=reach_reward)
+    env = R2D3Env(control="ee_delta", max_steps=20, reward_fn=reach_reward, end_effector=ee)
     obs, _ = env.reset()
     print(f"[rl] obs keys={list(obs.keys())}  rgb={obs['rgb'].shape}  action={env.action_space.shape}")
     total = 0.0

@@ -1,6 +1,6 @@
 """IK grasp-and-lift of a red cube, using the platform SDK.
 
-    scripts/isaacsim_ros2.sh isaac_sim/examples/07_grasp_cube.py
+    scripts/isaacsim_ros2.sh isaac_sim/examples/07_grasp_cube.py [--ee dexterous|gripper]
 
 Pattern: add a table+cube via the R2D3 ``setup`` hook (before physics init),
 IK the wrist over the cube, close the hand, attach the cube to the hand with a
@@ -11,6 +11,8 @@ The cube is held frozen on the table during the approach so the weld is computed
 from a clean, known pose (otherwise the closing fingers knock it and the fixed
 joint snaps the bodies together with an impulse).
 """
+import argparse
+
 import numpy as np
 from isaac_sim.r2d3_sim import R2D3
 from isaac_sim.r2d3_sim import helpers as h
@@ -18,7 +20,12 @@ from isaac_sim.r2d3_sim import helpers as h
 TABLE_TOP = 0.44
 CUBE = 0.04
 CUBE_C = np.array([0.52, -0.21, TABLE_TOP + CUBE / 2])
-FINGER_OFFSET = np.array([0.12, 0.0, -0.05])   # dex fingers converge here vs l_hand_link
+# Where the grasp point sits vs l_hand_link (top-down), per end-effector: the dex
+# fingers converge ~0.12 m forward; the short gripper blades grasp at the wrist.
+FINGER_OFFSET = {
+    "dexterous": np.array([0.12, 0.0, -0.05]),
+    "gripper":   np.array([0.0, 0.0, -0.05]),
+}
 _HOLDER = {}
 
 
@@ -36,7 +43,12 @@ def build_scene(world):
 
 
 def main() -> int:
-    sim = R2D3(end_effector="dexterous", headless=True, setup=build_scene)
+    ap = argparse.ArgumentParser(description="IK grasp-and-lift (switchable end-effector)")
+    ap.add_argument("--ee", choices=["dexterous", "gripper"], default="dexterous",
+                    help="end-effector: dexterous 5-finger hand or 2-finger gripper")
+    ee = ap.parse_args().ee
+    finger_offset = FINGER_OFFSET[ee]
+    sim = R2D3(end_effector=ee, headless=True, setup=build_scene)
     try:
         import omni.usd
         from pxr import UsdGeom, Gf, UsdPhysics, Sdf
@@ -54,7 +66,7 @@ def main() -> int:
             freeze(); sim.step()
         z0 = float(cube.get_world_pose()[0][2])
 
-        grasp = CUBE_C - FINGER_OFFSET
+        grasp = CUBE_C - finger_offset
         pre = grasp + np.array([0.0, 0.0, 0.13])
         for tgt in (pre, grasp):
             ok = sim.set_arm_pose("left", tgt, sim.top_down_quat, pos_tol=0.015, ori_tol=0.2)
@@ -63,7 +75,7 @@ def main() -> int:
         sim.set_gripper("left", 1.0)          # curl the fingers
         for _ in range(40):
             freeze(); sim.step()
-        print(f"[grasp] reached grasp pose (ik ok={ok})", flush=True)
+        print(f"[grasp] ({ee}) reached grasp pose (ik ok={ok})", flush=True)
 
         # hold these joint targets through the lift
         q_weld = [sim.get_joint_state().get(f"l_joint{i}") for i in range(1, 8)]
@@ -91,7 +103,7 @@ def main() -> int:
             sim.step()
 
         z1 = float(cube.get_world_pose()[0][2])
-        print(f"[grasp] cube z {z0:.3f} -> {z1:.3f} (rose {z1 - z0:+.3f})  "
+        print(f"[grasp] ({ee}) cube z {z0:.3f} -> {z1:.3f} (rose {z1 - z0:+.3f})  "
               f"{'SUCCESS' if z1 - z0 > 0.1 else 'FAIL'}", flush=True)
         return 0
     finally:

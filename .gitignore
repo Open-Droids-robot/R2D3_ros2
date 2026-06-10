@@ -71,11 +71,13 @@ scratch/
 .vnc/
 *.vnc.log
 
-# Rendered URDFs (regenerable from r2d3_v1.urdf.xacro via scripts/build_robot.sh).
-# The built USD assets under isaac_sim/usd_<ee>/ ARE committed (the runtime asset);
-# these flat URDFs are just the intermediate.
+# Rendered flat URDFs are build intermediates with machine-specific absolute mesh
+# paths — ignored. The built USD (isaac_sim/usd_<ee>/) and the mesh-free
+# *_lula.urdf are the committed RUNTIME assets (the USD is loaded into the sim;
+# r2d3_sim.ik.ArmIK loads the _lula.urdf for Lula IK).
 isaac_sim/urdf/r2d3_v1.urdf
 isaac_sim/urdf/r2d3_v1_*.urdf
+!isaac_sim/urdf/r2d3_v1_*_lula.urdf
 
 
 # Generated USD assets (regenerable from scripts/urdf_to_usd.py)

@@ -18,10 +18,12 @@ from . import helpers as h
 
 _URDF_DIR = Path(__file__).resolve().parents[1] / "urdf"
 
-# end_effector -> (urdf, lula description yaml)
+# end_effector -> (urdf, lula description yaml). The mesh-free *_lula.urdf are
+# committed + portable (see scripts/make_lula_urdf.py); Lula needs only the joint
+# tree + the .yaml collision spheres, not the meshes.
 _CFG = {
-    "dexterous": ("r2d3_v1_dexterous.urdf", "r2d3_left_arm_lula.yaml"),
-    "gripper":   ("r2d3_v1_gripper.urdf",   "r2d3_left_arm_lula_gripper.yaml"),
+    "dexterous": ("r2d3_v1_dexterous_lula.urdf", "r2d3_left_arm_lula.yaml"),
+    "gripper":   ("r2d3_v1_gripper_lula.urdf",   "r2d3_left_arm_lula_gripper.yaml"),
 }
 
 

@@ -1,13 +1,19 @@
 """Hello, R2D3 — minimal control + sensing with the platform SDK.
 
-    scripts/isaacsim_ros2.sh isaac_sim/examples/01_hello_robot.py
+    scripts/isaacsim_ros2.sh isaac_sim/examples/01_hello_robot.py [--ee dexterous|gripper]
 """
+import argparse
+
 from isaac_sim.r2d3_sim import R2D3
 
 
 def main() -> int:
-    # Boot Isaac + load the robot (dexterous hand). enable_cameras=True by default.
-    with R2D3(end_effector="dexterous", headless=True) as sim:
+    ap = argparse.ArgumentParser(description="Hello R2D3 (switchable end-effector)")
+    ap.add_argument("--ee", choices=["dexterous", "gripper"], default="dexterous",
+                    help="dexterous 5-finger hand or 2-finger gripper")
+    ee = ap.parse_args().ee
+    # Boot Isaac + load the robot. enable_cameras=True by default.
+    with R2D3(end_effector=ee, headless=True) as sim:
         sim.reset()
         print(f"[hello] booted: {sim.robot.num_dof} DOFs, end-effector={sim.end_effector}")
 
