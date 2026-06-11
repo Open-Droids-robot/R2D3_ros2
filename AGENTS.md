@@ -145,13 +145,14 @@ isaac_sim/r2d3_sim/
   cameras.py     CameraRig (in-process RGB/depth numpy)
   ik.py          ArmIK (Lula, left arm; per-EE URDF/yaml in _CFG)
   scenes.py      training environments (warehouse/kitchen/living_room) + objects
+  perception.py  open-vocabulary detection (OWL-ViT) via subprocess; head-cam -> boxes
   boot.py        SimulationApp launch + ROS-ext enable
   helpers.py     quats, prim lookup, world pose, RGBA, lighting, GIF
   sim_topics.py  joint-name + topic-name contract; reads R2D3_EE → EE_TYPE
   sim_adapter.py rclpy node (ROS state/command surface)
   bring_up.py    ROS entry point (the bridge path)
   envs/          rl_env.py, vlm_loop.py, teleop.py
-isaac_sim/examples/   01–08 runnable demos (08 = pick a mug off the kitchen island)
+isaac_sim/examples/   01–09 demos (08 = pick a mug; 09 = OWL-ViT-perception clear-island pick/place)
 isaac_sim/tests/      smoke_sdk.py, diag_all_joints.py, diag_motion_gif.py,
                       diag_scenes.py (scene render + --check); grasp_lift_ik/move_task
                       (GIF demos); diagnostics/ = archive
@@ -177,6 +178,20 @@ object → `scenes.py` (`add_fixed_box` for surfaces, `add_object` for manipulab
   `get_image()` handle it. The white robot needs a dark/contrast backdrop + lights
   to be visible (`helpers.set_lighting`, `scene.add_visual_box`) — see
   `tests/diag_motion_gif.py`.
+- **Stale camera frames**: `CameraRig` warms up **once**; after that `get_image()`
+  returns the last *rendered* frame. If you change the robot/head pose and step with
+  `render=False`, the captured frame is stale — step with `render=True` after posing,
+  before capturing. See `09_kitchen_clear_island.py` / `tests/diag_perception.py`.
+- **ML models crash the kit process**: importing `transformers`/big `torch` models
+  in-process segfaults the Isaac kit app (threading/CUDA-context conflict, no
+  traceback). Run them in a **subprocess** — `r2d3_sim.perception.detect()` shells
+  out to a clean Python and returns JSON. Also: a COCO detector (torchvision) does
+  NOT recognise the sim YCB props (a red mug → "chair"); use **open-vocabulary**
+  OWL-ViT (text query "a red mug"), which transfers to the sim render.
+- **Perception → grasp**: head-cam pixel + radial depth (`distance_to_camera`) +
+  the head `Camera` prim's intrinsics/world-pose unproject to a world point (≈2.5 cm
+  accurate). Observe from ~0.3 m back with the arm stowed (the recessed head lens is
+  occluded by the robot's own body/arms at the grasp pose).
 - **`rep` camera `look_at`** fails for near-level views — use a downward angle.
 - **Gravity is off** on the robot articulation (stable position drives); `get_wrench`
   reads contact/holding forces, not static gravity load.

@@ -26,7 +26,10 @@ scripts/isaacsim_ros2.sh isaac_sim/tests/diag_scenes.py --scene kitchen --check 
 ```
 
 To grasp an object, see **`isaac_sim/examples/08_kitchen_manipulation.py`** (picks the
-mug off the island).
+mug off the island). For an **ML-perception-driven** pick-and-place — an
+open-vocabulary detector (OWL-ViT) finds the mug in the head camera, the pixel is
+unprojected to 3D, and the robot picks + places it — see
+**`isaac_sim/examples/09_kitchen_clear_island.py`** (needs `pip install transformers`).
 
 ## The three scenes
 

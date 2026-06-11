@@ -17,10 +17,18 @@ scripts/isaacsim_ros2.sh isaac_sim/examples/01_hello_robot.py
 | `06_drive_base.py` | drive the mobile base (wheels rolling) — needs the `usd_mobile` build |
 | `07_grasp_cube.py` | full IK grasp-and-lift of a cube (`--ee dexterous\|gripper`) |
 | `08_kitchen_manipulation.py` | pick a mug off the kitchen island in a full training scene |
+| `09_kitchen_clear_island.py` | **ML-perception pick-and-place** — OWL-ViT finds the mug, robot picks + places it |
 
 `08` loads the **kitchen training scene** (`scenes.load`) — counters/island with a
 mug, bowl, and groceries on them — and grasps the mug. See [`../../docs/scenes.md`](../../docs/scenes.md)
 for the warehouse / kitchen / living-room scenes + their manipulable objects.
+
+`09` adds **ML perception**: an open-vocabulary detector (OWL-ViT) localises the mug
+in the head camera, the pixel is unprojected to 3D via the depth image, and the robot
+picks + places it — a full perceive→ground→act loop. Needs `pip install transformers`
+(weights auto-download, ~600 MB, cached); the model runs in a subprocess
+(`r2d3_sim/perception.py`) since `transformers` crashes the Isaac kit process in-line.
+Writes `tests/captures/clear_island.gif` + `clear_island_detect.png`.
 
 ## Switch the arm / end-effector
 

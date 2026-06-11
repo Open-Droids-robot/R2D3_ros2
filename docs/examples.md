@@ -17,6 +17,7 @@ scripts/isaacsim_ros2.sh isaac_sim/examples/01_hello_robot.py
 | 06 | `06_drive_base.py` | drive the mobile base, wheels rolling | needs the `usd_mobile` build |
 | 07 | `07_grasp_cube.py` | full IK grasp-and-lift of a cube | uses the `setup` hook + a weld |
 | 08 | `08_kitchen_manipulation.py` | pick a mug off the island in the kitchen scene | loads `scenes.load("kitchen")`; see [scenes.md](scenes.md) |
+| 09 | `09_kitchen_clear_island.py` | **ML perception** — OWL-ViT locates the mug in the head cam, the robot picks + places it | needs `pip install transformers`; writes a GIF + detection frame |
 
 GIF-capturing demos + the verification suite live in `isaac_sim/tests/`
 (`grasp_lift_ik.py`, `move_task.py`, `smoke_sdk.py`, `diag_all_joints.py`,

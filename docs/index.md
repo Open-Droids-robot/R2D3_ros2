@@ -22,7 +22,7 @@ with R2D3(end_effector="dexterous") as sim:
 ## Build on it
 - **[Platform guide](platform.md)** — RL (`R2D3Env`), VLM (`PerceptionLoop`), teleop (`TeleopServer`), custom task scenes
 - **[Training scenes](scenes.md)** — warehouse / kitchen / living room + recommended environments
-- **[Examples](examples.md)** — 8 runnable demos in `isaac_sim/examples/`
+- **[Examples](examples.md)** — 9 runnable demos in `isaac_sim/examples/` (09 = ML-perception pick-and-place)
 
 ## Under the hood
 - **[Architecture](architecture.md)** — design, dynamics, gripper-mimic decisions
