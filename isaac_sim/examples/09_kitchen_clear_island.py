@@ -28,8 +28,10 @@ from isaac_sim.r2d3_sim import perception
 OUT = Path(__file__).resolve().parents[1] / "tests" / "captures"
 QUERIES = ["a red mug", "a bowl", "a cracker box", "a soup can", "a mustard bottle"]
 TARGET = "a red mug"
-WRIST_OFFSET = np.array([0.12, 0.0, 0.05])          # wrist vs grasp point (yaw-180 top-down; see ex 08)
+WRIST_OFFSET = np.array([0.12, 0.0, 0.02])           # wrist vs grasp point; low z -> hand comes onto the mug
 STOW_LEFT = [0.0, -2.2, 0.0, -0.44, 0.0, 0.0, 0.0]   # FK-found: left hand low + out of the head-cam cone
+STOW_RIGHT = [0.0, -2.2, 0.0, -0.44, 0.0, 0.0, 0.0]  # tuck the (unused) right arm down, not idle-raised
+BASE_Z = 0.25                                        # wheels on the floor (not floating)
 GIF = os.environ.get("CLEAR_GIF", "1") == "1"
 
 
@@ -52,19 +54,39 @@ def main() -> int:
         sim.set_lift(man.get("lift", 0.90))
         sx, sy, yaw = man["spawn"]
         q = h.yaw_quat(yaw)
-        base_grasp = np.array([sx, sy, 0.27])
-        base_obs = np.array([sx + 0.30, sy, 0.27])      # 0.30 m back: island enters the clear view cone
+        base_grasp = np.array([sx, sy, BASE_Z])
+        base_obs = np.array([sx + 0.35, sy, BASE_Z])    # 0.35 m back: island enters the clear view cone
         obj = man["objects"]["mug"]
 
         def center():
             lo, hi = scene_mod.world_range(obj)
             return (np.asarray(lo) + np.asarray(hi)) / 2.0
 
-        # third-person GIF camera (same framing as the scene renders)
-        cam = rep.functional.create.camera(position=(4.0, -3.0, 2.4), look_at=(-1.0, 0.0, 0.9))
+        # third-person GIF camera from the robot's +Y (left) side so the LEFT arm doing
+        # the grasp is visible, not hidden behind the torso.
+        cam = rep.functional.create.camera(position=(2.1, 2.5, 1.55), look_at=(-0.60, 0.12, 0.96))
         rp = rep.create.render_product(str(cam.GetPath()), (960, 540))
         ann = rep.AnnotatorRegistry.get_annotator("rgb"); ann.attach(rp)
         frames = []
+
+        def grab():
+            frames.append(Image.fromarray(h.rgba_to_rgb(
+                np.asarray(ann.get_data(do_array_copy=True)))).resize((640, 360)))
+
+        wheel = [0.0]
+
+        def drive(b0, b1, n, *, frz=False):              # smooth wheeled base move (not a teleport)
+            for i in range(n):
+                t = (i + 1) / n
+                b = b0 * (1.0 - t) + b1 * t
+                wheel[0] += 0.22
+                sim.set_joint_targets({"joint_left_wheel": wheel[0], "joint_right_wheel": wheel[0]})
+                if frz:
+                    freeze()
+                sim.set_base_pose(b, q)
+                sim.world.step(render=GIF)
+                if GIF and i % 2 == 0:
+                    grab()
 
         # freeze handle: pin the mug to its rest pose during the reach so the weld is
         # computed from a clean, static pose (else contact knocks it and the weld snaps)
@@ -92,9 +114,9 @@ def main() -> int:
                     frames.append(Image.fromarray(h.rgba_to_rgb(
                         np.asarray(ann.get_data(do_array_copy=True)))).resize((640, 360)))
 
-        for _ in range(16):                             # RTX warm-up + initial settle
-            sim.set_base_pose(base_grasp, q); sim.world.step(render=True)
-        step(30, base_grasp)
+        for _ in range(16):                             # RTX warm-up + initial settle (start at the observe pose)
+            sim.set_base_pose(base_obs, q); sim.world.step(render=True)
+        step(30, base_obs)
         if mug_rb is not None:
             try:
                 rest_p, rest_o = mug_rb.get_world_poses()
@@ -103,13 +125,16 @@ def main() -> int:
         z_start = float(center()[2])
         print(f"[clear] mug rest center {center().round(3)}", flush=True)
 
-        # ---------- OBSERVE: stow the arm, point the head down, look at the island ----------
+        # ---------- OBSERVE: stow both arms, point the head down, look at the island ----------
         sim.set_arm_joints("left", STOW_LEFT)
+        sim.set_arm_joints("right", STOW_RIGHT)
         sim.set_head(0.0, -0.62)
         h.set_lighting(dome=400.0, key=4000.0, fill=2000.0)
         step(25, base_obs, frz=True, render=False)      # settle physics (fast)
-        for _ in range(15):                             # REFRESH the head render product at this pose
+        for i in range(18):                             # REFRESH the head render + show the "looking" in the GIF
             freeze(); sim.set_base_pose(base_obs, q); sim.world.step(render=True)
+            if GIF and i % 2 == 0:
+                grab()
         rgb, depth = sim.get_image("head", depth=True)
         H, W = depth.shape
 
@@ -148,12 +173,12 @@ def main() -> int:
               f"(true {center().round(3)})", flush=True)
         _save_annotated(rgb, dets, OUT / "clear_island_detect.png", TARGET)
 
-        # ---------- APPROACH: raise the arm clear, then drive up (mug is world-fixed) ----------
+        # ---------- APPROACH: raise the left arm clear, keep the right tucked, DRIVE up ----------
         sim.set_head(0.0, 0.0)
-        sim.go_home()
-        sim.set_lift(man.get("lift", 0.90))
-        step(35, base_obs, frz=True)                    # raise arm while still back (clear of the mug)
-        step(45, base_grasp, frz=True)                  # drive up with the arm raised
+        sim.set_arm_joints("left", [0.0] * 7)           # raise the left arm clear of the island
+        sim.set_arm_joints("right", STOW_RIGHT)         # keep the right arm tucked down
+        step(25, base_obs, frz=True)                    # let the left arm rise (still back)
+        drive(base_obs, base_grasp, 48, frz=True)       # smooth wheeled drive up to the island
         print(f"[clear] after approach, mug at {center().round(3)}", flush=True)
 
         # ---------- GRASP at the PERCEIVED point (IK + weld, frozen reach; ex 07/08) ----------
@@ -185,8 +210,12 @@ def main() -> int:
         sim.set_arm_pose("left", grasp + np.array([0.0, 0.0, 0.22]), sim.top_down_quat,
                          pos_tol=0.04, ori_tol=0.4)
         step(60, base_grasp, grip=1.0)
+        step(25, base_grasp, grip=1.0)                  # hold the mug up so the lift reads clearly
         z_lift = float(center()[2])
-        print(f"[clear] lifted; mug at {center().round(3)} (rose {z_lift - z_start:+.3f})", flush=True)
+        body = "?"
+        if mug_rb is not None:
+            body = np.asarray(mug_rb.get_world_poses()[0], dtype=float).reshape(-1)[:3].round(3)
+        print(f"[clear] lifted; mug bbox {center().round(3)} body {body} (rose {z_lift - z_start:+.3f})", flush=True)
 
         drop = Pmug + np.array([-0.09, -0.30, 0.0])          # clear spot to the side, deeper on the island
         drop[0] = min(drop[0], -0.70)                        # keep clear of the near edge (~-0.56) so it can't roll off
@@ -198,9 +227,13 @@ def main() -> int:
         print(f"[clear] over drop (ik ok={okp}); mug at {center().round(3)}", flush=True)
 
         fj.CreateJointEnabledAttr().Set(False)               # release the weld
-        if mug_rb is not None:                               # kill the inherited hand velocity (else it flies)
+        if mug_rb is not None and rest_p is not None:        # set the mug down UPRIGHT on the surface
+            rp = np.asarray(rest_p, dtype=np.float32).reshape(1, 3)
+            ro = np.asarray(rest_o, dtype=np.float32).reshape(1, 4)
+            placed = rp + np.array([[drop[0] - Pmug[0], drop[1] - Pmug[1], 0.0]], dtype=np.float32)
+            mug_rb.set_world_poses(placed, ro)               # rest orientation = upright; rest z = on the island
             mug_rb.set_velocities(np.zeros((1, 6), dtype=np.float32))
-        step(55, base_grasp, grip=0.0)                       # open the hand, let it settle onto the surface
+        step(55, base_grasp, grip=0.0)                       # open the hand; the mug rests upright
 
         c_end = center()
         moved = float(np.linalg.norm(c_end[:2] - Pmug[:2]))
