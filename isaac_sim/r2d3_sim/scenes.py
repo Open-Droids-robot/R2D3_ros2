@@ -206,22 +206,24 @@ def load_living_room(world):
     O = asset_root() + _OFF
     UsdGeom.Xform.Define(omni.usd.get_context().get_stage(), "/World/lr")
     _room(size=(7.5, 7.5), floor=(0.40, 0.31, 0.25), wall=(0.60, 0.58, 0.55))
-    scene_mod.add_visual_box("/World/lr/rug", (-0.9, 0.0, 0.006), (3.2, 2.6, 0.012), (0.34, 0.24, 0.24))
-    _ref(O + "/SM_Sofa.usd", "/World/lr/sofa", pos=(-3.0, 0.0, 0), yaw=90)
-    _ref(O + "/SM_Armchair.usd", "/World/lr/arm1", pos=(-0.9, 2.3, 0), yaw=205)
-    _ref(O + "/SM_Armchair.usd", "/World/lr/arm2", pos=(-0.9, -2.3, 0), yaw=-25)
+    # A conversation grouping centred on the coffee table at (-1.4, 0): sofa against
+    # the back (-X) wall facing the table; two armchairs flanking, facing inward.
+    scene_mod.add_visual_box("/World/lr/rug", (-1.4, 0.0, 0.006), (3.4, 2.8, 0.012), (0.34, 0.24, 0.24))
+    _ref(O + "/SM_Sofa.usd", "/World/lr/sofa", pos=(-2.7, 0.0, 0), yaw=90)         # faces +X (toward the table)
+    _ref(O + "/SM_Armchair.usd", "/World/lr/arm_l", pos=(-1.4, 1.7, 0), yaw=0)      # faces -Y (toward the table)
+    _ref(O + "/SM_Armchair.usd", "/World/lr/arm_r", pos=(-1.4, -1.7, 0), yaw=180)   # faces +Y (toward the table)
     # collidable coffee table (replaces SM_A4_Table, whose collider is unknown)
-    scene_mod.add_fixed_box("/World/lr/coffee_top", (-1.5, 0.0, 0.42), (0.95, 0.6, 0.06), (0.46, 0.33, 0.22))
-    scene_mod.add_fixed_box("/World/lr/coffee_leg", (-1.5, 0.0, 0.195), (0.80, 0.45, 0.39), (0.40, 0.28, 0.18))
-    _ref(O + "/SM_Plant01.usd", "/World/lr/plant1", pos=(-3.3, 3.2, 0))
-    _ref(O + "/SM_Plant02.usd", "/World/lr/plant2", pos=(-3.3, -3.2, 0))
-    _ref(O + "/SM_Cupboard.usd", "/World/lr/cupboard", pos=(2.6, 3.2, 0), yaw=180)
-    man = _manifest((1.4, 0.0, 180.0), look=(-1.2, 0.0, 0.8), eye=(4.6, -3.4, 2.6))
+    scene_mod.add_fixed_box("/World/lr/coffee_top", (-1.4, 0.0, 0.42), (0.95, 0.6, 0.06), (0.46, 0.33, 0.22))
+    scene_mod.add_fixed_box("/World/lr/coffee_leg", (-1.4, 0.0, 0.195), (0.80, 0.45, 0.39), (0.40, 0.28, 0.18))
+    _ref(O + "/SM_Plant01.usd", "/World/lr/plant1", pos=(-3.3, 3.3, 0))            # corners
+    _ref(O + "/SM_Plant02.usd", "/World/lr/plant2", pos=(-3.3, -3.3, 0))
+    _ref(O + "/SM_Cupboard.usd", "/World/lr/cupboard", pos=(1.4, 3.3, 0), yaw=180)  # sideboard on the +Y wall
+    man = _manifest((1.4, 0.0, 180.0), look=(-1.4, 0.0, 0.7), eye=(4.8, -3.8, 2.8))
     man["hold_base"] = True       # visual-only floor -> re-pin the base each step
     TBL = 0.45   # coffee-table top surface
-    add_object(man, "banana", _YCB + "/011_banana.usd", (-1.35, 0.12, TBL + 0.10), surface_z=TBL, mass=0.10)
-    add_object(man, "mug", _YCB + "/025_mug.usd", (-1.62, -0.12, TBL + 0.10), surface_z=TBL, mass=0.12)
-    add_object(man, "sugar_box", _YCB + "/004_sugar_box.usd", (-1.62, 0.18, TBL + 0.12), surface_z=TBL, yaw=35, mass=0.30)
+    add_object(man, "banana", _YCB + "/011_banana.usd", (-1.25, 0.12, TBL + 0.10), surface_z=TBL, mass=0.10)
+    add_object(man, "mug", _YCB + "/025_mug.usd", (-1.55, -0.12, TBL + 0.10), surface_z=TBL, mass=0.12)
+    add_object(man, "sugar_box", _YCB + "/004_sugar_box.usd", (-1.55, 0.18, TBL + 0.12), surface_z=TBL, yaw=35, mass=0.30)
     return man
 
 
