@@ -1,55 +1,83 @@
 # Training environments (scenes)
 
-R2D3 can be dropped into furnished environments for training and evaluation.
+R2D3 can be dropped into furnished, **interactable** environments — each with
+manipulable objects already on its surfaces — for training and evaluation.
 `isaac_sim/r2d3_sim/scenes.py` loads a scene; pass it through the `R2D3` setup hook:
 
 ```python
 from isaac_sim.r2d3_sim import R2D3, scenes
 
-sim = R2D3(mobile=True, setup=lambda w: scenes.load("kitchen", w))
+man = {}
+sim = R2D3(mobile=True, setup=lambda w: man.update(scenes.load("kitchen", w)))
 sim.reset()
-# scenes.load(...) returns {"spawn": (x, y, yaw), "look": ..., "eye": ...}
+# scenes.load(...) returns a manifest:
+#   man["objects"]   -> {"mug": "/World/objs/mug", ...}   manipulable rigid bodies
+#   man["surface_z"] -> {"mug": 0.85, ...}                the surface each rests on
+#   man["spawn"]/["look"]/["eye"]/["lift"]                robot placement + camera hints
 ```
 
-Render a screenshot of any scene with the robot in it:
+Render a screenshot, or verify the objects are interactable (numeric, no render):
 
 ```bash
-scripts/isaacsim_ros2.sh isaac_sim/tests/diag_scenes.py --scene warehouse
-scripts/isaacsim_ros2.sh isaac_sim/tests/diag_scenes.py --scene kitchen
-scripts/isaacsim_ros2.sh isaac_sim/tests/diag_scenes.py --scene living_room
-# -> isaac_sim/tests/captures/scene_<name>.png
+scripts/isaacsim_ros2.sh isaac_sim/tests/diag_scenes.py --scene kitchen           # screenshot
+scripts/isaacsim_ros2.sh isaac_sim/tests/diag_scenes.py --scene kitchen --check --no-render
+# screenshots -> isaac_sim/tests/captures/scene_<name>.png
+# --check verifies every object settled on its surface + the robot is stable (exit 1 on fail)
 ```
+
+To grasp an object, see **`isaac_sim/examples/08_kitchen_manipulation.py`** (picks the
+mug off the island).
 
 ## The three scenes
 
-| Scene | Built from | Notes |
+| Scene | Built from | Objects on it |
 |---|---|---|
-| **warehouse** | NVIDIA prebuilt `full_warehouse.usd` | shelving, pallets, forklifts, floor markings — a complete real scene |
-| **living_room** | Isaac **Office** furniture props (`SM_Sofa`, `SM_Armchair`, `SM_Plant`, table) + rug | real SimReady-quality props |
-| **kitchen** | primitive cabinetry (counter run, island, fridge, upper cabinets, stovetop) + a live plant | see the asset note below |
+| **warehouse** | NVIDIA prebuilt `warehouse.usd` (shelving, floor markings) | cardboard boxes + a tote on the floor |
+| **living_room** | Office props (`SM_Sofa`/`SM_Armchair`/`SM_Plant`) + rug + a collidable coffee table | banana, mug, sugar box on the table |
+| **kitchen** | collidable cabinetry (counter run, island, fridge, cabinets, stovetop) | mug, bowl, cracker box, soup can, mustard on the worktops |
 
-Assets are streamed from NVIDIA's **cloud** asset server (`get_assets_root_path()`),
-so the machine needs internet — no local Nucleus required. First load of the
-warehouse takes a minute (it pulls many sub-assets).
+Assets stream from NVIDIA's **cloud** asset server (`get_assets_root_path()`), so the
+machine needs internet — no local Nucleus required.
 
-> **Robot framing in the warehouse:** the prebuilt warehouse is large, densely
-> racked, and its floor isn't at z=0, which makes a *headless, blind* third-person
-> screenshot of the robot inside it finicky (the robot settles on the floor fine,
-> but origin is occluded by racks and good camera/spawn coordinates are best picked
-> interactively in the GUI). The kitchen + living-room screenshots show the robot
-> clearly; for the warehouse, tune `scenes.load_warehouse`'s `spawn`/`look`/`eye`
-> (or view it in the Kit UI with `headless=False`) to a clear aisle.
+## Manipulable objects
+
+Every scene seeds rigid-body objects (Isaac YCB props + cardboard boxes) on its
+surfaces. `scenes.load(...)` returns them in the manifest:
+
+```python
+man = scenes.load("kitchen", world)
+man["objects"]     # {"mug": "/World/objs/mug", "bowl": ..., "soup_can": ...}
+man["surface_z"]   # {"mug": 0.85, ...}  (None = rests on the scene floor)
+```
+
+Objects live under `/World/objs/<name>`, are made dynamic rigid bodies
+(`scenes.add_object` applies a collider + mass if the asset lacks one), and settle
+onto **collidable** surfaces (`scene.add_fixed_box` counters/island/table, or the
+warehouse floor). Grasp one with the SDK's IK + a fixed-joint weld — see
+`isaac_sim/examples/08_kitchen_manipulation.py`. Add your own with
+`scenes.add_object(manifest, name, usd, pos, surface_z=..., mass=...)`.
+
+> **Surfaces vs floors:** counters/island/coffee-table are collidable
+> (`add_fixed_box`); the composed-room floors/walls are visual-only (the kinematic
+> base is re-pinned each step, and a collidable ground would perturb the
+> articulation). Objects rest on the fixed surfaces, not the room floor.
+
+> **Warehouse note:** uses the single-shelf `warehouse.usd` (open floor at the
+> origin) rather than `full_warehouse.usd` — the full warehouse is densely racked,
+> which made headless robot placement finicky. Both render the same way; swap the
+> USD in `scenes.load_warehouse` if you want the larger layout (and tune the spawn).
 
 ### Asset note (kitchen)
 
-The kitchen cabinetry is built from primitives rather than the
-`SimReady/Residential/Kitchen` USDs. Those assets carry varied internal
-z-offsets and didn't render reliably headless (the prims load but the visual
-meshes don't appear). The Office furniture props (used for the living room) and
-the prebuilt warehouse render correctly. To swap the photoreal kitchen assets
-back in once the SimReady rendering is resolved, replace the `add_visual_box`
-calls in `scenes.load_kitchen` with `_ref(...)` to the SimReady USDs (the paths
-are in git history) and let the per-asset floor-snap in `diag_scenes.py` place them.
+The kitchen cabinetry is built from **collidable primitives** (`scene.add_fixed_box`)
+rather than the `SimReady/Residential/Kitchen` USDs. Those assets carry varied
+internal z-offsets and didn't render reliably headless (the prims load but the
+visual meshes don't appear). The Office furniture props (living room) and the
+prebuilt warehouse render correctly. To swap the photoreal kitchen assets back in
+once the SimReady rendering is resolved, replace the `add_fixed_box` calls in
+`scenes.load_kitchen` with `scenes.add_object(...)`/`_ref(...)` to the SimReady USDs
+(paths are in git history). The island is intentionally low (worktop 0.85 m) so the
+robot's resting arms clear it at the close grasp spawn.
 
 ## Recommended additional scenes
 
@@ -68,7 +96,7 @@ are in git history) and let the per-asset floor-snap in `diag_scenes.py` place t
 - **Lab bench** — precise bimanual manipulation.
 
 **Training-specific:**
-- **Cluttered tabletop** — dense graspable objects (Isaac `Props/YCB/`): the RL grasping workhorse.
+- **Cluttered tabletop** — denser piles of the YCB props already used here (`Props/YCB/`): the RL grasping workhorse.
 - **Domain-randomized variants** of every scene — randomize lighting, textures, and object poses (Isaac Replicator) for sim-to-real robustness.
 - **Multi-room apartment** — kitchen + living room + bedroom + hallway: long-horizon mobile manipulation.
 

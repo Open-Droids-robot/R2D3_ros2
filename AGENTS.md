@@ -144,22 +144,25 @@ isaac_sim/r2d3_sim/
   sensors.py     camera prims + OmniGraph ROS publishers
   cameras.py     CameraRig (in-process RGB/depth numpy)
   ik.py          ArmIK (Lula, left arm; per-EE URDF/yaml in _CFG)
+  scenes.py      training environments (warehouse/kitchen/living_room) + objects
   boot.py        SimulationApp launch + ROS-ext enable
   helpers.py     quats, prim lookup, world pose, RGBA, lighting, GIF
   sim_topics.py  joint-name + topic-name contract; reads R2D3_EE → EE_TYPE
   sim_adapter.py rclpy node (ROS state/command surface)
   bring_up.py    ROS entry point (the bridge path)
   envs/          rl_env.py, vlm_loop.py, teleop.py
-isaac_sim/examples/   01–07 runnable demos (all take --ee)
+isaac_sim/examples/   01–08 runnable demos (08 = pick a mug off the kitchen island)
 isaac_sim/tests/      smoke_sdk.py, diag_all_joints.py, diag_motion_gif.py,
-                      grasp_lift_ik.py + move_task.py (GIF demos); diagnostics/ = archive
+                      diag_scenes.py (scene render + --check); grasp_lift_ik/move_task
+                      (GIF demos); diagnostics/ = archive
 scripts/              bootstrap.sh, isaacsim_ros2.sh, build_robot.sh,
                       urdf_to_usd.py, make_lula_urdf.py, _conda_env.sh
-docs/                 setup, run, api, platform, examples, bridge, architecture, ros2_packages
+docs/                 setup, run, api, platform, examples, bridge, scenes, architecture, ros2_packages
 ```
-Add a new example → `isaac_sim/examples/NN_name.py` (take `--ee`, use the SDK).
+Add a new example → `isaac_sim/examples/NN_name.py` (use the SDK).
 Add a new env/interface → `isaac_sim/r2d3_sim/envs/`. New control/sensing → extend
-`r2d3.py` (and `robot.py` if it needs the articulation).
+`r2d3.py` (and `robot.py` if it needs the articulation). New training scene or
+object → `scenes.py` (`add_fixed_box` for surfaces, `add_object` for manipulables).
 
 ---
 
@@ -180,7 +183,15 @@ Add a new env/interface → `isaac_sim/r2d3_sim/envs/`. New control/sensing → 
 - **IK is left-arm only** (Lula descriptions are `l_joint1..7`); `set_arm_pose("right")`
   raises.
 - **Base is kinematic** in V1 (`set_base_pose`); spin wheels visually with
-  `set_joint_targets`. Wheel-physics driving is V2.
+  `set_joint_targets`. Wheel-physics driving is V2. A free mobile base (gravity off)
+  has no friction, so **re-pin it each step** (`set_base_pose` in the loop) when
+  holding a pose — else it drifts. See `tests/diag_scenes.py`.
+- **IK uses the base orientation**: `set_arm_pose` syncs the real base pose, so a
+  rotated robot (e.g. facing -X at a counter) solves correctly. The wrist offset for
+  a top-down grasp is toward the robot — opposite sign to a +X-facing robot.
+- **Scene surfaces are collidable, room floors are visual-only**: objects rest on
+  `add_fixed_box` counters/island/table (or the warehouse floor); the room
+  floor/walls have no collider (a collidable ground would perturb the held base).
 - **Grasping small objects**: friction alone is unreliable — the grasp examples
   attach the object with a fixed joint at contact, and **freeze the object on the
   table during the approach** so the weld is computed from a clean pose (else it
@@ -196,6 +207,7 @@ Add a new env/interface → `isaac_sim/r2d3_sim/envs/`. New control/sensing → 
 scripts/isaacsim_ros2.sh isaac_sim/tests/smoke_sdk.py                      # SDK boots, controls, senses
 scripts/isaacsim_ros2.sh isaac_sim/tests/diag_all_joints.py --ee dexterous # every DOF moves (also --ee gripper, --mobile)
 scripts/isaacsim_ros2.sh isaac_sim/tests/diag_motion_gif.py --ee dexterous # third-person motion GIF (visual check)
+scripts/isaacsim_ros2.sh isaac_sim/tests/diag_scenes.py --scene kitchen --check --no-render  # objects settle + robot stable
 ```
 `diag_all_joints.py` prints PASS/FAIL per joint and exits non-zero on failure —
 use it after any control/asset change. Expected: dexterous 41 DOF, gripper 21,

@@ -189,13 +189,22 @@ def add_visual_box(prim_path: str, center, size, color) -> str:
     xf.AddTranslateOp().Set(Gf.Vec3d(float(center[0]), float(center[1]), float(center[2])))
     xf.AddScaleOp().Set(Gf.Vec3f(float(size[0]), float(size[1]), float(size[2])))
 
-    # Bind a UsdPreviewSurface material. displayColor alone renders BLACK under
-    # RTX on faces not hit by a direct light (no ambient from primvar color); a
-    # material albedo lights correctly from any angle. Wrapped in try/except so
-    # a USD-version API mismatch can never crash the caller — it just falls back
-    # to displayColor.
+    _bind_preview_material(prim_path, cube.GetPrim(), color)
+    return prim_path
+
+
+def _bind_preview_material(prim_path: str, prim, color) -> None:
+    """Bind a UsdPreviewSurface material to ``prim``.
+
+    displayColor alone renders BLACK under RTX on faces not hit by a direct light
+    (no ambient from the primvar color); a material albedo lights correctly from
+    any angle. Wrapped in try/except so a USD-version API mismatch can never crash
+    the caller — it just falls back to displayColor.
+    """
+    import omni.usd
+    from pxr import Gf, Sdf, UsdShade
+    stage = omni.usd.get_context().get_stage()
     try:
-        from pxr import Sdf, UsdShade
         mtl = UsdShade.Material.Define(stage, f"{prim_path}/Mat")
         shader = UsdShade.Shader.Define(stage, f"{prim_path}/Mat/Shader")
         shader.CreateIdAttr("UsdPreviewSurface")
@@ -204,10 +213,49 @@ def add_visual_box(prim_path: str, center, size, color) -> str:
         shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
         surf_out = shader.CreateOutput("surface", Sdf.ValueTypeNames.Token)
         mtl.CreateSurfaceOutput().ConnectToSource(surf_out)
-        UsdShade.MaterialBindingAPI.Apply(cube.GetPrim())
-        UsdShade.MaterialBindingAPI(cube.GetPrim()).Bind(mtl)
+        UsdShade.MaterialBindingAPI.Apply(prim)
+        UsdShade.MaterialBindingAPI(prim).Bind(mtl)
     except Exception as e:  # noqa: BLE001
         logger.warning("material bind failed for %s (%s); using displayColor", prim_path, e)
+
+
+_PHYS_MAT = None
+
+
+def _phys_material():
+    """One shared PhysicsMaterial (lazy) for fixed scene surfaces + objects."""
+    global _PHYS_MAT
+    import omni.usd
+    from isaacsim.core.api.materials import PhysicsMaterial
+    stage = omni.usd.get_context().get_stage()
+    if _PHYS_MAT is None or not stage.GetPrimAtPath("/World/PhysMat").IsValid():
+        _PHYS_MAT = PhysicsMaterial(prim_path="/World/PhysMat",
+                                    static_friction=1.4, dynamic_friction=1.2)
+    return _PHYS_MAT
+
+
+def add_fixed_box(prim_path: str, center, size, color) -> str:
+    """Author a STATIC collidable colored box (FixedCuboid + collider + material).
+
+    Unlike ``add_visual_box`` this has a collider, so objects rest on it — use it
+    for interactable surfaces (counters, tables). Create it in the setup hook,
+    before ``world.reset()``. A bound UsdPreviewSurface keeps it from rendering
+    black under RTX.
+    """
+    import numpy as np
+    import omni.usd
+    from isaacsim.core.api.objects import FixedCuboid
+
+    FixedCuboid(
+        prim_path=prim_path,
+        name=prim_path.rsplit("/", 1)[-1],
+        position=np.asarray([float(center[0]), float(center[1]), float(center[2])]),
+        scale=np.asarray([float(size[0]), float(size[1]), float(size[2])]),
+        color=np.asarray(color, dtype=float),
+        physics_material=_phys_material(),
+    )
+    prim = omni.usd.get_context().get_stage().GetPrimAtPath(prim_path)
+    _bind_preview_material(prim_path, prim, color)
     return prim_path
 
 

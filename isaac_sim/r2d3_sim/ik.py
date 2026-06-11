@@ -40,11 +40,15 @@ class ArmIK:
             urdf_path=str(_URDF_DIR / urdf),
         )
 
-    def sync_base(self, base_pos=None, base_quat_wxyz=(1.0, 0.0, 0.0, 0.0)) -> None:
-        """Tell the solver where the robot base is. With no args, reads the
-        ``base_link_underpan`` world pose from the stage."""
-        if base_pos is None:
-            base_pos, _ = h.world_pose("base_link_underpan")
+    def sync_base(self, base_pos=None, base_quat_wxyz=None) -> None:
+        """Tell the solver where the robot base is — position AND orientation. With no
+        args, reads the ``base_link_underpan`` world pose from the stage; reading the
+        orientation matters when the mobile base is rotated (a fixed identity quat
+        would make IK solve in the wrong frame, e.g. a robot facing -X)."""
+        if base_pos is None or base_quat_wxyz is None:
+            p, qb = h.world_pose("base_link_underpan")
+            base_pos = p if base_pos is None else base_pos
+            base_quat_wxyz = qb if base_quat_wxyz is None else base_quat_wxyz
         self._solver.set_robot_base_pose(np.asarray(base_pos, dtype=float),
                                          np.asarray(base_quat_wxyz, dtype=float))
 

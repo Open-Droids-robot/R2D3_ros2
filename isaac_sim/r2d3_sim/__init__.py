@@ -15,6 +15,7 @@ SDK modules:
     helpers     Quaternions, prim lookups, world poses, RGBA, lighting, GIF
     cameras     CameraRig — in-process RGB/depth as numpy
     ik          ArmIK — Lula IK/FK for the left arm
+    scenes      Training environments (warehouse/kitchen/living_room) + manipulable objects
     envs/       RL env, VLM loop, teleop built on R2D3
 
 Building blocks (used by the facade; also usable directly):

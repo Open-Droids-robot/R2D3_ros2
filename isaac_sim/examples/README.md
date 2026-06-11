@@ -15,11 +15,16 @@ scripts/isaacsim_ros2.sh isaac_sim/examples/01_hello_robot.py
 | `04_rl_env.py` | a Gymnasium rollout in `R2D3Env` (needs `pip install gymnasium`) |
 | `05_vlm_loop.py` | perception → action loop (`PerceptionLoop`) with a stub policy |
 | `06_drive_base.py` | drive the mobile base (wheels rolling) — needs the `usd_mobile` build |
-| `07_grasp_cube.py` | full IK grasp-and-lift of a cube |
+| `07_grasp_cube.py` | full IK grasp-and-lift of a cube (`--ee dexterous\|gripper`) |
+| `08_kitchen_manipulation.py` | pick a mug off the kitchen island in a full training scene |
+
+`08` loads the **kitchen training scene** (`scenes.load`) — counters/island with a
+mug, bowl, and groceries on them — and grasps the mug. See [`../../docs/scenes.md`](../../docs/scenes.md)
+for the warehouse / kitchen / living-room scenes + their manipulable objects.
 
 ## Switch the arm / end-effector
 
-Every example takes **`--ee dexterous|gripper`** to switch between the 5-finger
+Examples `01`–`07` take **`--ee dexterous|gripper`** to switch between the 5-finger
 Inspire hand and the 2-finger parallel gripper — the IK, grasp geometry, and
 finger control all adapt automatically:
 
