@@ -1,0 +1,916 @@
+<?xml version="1.0"?>
+<!--
+  dg4f_gazebo_classic.urdf.xacro
+  
+  Gazebo Classic wrapper for the TESOLLO DG-4F gripper.
+  Attaches the gripper to the R2D3 left arm (l_hand_link).
+  
+  Usage: include this file in dual_rm_75b_gazebo.urdf.xacro
+  
+    <xacro:include filename="$(find dual_rm_gazebo)/config/dg4f_gazebo_classic.urdf.xacro"/>
+    <xacro:dg4f_attach parent="l_hand_link" xyz="0 0 0.01" rpy="0 0 0"/>
+
+  NOTE: The mimic joints (j_dg_1_outer, j_dg_1_mimic, j_dg_4_outer, j_dg_4_mimic)
+  are kept as revolute joints in URDF but registered as passive in ros2_control.
+  Gazebo Classic does not natively support URDF <mimic> tags — those joints will
+  stay at 0. For visual correctness you can add a mimic_joint_plugin later.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="dg4f_attach" params="parent xyz rpy">
+
+    <!-- ============================================================
+         ATTACHMENT JOINT: gripper mount to arm tip
+         ============================================================ -->
+    <joint name="l_hand_to_dg4f" type="fixed">
+      <parent link="${parent}"/>
+      <child link="l_dg_mount"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+
+    <!-- ============================================================
+         INCLUDE ALL DG-4F LINKS AND JOINTS
+         (copy of dg4f.urdf content, robot tag removed)
+         ============================================================ -->
+
+    <!-- base -->
+    <link name="l_dg_mount">
+      <inertial>
+        <origin xyz="6.4721E-09 2.1674E-05 0.0049997" rpy="0.0 0.0 0.0"/>
+        <inertia ixx="1.0999E-05" ixy="-2.1734E-12" ixz="-1.2441E-12"
+                 iyy="1.1018E-05" iyz="-4.0435E-09" izz="2.0531E-05"/>
+        <mass value="0.05"/>
+      </inertial>
+      <visual>
+        <geometry>
+          <mesh filename="package://dg_description/meshes/dg4f/l_dg_mount.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://dg_description/meshes/dg4f/l_dg_mount_c.STL"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="j_dg_base" type="fixed">
+      <parent link="l_dg_mount"/>
+      <child link="l_dg_base"/>
+      <origin rpy="0 0 0" xyz="0 0 0.004"/>
+    </joint>
+
+    <link name="l_dg_base">
+      <inertial>
+        <mass value="0.451"/>
+        <origin xyz="0 0 0.05" rpy="0 0 0"/>
+        <inertia ixx="0.00226" ixy="0.0" ixz="0.0" iyy="0.00226" iyz="0.0" izz="0.00113"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://dg_description/meshes/dg4f/DG_F_P.stl"/>
+        </geometry>
+        <material name="very_dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://dg_description/meshes/dg4f/DG_F_P.stl"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="l_dg_logo">
+      <inertial>
+        <mass value="0.001"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://dg_description/meshes/dg4f/DG_F_P_LOGO.stl"/>
+        </geometry>
+        <material name="white"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://dg_description/meshes/dg4f/DG_F_P_LOGO.stl"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="j_dg_logo" type="fixed">
+      <origin xyz="-0.00003 0.0 0.1481" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_base"/>
+      <child link="l_dg_logo"/>
+    </joint>
+
+    <!-- ============================================================
+         FINGER 1 (thumb-like, has abduction j_dg_1_inner)
+         ============================================================ -->
+    <link name="l_dg_1_inner">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="-0.015 0 0.02" rpy="0 0 0"/>
+        <inertia ixx="0.0000135" ixy="0.0" ixz="0.0" iyy="0.0000270" iyz="0.0" izz="0.0000270"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 -0.366519"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L_FB_1.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 -0.366519"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L_FB_1.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_1_inner" type="revolute">
+      <origin xyz="-0.00747 0.01918 0.07577" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_base"/>
+      <child link="l_dg_1_inner"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="0" upper="2.495821" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <!-- mimic outer (passive in simulation) -->
+    <link name="l_dg_1_outer">
+      <inertial>
+        <mass value="0.046"/>
+        <origin xyz="0.015 0 0.02" rpy="0 0 0"/>
+        <inertia ixx="0.0000230" ixy="0.0" ixz="0.0" iyy="0.0000460" iyz="0.0" izz="0.0000460"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0.0174533"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L_FB_2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0.0174533"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L_FB_2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_1_outer" type="revolute">
+      <origin xyz="-0.00003 0.02516 0.08349" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_base"/>
+      <child link="l_dg_1_outer"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="0" upper="2.897247" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_1_1">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="0 0 0.02" rpy="0 0 0"/>
+        <inertia ixx="0.0000135" ixy="0.0" ixz="0.0" iyy="0.0000270" iyz="0.0" izz="0.0000270"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L0_1.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L0_1.stl"/></geometry>
+      </collision>
+    </link>
+    <!-- mimic joint (passive) -->
+    <joint name="j_dg_1_mimic" type="revolute">
+      <origin xyz="0.03562 -0.01363 0.00565" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_1_inner"/>
+      <child link="l_dg_1_1"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-0.698132" upper="0.698132" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_1_2">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.018 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000555" iyz="0.0" izz="0.0000555"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L1.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L1.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_1_1" type="revolute">
+      <origin xyz="-0.01114 0.00942 0.04238" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_1_1"/>
+      <child link="l_dg_1_2"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_1_3">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.019 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000637" iyz="0.0" izz="0.0000637"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_1_2" type="revolute">
+      <origin xyz="0.0367 0.000613 0.0085" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_1_2"/>
+      <child link="l_dg_1_3"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_1_4">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.019 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000637" iyz="0.0" izz="0.0000637"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_1_3" type="revolute">
+      <origin xyz="0.03882 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_1_3"/>
+      <child link="l_dg_1_4"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_1_5">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.012 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000246" iyz="0.0" izz="0.0000246"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L3.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L3.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_1_4" type="revolute">
+      <origin xyz="0.0388 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_1_4"/>
+      <child link="l_dg_1_5"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_1_tip">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.012 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000246" iyz="0.0" izz="0.0000246"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L4.stl"/></geometry>
+        <material name="white"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L4.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_1_tip" type="fixed">
+      <origin xyz="0.02494 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_1_5"/>
+      <child link="l_dg_1_tip"/>
+    </joint>
+
+    <!-- ============================================================
+         FINGER 2
+         ============================================================ -->
+    <link name="l_dg_2_1">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="-0.018 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000135" ixy="0.0" ixz="0.0" iyy="0.0000364" iyz="0.0" izz="0.0000364"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L1.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L1.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_2_1" type="revolute">
+      <origin xyz="-0.015918 0.01497 0.1238" rpy="0 0 0"/>
+      <parent link="l_dg_base"/>
+      <child link="l_dg_2_1"/>
+      <axis xyz="-1 0 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_2_2">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="-0.019 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000045" ixy="0.0" ixz="0.0" iyy="0.0000419" iyz="0.0" izz="0.0000419"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_2_2" type="revolute">
+      <origin xyz="-0.037792 0.000613 0.0085" rpy="0 0 0"/>
+      <parent link="l_dg_2_1"/>
+      <child link="l_dg_2_2"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_2_3">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="-0.019 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000045" ixy="0.0" ixz="0.0" iyy="0.0000419" iyz="0.0" izz="0.0000419"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_2_3" type="revolute">
+      <origin xyz="-0.03882 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_2_2"/>
+      <child link="l_dg_2_3"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_2_4">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="-0.012 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000045" ixy="0.0" ixz="0.0" iyy="0.0000162" iyz="0.0" izz="0.0000162"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L3.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L3.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_2_4" type="revolute">
+      <origin xyz="-0.0388 0.0 0.0" rpy="0 0 0"/>
+      <parent link="l_dg_2_3"/>
+      <child link="l_dg_2_4"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_2_tip">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="-0.012 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000246" iyz="0.0" izz="0.0000246"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L4.stl"/></geometry>
+        <material name="white"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L4.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_2_tip" type="fixed">
+      <origin xyz="-0.02492 0.0 0.0" rpy="0 0 0"/>
+      <parent link="l_dg_2_4"/>
+      <child link="l_dg_2_tip"/>
+    </joint>
+
+    <!-- ============================================================
+         FINGER 3
+         ============================================================ -->
+    <link name="l_dg_3_1">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="-0.018 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000135" ixy="0.0" ixz="0.0" iyy="0.0000364" iyz="0.0" izz="0.0000364"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L1.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L1.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_3_1" type="revolute">
+      <origin xyz="-0.015918 -0.01497 0.1238" rpy="0 0 0"/>
+      <parent link="l_dg_base"/>
+      <child link="l_dg_3_1"/>
+      <axis xyz="-1 0 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_3_2">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="-0.019 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000045" ixy="0.0" ixz="0.0" iyy="0.0000419" iyz="0.0" izz="0.0000419"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_3_2" type="revolute">
+      <origin xyz="-0.037792 0.000613 0.0085" rpy="0 0 0"/>
+      <parent link="l_dg_3_1"/>
+      <child link="l_dg_3_2"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_3_3">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="-0.019 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000045" ixy="0.0" ixz="0.0" iyy="0.0000419" iyz="0.0" izz="0.0000419"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_3_3" type="revolute">
+      <origin xyz="-0.03882 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_3_2"/>
+      <child link="l_dg_3_3"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_3_4">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="-0.012 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000045" ixy="0.0" ixz="0.0" iyy="0.0000162" iyz="0.0" izz="0.0000162"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L3.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L3.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_3_4" type="revolute">
+      <origin xyz="-0.0388 0.0 0.0" rpy="0 0 0"/>
+      <parent link="l_dg_3_3"/>
+      <child link="l_dg_3_4"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_3_tip">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="-0.012 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000246" iyz="0.0" izz="0.0000246"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L4.stl"/></geometry>
+        <material name="white"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 3.141593"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L4.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_3_tip" type="fixed">
+      <origin xyz="-0.02492 0.0 0.0" rpy="0 0 0"/>
+      <parent link="l_dg_3_4"/>
+      <child link="l_dg_3_tip"/>
+    </joint>
+
+    <!-- ============================================================
+         FINGER 4 (thumb-like, has abduction j_dg_4_inner)
+         ============================================================ -->
+    <link name="l_dg_4_inner">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="0.015 0 0.02" rpy="0 0 0"/>
+        <inertia ixx="0.0000135" ixy="0.0" ixz="0.0" iyy="0.0000270" iyz="0.0" izz="0.0000270"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0.366519"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L_FB_1.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0.366519"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L_FB_1.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_4_inner" type="revolute">
+      <origin xyz="-0.00747 -0.01918 0.07577" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_base"/>
+      <child link="l_dg_4_inner"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-2.495821" upper="0" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <!-- mimic outer (passive) -->
+    <link name="l_dg_4_outer">
+      <inertial>
+        <mass value="0.046"/>
+        <origin xyz="0.015 0 0.02" rpy="0 0 0"/>
+        <inertia ixx="0.0000230" ixy="0.0" ixz="0.0" iyy="0.0000460" iyz="0.0" izz="0.0000460"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 -0.0174533"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L_FB_2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L_FB_2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_4_outer" type="revolute">
+      <origin xyz="-0.00003 -0.02516 0.08349" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_base"/>
+      <child link="l_dg_4_outer"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-2.897247" upper="0" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_4_1">
+      <inertial>
+        <mass value="0.027"/>
+        <origin xyz="0 0 0.02" rpy="0 0 0"/>
+        <inertia ixx="0.0000135" ixy="0.0" ixz="0.0" iyy="0.0000270" iyz="0.0" izz="0.0000270"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L0_2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L0_2.stl"/></geometry>
+      </collision>
+    </link>
+    <!-- mimic joint (passive) -->
+    <joint name="j_dg_4_mimic" type="revolute">
+      <origin xyz="0.03562 0.01363 0.00565" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_4_inner"/>
+      <child link="l_dg_4_1"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-0.698132" upper="0.698132" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_4_2">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.018 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000555" iyz="0.0" izz="0.0000555"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L1.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L1.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_4_1" type="revolute">
+      <origin xyz="-0.01114 -0.00942 0.04238" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_4_1"/>
+      <child link="l_dg_4_2"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_4_3">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.019 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000637" iyz="0.0" izz="0.0000637"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_4_2" type="revolute">
+      <origin xyz="0.0367 0.000613 0.0085" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_4_2"/>
+      <child link="l_dg_4_3"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_4_4">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.019 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000637" iyz="0.0" izz="0.0000637"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L2.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_4_3" type="revolute">
+      <origin xyz="0.03882 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_4_3"/>
+      <child link="l_dg_4_4"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_4_5">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.012 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000246" iyz="0.0" izz="0.0000246"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L3.stl"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L3.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_4_4" type="revolute">
+      <origin xyz="0.0388 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_4_4"/>
+      <child link="l_dg_4_5"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="-1.5708" upper="1.5708" effort="7.644" velocity="3.141592653589793"/>
+    </joint>
+
+    <link name="l_dg_4_tip">
+      <inertial>
+        <mass value="0.041"/>
+        <origin xyz="0.012 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0000068" ixy="0.0" ixz="0.0" iyy="0.0000246" iyz="0.0" izz="0.0000246"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L4.stl"/></geometry>
+        <material name="white"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><mesh filename="package://dg_description/meshes/dg4f/DG_F_L4.stl"/></geometry>
+      </collision>
+    </link>
+    <joint name="j_dg_4_tip" type="fixed">
+      <origin xyz="0.02492 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="l_dg_4_5"/>
+      <child link="l_dg_4_tip"/>
+    </joint>
+
+    <!-- ============================================================
+         GAZEBO CLASSIC PROPERTIES
+         ============================================================ -->
+    <gazebo reference="l_dg_1_tip">
+      <self_collide>false</self_collide>
+      <gravity>true</gravity>
+      <mu1>1.5</mu1>
+      <mu2>1.5</mu2>
+      <kp>1000000.0</kp>
+      <kd>1.0</kd>
+    </gazebo>
+    <gazebo reference="l_dg_2_tip">
+      <self_collide>false</self_collide>
+      <gravity>true</gravity>
+      <mu1>1.5</mu1>
+      <mu2>1.5</mu2>
+      <kp>1000000.0</kp>
+      <kd>1.0</kd>
+    </gazebo>
+    <gazebo reference="l_dg_3_tip">
+      <self_collide>false</self_collide>
+      <gravity>true</gravity>
+      <mu1>1.5</mu1>
+      <mu2>1.5</mu2>
+      <kp>1000000.0</kp>
+      <kd>1.0</kd>
+    </gazebo>
+    <gazebo reference="l_dg_4_tip">
+      <self_collide>false</self_collide>
+      <gravity>true</gravity>
+      <mu1>1.5</mu1>
+      <mu2>1.5</mu2>
+      <kp>1000000.0</kp>
+      <kd>1.0</kd>
+    </gazebo>
+    <gazebo reference="l_dg_base">
+      <self_collide>false</self_collide>
+      <gravity>true</gravity>
+    </gazebo>
+    <gazebo reference="l_dg_mount">
+      <self_collide>false</self_collide>
+      <gravity>true</gravity>
+    </gazebo>
+
+    <!-- ============================================================
+         ROS2_CONTROL BLOCK FOR GAZEBO CLASSIC
+         18 controlled joints (effort interface)
+         4 passive mimic joints (state only)
+         ============================================================ -->
+    <ros2_control name="DG4FSystem" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+
+      <!-- === 18 ACTUATED JOINTS === -->
+      <!-- Finger 1 abduction -->
+      <joint name="j_dg_1_inner">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <!-- Finger 1 flexion -->
+      <joint name="j_dg_1_1">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_1_2">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_1_3">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_1_4">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <!-- Finger 2 -->
+      <joint name="j_dg_2_1">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_2_2">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_2_3">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_2_4">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <!-- Finger 3 -->
+      <joint name="j_dg_3_1">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_3_2">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_3_3">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_3_4">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <!-- Finger 4 abduction -->
+      <joint name="j_dg_4_inner">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <!-- Finger 4 flexion -->
+      <joint name="j_dg_4_1">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_4_2">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_4_3">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_4_4">
+        <command_interface name="effort"/>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <!-- === 4 PASSIVE MIMIC JOINTS (state only, no command) === -->
+      <joint name="j_dg_1_outer">
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_1_mimic">
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_4_outer">
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="j_dg_4_mimic">
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+
+    </ros2_control>
+
+  </xacro:macro>
+
+</robot>

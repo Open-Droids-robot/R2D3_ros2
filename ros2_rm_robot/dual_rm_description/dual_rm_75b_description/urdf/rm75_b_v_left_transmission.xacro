@@ -17,5 +17,5 @@
   <xacro:rm75_b_v_left_transmission joint_name="l_joint4" />
   <xacro:rm75_b_v_left_transmission joint_name="l_joint5" />
   <xacro:rm75_b_v_left_transmission joint_name="l_joint6" />
-  <xacro:rm75_b_v_left_transmission joint_name="l_joint7" />
+  <!-- <xacro:rm75_b_v_left_transmission joint_name="l_joint7" /> -->
 </robot>

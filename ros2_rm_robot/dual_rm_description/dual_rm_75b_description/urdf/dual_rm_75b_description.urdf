@@ -1350,7 +1350,7 @@
       effort="10"
       velocity="3.925" />
   </joint>
-  <link
+  <!-- <link
     name="r_link7">
     <inertial>
       <origin
@@ -1408,12 +1408,12 @@
       effort="10"
       velocity="3.925" />
   </joint>
+   -->
   
   
   
   
-  
-   <link
+   <!-- <link
     name="r_hand">
     <inertial>
       <origin
@@ -1470,7 +1470,7 @@
       upper="0"
       effort="0"
       velocity="0" />
-  </joint>  
+  </joint>   -->
   
   
   
@@ -1849,7 +1849,7 @@
       effort="10"
       velocity="3.925" />
   </joint>
-  <link
+  <!-- <link
     name="l_link7">
     <inertial>
       <origin
@@ -1888,8 +1888,8 @@
           filename="package://dual_rm_75b_description/meshes/l_link7.STL" />
       </geometry>
     </collision>
-  </link>
-  <joint
+  </link> -->
+  <!-- <joint
     name="l_joint7"
     type="revolute">
     <origin
@@ -1907,13 +1907,13 @@
       effort="10"
       velocity="3.925" />
   </joint>
+   -->
   
-  
 
 
 
 
-  <link
+  <!-- <link
     name="l_hand_link">
     <inertial>
       <origin
@@ -1951,7 +1951,7 @@
         <mesh
           filename="package://dual_rm_75b_description/meshes/l_hand_base_link.STL" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
 
 
@@ -1972,7 +1972,7 @@
 
 
 
-  <joint
+  <!-- <joint
     name="l_hand_joint"
     type="fixed">
     <origin
@@ -1989,7 +1989,7 @@
       upper="0"
       effort="0"
       velocity="0" />
-  </joint>  
+  </joint>   -->
     
   
   

@@ -95,6 +95,7 @@ def generate_launch_description():
         executable="move_group",
         output="screen",
         parameters=[
+            {'use_sim_time': True},
             robot_description,
             robot_description_semantic,
             kinematics_yaml,
@@ -115,6 +116,7 @@ def generate_launch_description():
         output="log",
         arguments=["-d", rviz_full_config],
         parameters=[
+            {'use_sim_time': True},
             robot_description,
             robot_description_semantic,
             ompl_planning_pipeline_config,

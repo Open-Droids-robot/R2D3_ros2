@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find 4C2)/urdf/4C2.xacro"/>
+
+    <xacro:gripper_4c2 prefix="l_4c2_" />
+    <xacro:gripper_4c2 prefix="r_4c2_" />
+
+    <joint name="l_arm_to_4c2_joint" type="fixed">
+        <origin xyz="0 0 0.115" rpy="0 0 3.1415"/> 
+        <parent link="l_link6"/>
+        <child link="l_4c2_base_link"/> </joint>
+
+    <joint name="r_arm_to_4c2_joint" type="fixed">
+        <origin xyz="0 0 0.115" rpy="0 0 0"/> 
+        <parent link="r_link6"/>
+        <child link="r_4c2_base_link"/> </joint>
+
+</robot>
