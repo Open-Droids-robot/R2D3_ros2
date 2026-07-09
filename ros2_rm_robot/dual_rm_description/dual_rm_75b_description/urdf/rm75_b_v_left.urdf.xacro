@@ -146,7 +146,7 @@
     </inertial>
     <xacro:visual_collision mesh="l_link6.STL" />
   </link>
-  <link
+  <!-- <link
     name="l_link7">
     <inertial>
       <origin
@@ -161,9 +161,9 @@
         iyy="0.00026856"
         iyz="-1.7799E-08"
         izz="0.00035278" />
-    </inertial>
-    <xacro:visual_collision mesh="l_link7.STL" />
-  </link>
+    </inertial> -->
+    <!-- <xacro:visual_collision mesh="l_link7.STL" />
+  </link> -->
 
   <joint
     name="l_joint1"
@@ -273,7 +273,7 @@
       effort="10"
       velocity="3.925" />
   </joint>
-  <joint
+  <!-- <joint
     name="l_joint7"
     type="revolute">
     <origin
@@ -290,5 +290,5 @@
       upper="6.28"
       effort="10"
       velocity="3.925" />
-  </joint>
+  </joint> -->
 </robot>

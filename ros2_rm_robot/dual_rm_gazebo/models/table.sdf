@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="simple_table">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <pose>-0.6 0 0.3 0 0 0</pose>
+        <geometry><box><size>1.2 0.6 0.6</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>-0.6 0 0.3 0 0 0</pose>
+        <geometry><box><size>1.2 0.6 0.6</size></box></geometry>
+        <material><ambient>0.6 0.4 0.2 1.0</ambient></material>
+      </visual>
+    </link>
+  </model>
+</sdf>

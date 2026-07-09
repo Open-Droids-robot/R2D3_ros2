@@ -1,7 +1,13 @@
 # This config file is used by ros2_control
 controller_manager:
   ros__parameters:
-    update_rate: 100  # Hz
+    update_rate: 100 
+
+    l_gripper_controller:
+      type: position_controllers/GripperActionController 
+
+    r_gripper_controller:
+      type: position_controllers/GripperActionController 
 
     left_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
@@ -15,6 +21,9 @@ controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    agv_controller:
+      type: diff_drive_controller/DiffDriveController
+
 left_arm_controller:
   ros__parameters:
     joints:
@@ -24,7 +33,7 @@ left_arm_controller:
       - l_joint4
       - l_joint5
       - l_joint6
-      - l_joint7
+      # - l_joint7
     command_interfaces:
       - position
     state_interfaces:
@@ -39,7 +48,7 @@ right_arm_controller:
       - r_joint4
       - r_joint5
       - r_joint6
-      - r_joint7
+      # - r_joint7
     command_interfaces:
       - position
     state_interfaces:
@@ -48,3 +57,36 @@ right_arm_controller:
 platform_controller:
   ros__parameters:
     joint: platform_joint
+
+agv_controller:
+  ros__parameters:
+    left_wheel_names: ["joint_left_wheel"]
+    right_wheel_names: ["joint_right_wheel"]
+    wheel_separation: 0.296
+    wheel_radius: 0.163
+    publish_rate: 50.0
+    odom_frame_id: odom
+    base_frame_id: base_link_underpan
+    open_loop: true
+    enable_odom_tf: true
+    cmd_vel_timeout: 0.5
+
+l_gripper_controller:
+  ros__parameters:
+    joint: l_4c2_gripper_joint
+    action_monitor_rate: 20.0
+    allow_stalling: true 
+    stall_velocity_threshold: 0.01 
+    stall_timeout: 0.5 
+    goal_tolerance: 0.05 
+    max_effort: 0.01 
+
+r_gripper_controller:
+  ros__parameters:
+    joint: r_4c2_gripper_joint
+    action_monitor_rate: 20.0 
+    allow_stalling: true 
+    stall_velocity_threshold: 0.01 
+    stall_timeout: 0.5 
+    goal_tolerance: 0.05 
+    max_effort: 0.01 

@@ -3,8 +3,9 @@
   <!-- 引入各个模块的 xacro 文件，分别定义底盘、夹爪、升降平台、机械臂及关节 -->
   <xacro:include filename="$(find dual_rm_75b_description)/urdf/woosh_agv.urdf.xacro"/>
   <xacro:include filename="$(find dual_rm_75b_description)/urdf/body_head_platform.urdf.xacro"/>
-  <xacro:include filename="$(find dual_rm_75b_description)/urdf/left_hand.urdf.xacro"/>
-  <xacro:include filename="$(find dual_rm_75b_description)/urdf/right_hand.urdf.xacro"/>
+  <xacro:include filename="$(find dual_rm_75b_description)/urdf/4c2_attachments.urdf.xacro"/>
+  <!-- <xacro:include filename="$(find dual_rm_75b_description)/urdf/left_hand.urdf.xacro"/> -->
+  <!-- <xacro:include filename="$(find dual_rm_75b_description)/urdf/right_hand.urdf.xacro"/> -->
   <xacro:include filename="$(find dual_rm_75b_description)/urdf/rm75_b_v_left.urdf.xacro"/>
   <xacro:include filename="$(find dual_rm_75b_description)/urdf/rm75_b_v_right.urdf.xacro"/>
   <xacro:include filename="$(find dual_rm_75b_description)/urdf/joint.urdf.xacro"/>

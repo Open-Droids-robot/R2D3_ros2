@@ -59,7 +59,7 @@ def generate_launch_description():
     # gazebo在加载urdf时，根据urdf的设定，会启动一个joint_states节点
     # 关节状态发布器
     load_joint_state_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start',
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
              'joint_state_broadcaster'],
         output='screen'
     )
@@ -67,19 +67,19 @@ def generate_launch_description():
     # 这个arm_controller需要根据urdf文件里面引用的ros2_controllers.yaml里面的名字确定
     # 加载左臂控制器
     load_left_arm_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start',
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
              'left_arm_controller'],
         output='screen'
     )
     # 加载右臂控制器
     load_right_arm_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start',
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
              'right_arm_controller'],
         output='screen'
     )
     # 加载升降机构控制器
     load_platform_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start',
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
              'platform_controller'],
         output='screen'
     )

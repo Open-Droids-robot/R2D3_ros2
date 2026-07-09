@@ -223,7 +223,7 @@
     name="joint_right_wheel"
     type="continuous">
     <origin
-      xyz="-0.148 0.015574 -0.153"
+      xyz="-0.148 0.015574 -0.16254"
       rpy="0 0 0" />
     <parent
       link="base_link_underpan" />
@@ -239,14 +239,14 @@
     name="joint_left_wheel"
     type="continuous">
     <origin
-      xyz="0.148 0.015574 -0.153"
+      xyz="0.148 0.015574 -0.16254"
       rpy="0 0 0" />
     <parent
       link="base_link_underpan" />
     <child
       link="link_left_wheel" />
     <axis
-      xyz="-1 0 0" />
+      xyz="1 0 0" />
     <limit
       effort="100"
       velocity="10" />

@@ -50,10 +50,17 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="l_joint7">
+            <!-- <joint name="l_joint7">
                 <command_interface name="position"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['l_joint7']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint> -->
+            <joint name="l_4c2_gripper_joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['l_4c2_gripper_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
@@ -99,10 +106,17 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="r_joint7">
+            <!-- <joint name="r_joint7">
                 <command_interface name="position"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['r_joint7']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint> -->
+            <joint name="r_4c2_gripper_joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['r_4c2_gripper_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
@@ -113,7 +127,6 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-
         </ros2_control>
     </xacro:macro>
 </robot>

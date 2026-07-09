@@ -42,7 +42,7 @@
     <axis
       xyz="0 0 0" />
   </joint>
-  <joint
+  <!-- <joint
     name="r_hand_joint"
     type="fixed">
     <origin
@@ -59,8 +59,8 @@
       upper="0"
       effort="0"
       velocity="0" />
-  </joint>
-  <joint
+  </joint> -->
+  <!-- <joint
     name="l_hand_joint"
     type="fixed">
     <origin
@@ -77,7 +77,7 @@
       upper="0"
       effort="0"
       velocity="0" />
-  </joint>  
+  </joint>   -->
 </robot>
 
 
