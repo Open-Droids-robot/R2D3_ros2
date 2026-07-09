@@ -7,8 +7,7 @@ initial_positions:
   l_joint4: 0
   l_joint5: 0
   l_joint6: 0
-  # l_joint7: 0
-  l_4c2_gripper_joint: 0.1
+  l_joint7: 0
   platform_joint: 0
   r_joint1: 0
   r_joint2: 0
@@ -16,5 +15,4 @@ initial_positions:
   r_joint4: 0
   r_joint5: 0
   r_joint6: 0
-  # r_joint7: 0
-  r_4c2_gripper_joint: 0.1
+  r_joint7: 0

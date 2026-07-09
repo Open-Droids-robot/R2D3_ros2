@@ -1,189 +1,161 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_rm_75b_description">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_rm_75b_gazebo">
+
+    <link name="world"/>
+    <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="base_link_underpan"/>
+    </joint>
 
     <xacro:include filename="$(find dual_rm_75b_description)/urdf/dual_rm_75b_description.urdf.xacro" />
-    <!-- <xacro:include filename="$(find dual_rm_gazebo)/config/dg4f_gazebo_classic.urdf.xacro"/> -->
 
     <gazebo reference="base_link">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
 
     <gazebo reference="r_link1">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="r_link2">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="r_link3">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="r_link4">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="r_link5">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="r_link6">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
-    <!-- <gazebo reference="r_link7">
+    <gazebo reference="r_link7">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-    </gazebo> -->
+        <gravity>false</gravity>
+    </gazebo>
     <gazebo reference="l_link1">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="l_link2">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="l_link3">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="l_link4">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="l_link5">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="l_link6">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
-    <!-- <gazebo reference="l_link7">
+    <gazebo reference="l_link7">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-    </gazebo> -->
+        <gravity>false</gravity>
+    </gazebo>
 
     <gazebo reference="head_link1">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="head_link2">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="camera_link">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="link_right_wheel">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>10.0</mu1>
-        <mu2>10.0</mu2>
-        <kp>1000000.0</kp>
-        <kd>1.0</kd>
-        <minDepth>0.001</minDepth>
-        <maxVel>1.0</maxVel>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="link_left_wheel">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>10.0</mu1>
-        <mu2>10.0</mu2>
-        <kp>1000000.0</kp>
-        <kd>1.0</kd>
-        <minDepth>0.001</minDepth>
-        <maxVel>1.0</maxVel>
+        <gravity>false</gravity>
     </gazebo>
-    
     <gazebo reference="link_swivel_wheel_1_1">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>0.0</mu1>
-        <mu2>0.0</mu2>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="link_swivel_wheel_1_2">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>0.0</mu1>
-        <mu2>0.0</mu2>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="link_swivel_wheel_2_1">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>0.0</mu1>
-        <mu2>0.0</mu2>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="link_swivel_wheel_2_2">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>0.0</mu1>
-        <mu2>0.0</mu2>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="link_swivel_wheel_3_1">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>0.0</mu1>
-        <mu2>0.0</mu2>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="link_swivel_wheel_3_2">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>0.0</mu1>
-        <mu2>0.0</mu2>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="link_swivel_wheel_4_1">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>0.0</mu1>
-        <mu2>0.0</mu2>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="link_swivel_wheel_4_2">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
-        <mu1>0.0</mu1>
-        <mu2>0.0</mu2>
+        <gravity>false</gravity>
     </gazebo>
+
 
     <gazebo reference="body_base_link">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="platform_base_link">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="l_base_link1">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="r_base_link1">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="r_hand_base_link">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="l_hand_base_link">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
     <gazebo reference="base_link_underpan">
         <self_collide>false</self_collide>
-        <gravity>true</gravity>
+        <gravity>false</gravity>
     </gazebo>
-
-    <!-- <xacro:dg4f_attach
-        parent="l_hand_link"
-        xyz="0 0 0.01"
-        rpy="0 0 0"/>
-     -->
+   
     <gazebo>
-        <is_static>false</is_static>
+        <is_static>true</is_static>
         <self_collide>true</self_collide>
     </gazebo>
 
@@ -316,7 +288,7 @@
         </joint>
 
         <joint name="joint_right_wheel">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>
@@ -324,7 +296,7 @@
         </joint>
         
         <joint name="joint_left_wheel">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>
@@ -333,7 +305,7 @@
 
 
         <joint name="joint_swivel_wheel_1_1">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>
@@ -341,7 +313,7 @@
         </joint>
 
         <joint name="joint_swivel_wheel_1_2">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>
@@ -349,7 +321,7 @@
         </joint>
 
         <joint name="joint_swivel_wheel_2_1">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>
@@ -357,7 +329,7 @@
         </joint>
 
         <joint name="joint_swivel_wheel_2_2">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>
@@ -366,7 +338,7 @@
 
 
         <joint name="joint_swivel_wheel_3_1">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>
@@ -375,7 +347,7 @@
 
 
         <joint name="joint_swivel_wheel_3_2">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>
@@ -383,7 +355,7 @@
         </joint>
 
         <joint name="joint_swivel_wheel_4_1">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>
@@ -391,7 +363,7 @@
         </joint>
 
         <joint name="joint_swivel_wheel_4_2">
-            <command_interface name="velocity"/>
+            <command_interface name="position"/>
             <state_interface name="position">
                 <param name="initial_value">0</param>
             </state_interface>

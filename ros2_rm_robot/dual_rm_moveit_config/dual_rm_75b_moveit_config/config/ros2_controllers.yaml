@@ -5,15 +5,15 @@ controller_manager:
 
     left_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-
+      action_ns: follow_joint_trajectory  # 添加这一行
 
     right_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-
+      action_ns: follow_joint_trajectory  # 添加这一行
 
     platform_controller:
       type: position_controllers/GripperActionController
-
+      action_ns: follow_joint_trajectory  # 添加这一行
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -27,10 +27,12 @@ left_arm_controller:
       - l_joint4
       - l_joint5
       - l_joint6
+      - l_joint7
     command_interfaces:
-      []
+      - position
     state_interfaces:
-      []
+      - position
+      - velocity
 right_arm_controller:
   ros__parameters:
     joints:
@@ -40,10 +42,12 @@ right_arm_controller:
       - r_joint4
       - r_joint5
       - r_joint6
+      - r_joint7
     command_interfaces:
-      []
+      - position
     state_interfaces:
-      []
+      - position
+      - velocity
 platform_controller:
   ros__parameters:
     joint: platform_joint
