@@ -102,15 +102,25 @@ Full reference: [`docs/api.md`](docs/api.md). Higher-level interfaces in
 
 ## 5. Switching parts
 
-**End-effector** — `R2D3(end_effector="dexterous" | "gripper")`. Picks the USD
-(`usd_dexterous/` vs `usd_gripper/`), the joint set (`sim_topics.LEFT_HAND_JOINTS`
-etc.), and the IK URDF + Lula yaml (`ik._CFG`). Fixed per process (see the
-import-lock rule, §8). Examples accept `--ee dexterous|gripper`.
+**End-effector** — `R2D3(end_effector="dexterous" | "gripper")` (or set `R2D3_EE`).
+Picks the USD, the joint set (`sim_topics.LEFT_HAND_JOINTS` etc.), and the IK URDF
++ Lula yaml (`ik._CFG`). Fixed per process (see the import-lock rule, §8). Examples
+accept `--ee dexterous|gripper`. The USD is chosen by `(end_effector, mobile)`:
 
-**Mobile base** — `R2D3(mobile=True)` loads `usd_mobile/` (AGV wheels revolute) and
-disables the `root_joint` so the base is free; then `set_base_pose(...)` moves it
-and `set_joint_targets({"joint_left_wheel": ...})` spins the wheels. The fixed
-build pins the base. (Gripper + mobile isn't built — `usd_mobile` is dexterous.)
+| | `mobile=False` | `mobile=True` |
+|---|---|---|
+| `dexterous` | `usd_dexterous/` | `usd_mobile/` |
+| `gripper`   | `usd_gripper/`   | `usd_gripper_mobile/` |
+
+The legacy RM `*_hand_base_link` hand-flange mesh is hidden for **both** EEs in
+`scene._hide_legacy_hand_flanges()` — the dexterous hand and the gripper jaws both
+mount on the `l_hand_link` frame, not that mesh, so leaving it visible read as a
+redundant second hand.
+
+**Mobile base** — `R2D3(mobile=True)` loads the per-EE mobile build (AGV wheels
+revolute) and disables the `root_joint` so the base is free; then `set_base_pose(...)`
+moves it and `set_joint_targets({"joint_left_wheel": ...})` spins the wheels. The
+static build pins the base.
 
 **Task objects** — pass `setup=fn` to `R2D3(...)`; `fn(world)` runs after the robot
 loads but before `world.reset()`. Add `isaacsim.core.api.objects` there (see
@@ -123,10 +133,11 @@ loads but before `world.reset()`. Add `isaacsim.core.api.objects` there (see
 The built USD assets ship in the repo. To regenerate (needs the `ros_humble` env
 for `xacro`):
 ```bash
-bash scripts/build_robot.sh dexterous|gripper|mobile|both|all
+bash scripts/build_robot.sh dexterous|gripper|mobile|gripper-mobile|both|all
 ```
-Pipeline: `urdf/r2d3_v1.urdf.xacro` → `render.sh` (flat URDF, in `ros_humble`) →
-`scripts/urdf_to_usd.py` (USD, in `isaac`) → `usd_<ee>/r2d3_v1.usda`.
+Pipeline: `urdf/r2d3_v1.urdf.xacro` → `render.sh <ee> <weld>` (flat URDF, in
+`ros_humble`; `weld=0` keeps the AGV wheels revolute for the mobile builds) →
+`scripts/urdf_to_usd.py` (USD, in `isaac`) → `usd_<out>/r2d3_v1.usda`.
 
 The Lula IK URDFs are **mesh-free** (`scripts/make_lula_urdf.py` strips `<mesh>` →
 `<box>`; the flat URDFs have absolute mesh paths and are gitignored). `ik.py`

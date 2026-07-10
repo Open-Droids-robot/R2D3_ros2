@@ -108,12 +108,15 @@ def main() -> int:
         eye = ctr + np.array([3.2, -1.4, 0.7])
         cam = rep.functional.create.camera(position=tuple(float(v) for v in eye),
                                             look_at=tuple(float(v) for v in ctr))
-        rp = rep.create.render_product(str(cam.GetPath()), (960, 540))
+        rp = rep.create.render_product(str(cam.GetPath()), (1280, 720))
         ann = rep.AnnotatorRegistry.get_annotator("rgb"); ann.attach(rp)
         frames = []
+        from isaac_sim.r2d3_sim import helpers as h
+        vid = h.Mp4Writer(OUT / "move_task.mp4", size=(1280, 720), fps=14)
         def grab():
             a = np.asarray(ann.get_data(do_array_copy=True))
             if a.ndim == 3 and a.shape[2] == 4: a = a[:, :, :3]
+            vid.add(a)                                   # full-res 720p -> clean mp4
             frames.append(Image.fromarray(a.astype(np.uint8)).resize((480, 270)))
 
         def drive(pos, quat, roll=0.0, diff=0.0, steer=0.0):
@@ -165,7 +168,8 @@ def main() -> int:
             frames[0].save(OUT/"move_task_first.png"); frames[-1].save(OUT/"move_task_last.png")
             frames[len(frames)//2].save(OUT/"move_task_mid.png")
             frames[int(len(frames)*0.30)].save(OUT/"move_task_q.png")
-            print(f"[move] wrote move_task.gif ({len(frames)} frames)", flush=True)
+            vid.save()
+            print(f"[move] wrote move_task.gif + move_task.mp4 ({len(frames)} frames)", flush=True)
         print("[move] DONE", flush=True)
         return 0
     finally:

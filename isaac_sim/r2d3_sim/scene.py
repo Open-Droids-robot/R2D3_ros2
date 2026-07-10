@@ -84,19 +84,20 @@ def _hide_legacy_hand_flanges() -> None:
 
     stage = omni.usd.get_context().get_stage()
     n = 0
-    # The RM hand-base flanges are only redundant under the dexterous hand (it
-    # replaces them). For the parallel gripper, the flange IS the visible hand
-    # base the gripper mounts on — keep it.
-    if _t.EE_TYPE == "dexterous":
-        for prim in stage.Traverse():
-            if prim.GetTypeName() != "Mesh":
-                continue
-            if prim.GetName().startswith(("l_hand_base_link", "r_hand_base_link")):
-                UsdGeom.Imageable(prim).MakeInvisible()
-                if prim.HasAPI(UsdPhysics.CollisionAPI):
-                    UsdPhysics.CollisionAPI(prim).GetCollisionEnabledAttr().Set(False)
-                n += 1
-        logger.info("hid %d legacy hand-flange meshes", n)
+    # The RM hand-base flange (a hand-shaped STL) is redundant for BOTH end
+    # effectors: the dexterous hand mounts on top of it, and the parallel gripper's
+    # jaws attach to the l_hand_link frame — not to this mesh. Left visible it reads
+    # as a second "hand" next to the gripper jaws. Hide + decollide it either way;
+    # the l_hand_link frame (the actual mount) is kept.
+    for prim in stage.Traverse():
+        if prim.GetTypeName() != "Mesh":
+            continue
+        if prim.GetName().startswith(("l_hand_base_link", "r_hand_base_link")):
+            UsdGeom.Imageable(prim).MakeInvisible()
+            if prim.HasAPI(UsdPhysics.CollisionAPI):
+                UsdPhysics.CollisionAPI(prim).GetCollisionEnabledAttr().Set(False)
+            n += 1
+    logger.info("hid %d legacy hand-flange meshes (ee=%s)", n, _t.EE_TYPE)
     # The HEAD camera is the upstream `camera_link` D435 (kept visible). Our
     # head_camera frames are co-located with it for the ROS sensor, so hide our
     # redundant D435 body box — only camera_link shows on the head. The WRIST

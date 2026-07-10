@@ -86,3 +86,9 @@ isaac_sim/usd/*
 
 # Rendered capture frames (regenerable from isaac_sim/r2d3_sim/capture.py)
 isaac_sim/tests/captures/
+
+# Local presentation/showcase artifacts — they embed the (gitignored) rendered
+# captures, so they only work locally; not part of the source tree.
+presentation/
+presentation.zip
+showcase.html

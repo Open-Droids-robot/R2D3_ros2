@@ -65,13 +65,16 @@ def main() -> int:
         # third-person GIF camera from the robot's +Y (left) side so the LEFT arm doing
         # the grasp is visible, not hidden behind the torso.
         cam = rep.functional.create.camera(position=(2.1, 2.5, 1.55), look_at=(-0.60, 0.12, 0.96))
-        rp = rep.create.render_product(str(cam.GetPath()), (960, 540))
+        rp = rep.create.render_product(str(cam.GetPath()), (1280, 720))
         ann = rep.AnnotatorRegistry.get_annotator("rgb"); ann.attach(rp)
         frames = []
+        vid = h.Mp4Writer(OUT / "clear_island.mp4", size=(1280, 720), fps=14) if GIF else None
 
         def grab():
-            frames.append(Image.fromarray(h.rgba_to_rgb(
-                np.asarray(ann.get_data(do_array_copy=True)))).resize((640, 360)))
+            a = h.rgba_to_rgb(np.asarray(ann.get_data(do_array_copy=True)))
+            if vid is not None:
+                vid.add(a)                               # full-res 720p -> clean mp4
+            frames.append(Image.fromarray(a).resize((640, 360)))
 
         wheel = [0.0]
 
@@ -111,8 +114,7 @@ def main() -> int:
                 sim.set_base_pose(base, q)
                 sim.world.step(render=render)
                 if render and GIF and i % 3 == 0:
-                    frames.append(Image.fromarray(h.rgba_to_rgb(
-                        np.asarray(ann.get_data(do_array_copy=True)))).resize((640, 360)))
+                    grab()            # one capture path -> feeds both the gif AND the mp4
 
         for _ in range(16):                             # RTX warm-up + initial settle (start at the observe pose)
             sim.set_base_pose(base_obs, q); sim.world.step(render=True)
@@ -248,7 +250,9 @@ def main() -> int:
             frames[0].save(gif, save_all=True, append_images=frames[1:], duration=70, loop=0)
             frames[0].save(OUT / "clear_island_first.png")
             frames[-1].save(OUT / "clear_island_last.png")
-            print(f"[clear] wrote {gif.name} ({len(frames)} frames) + first/last stills", flush=True)
+            if vid is not None:
+                vid.save()
+            print(f"[clear] wrote {gif.name} + clear_island.mp4 ({len(frames)} frames) + stills", flush=True)
         return 0 if ok_demo else 1
     finally:
         sim.close()

@@ -102,7 +102,10 @@ class R2D3:
         self.world = World(stage_units_in_meters=stage_units_m)
 
         if usd_path is None and mobile:
-            usd_path = _USD_DIR / "usd_mobile" / "r2d3_v1.usda"
+            # Mobile builds (wheels revolute) are per-end-effector, just like the
+            # static ones: usd_mobile = dexterous, usd_gripper_mobile = gripper.
+            mdir = "usd_gripper_mobile" if end_effector == "gripper" else "usd_mobile"
+            usd_path = _USD_DIR / mdir / "r2d3_v1.usda"
         self._robot_prim = scene_mod.assemble(self.world, usd_path=usd_path)
 
         if mobile:

@@ -144,3 +144,62 @@ class GifWriter:
             return
         self._frames[0].save(str(path), save_all=True,
                              append_images=self._frames[1:], duration=duration, loop=0)
+
+
+class Mp4Writer:
+    """Stream frames straight to an H.264 MP4 via the system ffmpeg.
+
+    Mirrors :class:`GifWriter` (``add`` / ``len`` / ``save``) but encodes a
+    clean, high-resolution video instead of a low-res GIF. Frames are piped to
+    ffmpeg as they arrive (rawvideo rgb24 -> libx264 yuv420p) so memory stays
+    flat even for long reels — nothing is buffered in Python. ``yuv420p`` +
+    ``+faststart`` make the file play everywhere (browsers, slides, QuickTime).
+
+    No extra Python deps: we shell out to whatever ffmpeg is on PATH.
+    """
+
+    def __init__(self, path, size: tuple[int, int] = (1280, 720),
+                 fps: int = 30, crf: int = 18):
+        # libx264 needs even dimensions; round down defensively.
+        self._w = int(size[0]) - (int(size[0]) % 2)
+        self._h = int(size[1]) - (int(size[1]) % 2)
+        self._path = str(path)
+        self._fps = int(fps)
+        self._crf = int(crf)
+        self._proc = None
+        self._n = 0
+
+    def _open(self) -> None:
+        import shutil
+        import subprocess
+        ff = shutil.which("ffmpeg") or "/usr/bin/ffmpeg"
+        cmd = [
+            ff, "-y", "-loglevel", "error",
+            "-f", "rawvideo", "-pix_fmt", "rgb24",
+            "-s", f"{self._w}x{self._h}", "-r", str(self._fps), "-i", "-",
+            "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+            "-crf", str(self._crf), "-preset", "slow",
+            "-movflags", "+faststart", self._path,
+        ]
+        self._proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+
+    def add(self, rgb: np.ndarray) -> None:
+        from PIL import Image
+        img = Image.fromarray(rgba_to_rgb(rgb))
+        if img.size != (self._w, self._h):
+            img = img.resize((self._w, self._h), Image.LANCZOS)
+        if self._proc is None:
+            self._open()
+        self._proc.stdin.write(img.tobytes())
+        self._n += 1
+
+    def __len__(self) -> int:
+        return self._n
+
+    def save(self, *args, **kwargs) -> None:
+        """Flush and finalize the MP4. Args accepted for GifWriter parity."""
+        if self._proc is None:
+            return
+        self._proc.stdin.close()
+        self._proc.wait()
+        self._proc = None

@@ -32,6 +32,19 @@ stage_units_m=1.0, setup=None)`
 | `headless` | run without the Kit window. |
 | `mobile` | load the wheels-revolute build + free the base so it can be driven (`set_base_pose`). |
 | `usd_path` | override the auto-selected USD. |
+
+**Switching end-effectors** — just change `end_effector` (or set the `R2D3_EE`
+env var before importing `r2d3_sim`). The USD is auto-selected from
+`(end_effector, mobile)`:
+
+| | `mobile=False` | `mobile=True` |
+|---|---|---|
+| `dexterous` | `usd_dexterous/` | `usd_mobile/` |
+| `gripper`   | `usd_gripper/`   | `usd_gripper_mobile/` |
+
+Each carries only its own effector — the gripper builds have no dexterous-hand
+geometry, and the legacy RM hand-flange mesh is hidden for both. Regenerate any
+build with `scripts/build_robot.sh dexterous|gripper|mobile|gripper-mobile|all`.
 | `enable_cameras` | attach in-process camera render products (needed for `get_image`). |
 | `enable_ros` | also publish/subscribe on `/r2d3/sim/*` (the bridge/eval path). |
 | `setup` | `setup(world)` callable run after the robot loads but **before** `world.reset()` — add task objects (tables, cubes) here. See `examples/07_grasp_cube.py`. |

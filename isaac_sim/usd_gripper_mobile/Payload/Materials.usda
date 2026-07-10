@@ -1,0 +1,674 @@
+#usda 1.0
+(
+    "R2D3 V1 (gripper mobile)"
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.0"
+    }
+    defaultPrim = "r2d3_v1"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "r2d3_v1"
+{
+    def Scope "Materials"
+    {
+        def Material "unnamed_001" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_001>
+        )
+        {
+        }
+
+        def Material "unnamed_002" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_002>
+        )
+        {
+        }
+
+        def Material "unnamed_003" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_003>
+        )
+        {
+        }
+
+        def Material "unnamed_004" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_004>
+        )
+        {
+        }
+
+        def Material "unnamed_005" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_005>
+        )
+        {
+        }
+
+        def Material "unnamed_006" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_006>
+        )
+        {
+        }
+
+        def Material "unnamed_007" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_007>
+        )
+        {
+        }
+
+        def Material "unnamed_008" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_008>
+        )
+        {
+        }
+
+        def Material "unnamed_009" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_009>
+        )
+        {
+        }
+
+        def Material "unnamed_010" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_010>
+        )
+        {
+        }
+
+        def Material "unnamed_011" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_011>
+        )
+        {
+        }
+
+        def Material "unnamed_012" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_012>
+        )
+        {
+        }
+
+        def Material "unnamed_013" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_013>
+        )
+        {
+        }
+
+        def Material "unnamed_014" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_014>
+        )
+        {
+        }
+
+        def Material "unnamed_015" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_015>
+        )
+        {
+        }
+
+        def Material "unnamed_016" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_016>
+        )
+        {
+        }
+
+        def Material "aluminum" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/aluminum>
+        )
+        {
+        }
+
+        def Material "unnamed_027" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_027>
+        )
+        {
+        }
+
+        def Material "unnamed_028" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_028>
+        )
+        {
+        }
+
+        def Material "unnamed_029" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_029>
+        )
+        {
+        }
+
+        def Material "unnamed_030" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_030>
+        )
+        {
+        }
+
+        def Material "unnamed_031" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_031>
+        )
+        {
+        }
+
+        def Material "unnamed_032" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_032>
+        )
+        {
+        }
+
+        def Material "unnamed_033" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_033>
+        )
+        {
+        }
+
+        def Material "unnamed_034" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_034>
+        )
+        {
+        }
+
+        def Material "unnamed_018" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_018>
+        )
+        {
+        }
+
+        def Material "r_finger_left_material" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/r_finger_left_material>
+        )
+        {
+        }
+
+        def Material "r_finger_right_material" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/r_finger_right_material>
+        )
+        {
+        }
+
+        def Material "unnamed_019" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_019>
+        )
+        {
+        }
+
+        def Material "unnamed_020" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_020>
+        )
+        {
+        }
+
+        def Material "unnamed_021" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_021>
+        )
+        {
+        }
+
+        def Material "unnamed_022" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_022>
+        )
+        {
+        }
+
+        def Material "unnamed_023" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_023>
+        )
+        {
+        }
+
+        def Material "unnamed_024" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_024>
+        )
+        {
+        }
+
+        def Material "unnamed_025" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_025>
+        )
+        {
+        }
+
+        def Material "unnamed_026" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_026>
+        )
+        {
+        }
+
+        def Material "unnamed_017" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/unnamed_017>
+        )
+        {
+        }
+
+        def Material "l_finger_left_material" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/l_finger_left_material>
+        )
+        {
+        }
+
+        def Material "l_finger_right_material" (
+            prepend references = @./MaterialsLibrary.usdc@</Materials/l_finger_right_material>
+        )
+        {
+        }
+    }
+
+    over "Geometry"
+    {
+        over "base_link_underpan"
+        {
+            over "base_link_underpan" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                rel material:binding = </r2d3_v1/Materials/unnamed_001>
+            }
+
+            over "link_right_wheel"
+            {
+                over "link_right_wheel" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                )
+                {
+                    rel material:binding = </r2d3_v1/Materials/unnamed_002>
+                }
+            }
+
+            over "link_left_wheel"
+            {
+                over "link_left_wheel" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                )
+                {
+                    rel material:binding = </r2d3_v1/Materials/unnamed_003>
+                }
+            }
+
+            over "link_swivel_wheel_1_1"
+            {
+                over "link_swivel_wheel_1_1" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                )
+                {
+                    rel material:binding = </r2d3_v1/Materials/unnamed_004>
+                }
+
+                over "link_swivel_wheel_1_2"
+                {
+                    over "link_swivel_wheel_1_2" (
+                        prepend apiSchemas = ["MaterialBindingAPI"]
+                    )
+                    {
+                        rel material:binding = </r2d3_v1/Materials/unnamed_005>
+                    }
+                }
+            }
+
+            over "link_swivel_wheel_2_1"
+            {
+                over "link_swivel_wheel_2_1" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                )
+                {
+                    rel material:binding = </r2d3_v1/Materials/unnamed_006>
+                }
+
+                over "link_swivel_wheel_2_2"
+                {
+                    over "link_swivel_wheel_2_2" (
+                        prepend apiSchemas = ["MaterialBindingAPI"]
+                    )
+                    {
+                        rel material:binding = </r2d3_v1/Materials/unnamed_007>
+                    }
+                }
+            }
+
+            over "link_swivel_wheel_3_1"
+            {
+                over "link_swivel_wheel_3_1" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                )
+                {
+                    rel material:binding = </r2d3_v1/Materials/unnamed_008>
+                }
+
+                over "link_swivel_wheel_3_2"
+                {
+                    over "link_swivel_wheel_3_2" (
+                        prepend apiSchemas = ["MaterialBindingAPI"]
+                    )
+                    {
+                        rel material:binding = </r2d3_v1/Materials/unnamed_009>
+                    }
+                }
+            }
+
+            over "link_swivel_wheel_4_1"
+            {
+                over "link_swivel_wheel_4_1" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                )
+                {
+                    rel material:binding = </r2d3_v1/Materials/unnamed_010>
+                }
+
+                over "link_swivel_wheel_4_2"
+                {
+                    over "link_swivel_wheel_4_2" (
+                        prepend apiSchemas = ["MaterialBindingAPI"]
+                    )
+                    {
+                        rel material:binding = </r2d3_v1/Materials/unnamed_011>
+                    }
+                }
+            }
+
+            over "body_base_link"
+            {
+                over "body_base_link" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                )
+                {
+                    rel material:binding = </r2d3_v1/Materials/unnamed_012>
+                }
+
+                over "platform_base_link"
+                {
+                    over "platform_base_link" (
+                        prepend apiSchemas = ["MaterialBindingAPI"]
+                    )
+                    {
+                        rel material:binding = </r2d3_v1/Materials/unnamed_013>
+                    }
+
+                    over "head_link1"
+                    {
+                        over "head_link1" (
+                            prepend apiSchemas = ["MaterialBindingAPI"]
+                        )
+                        {
+                            rel material:binding = </r2d3_v1/Materials/unnamed_014>
+                        }
+
+                        over "head_link2"
+                        {
+                            over "head_link2" (
+                                prepend apiSchemas = ["MaterialBindingAPI"]
+                            )
+                            {
+                                rel material:binding = </r2d3_v1/Materials/unnamed_015>
+                            }
+
+                            over "camera_link"
+                            {
+                                over "camera_link" (
+                                    prepend apiSchemas = ["MaterialBindingAPI"]
+                                )
+                                {
+                                    rel material:binding = </r2d3_v1/Materials/unnamed_016>
+                                }
+                            }
+
+                            over "head_camera_bottom_screw_frame"
+                            {
+                                over "head_camera_link"
+                                {
+                                    over "box" (
+                                        prepend apiSchemas = ["MaterialBindingAPI"]
+                                    )
+                                    {
+                                        rel material:binding = </r2d3_v1/Materials/aluminum>
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    over "r_base_link1"
+                    {
+                        over "r_base_link1" (
+                            prepend apiSchemas = ["MaterialBindingAPI"]
+                        )
+                        {
+                            rel material:binding = </r2d3_v1/Materials/unnamed_027>
+                        }
+
+                        over "r_link1"
+                        {
+                            over "r_link1" (
+                                prepend apiSchemas = ["MaterialBindingAPI"]
+                            )
+                            {
+                                rel material:binding = </r2d3_v1/Materials/unnamed_028>
+                            }
+
+                            over "r_link2"
+                            {
+                                over "r_link2" (
+                                    prepend apiSchemas = ["MaterialBindingAPI"]
+                                )
+                                {
+                                    rel material:binding = </r2d3_v1/Materials/unnamed_029>
+                                }
+
+                                over "r_link3"
+                                {
+                                    over "r_link3" (
+                                        prepend apiSchemas = ["MaterialBindingAPI"]
+                                    )
+                                    {
+                                        rel material:binding = </r2d3_v1/Materials/unnamed_030>
+                                    }
+
+                                    over "r_link4"
+                                    {
+                                        over "r_link4" (
+                                            prepend apiSchemas = ["MaterialBindingAPI"]
+                                        )
+                                        {
+                                            rel material:binding = </r2d3_v1/Materials/unnamed_031>
+                                        }
+
+                                        over "r_link5"
+                                        {
+                                            over "r_link5" (
+                                                prepend apiSchemas = ["MaterialBindingAPI"]
+                                            )
+                                            {
+                                                rel material:binding = </r2d3_v1/Materials/unnamed_032>
+                                            }
+
+                                            over "r_link6"
+                                            {
+                                                over "r_link6" (
+                                                    prepend apiSchemas = ["MaterialBindingAPI"]
+                                                )
+                                                {
+                                                    rel material:binding = </r2d3_v1/Materials/unnamed_033>
+                                                }
+
+                                                over "r_link7"
+                                                {
+                                                    over "r_link7" (
+                                                        prepend apiSchemas = ["MaterialBindingAPI"]
+                                                    )
+                                                    {
+                                                        rel material:binding = </r2d3_v1/Materials/unnamed_034>
+                                                    }
+
+                                                    over "r_hand"
+                                                    {
+                                                        over "r_hand_base_link" (
+                                                            prepend apiSchemas = ["MaterialBindingAPI"]
+                                                        )
+                                                        {
+                                                            rel material:binding = </r2d3_v1/Materials/unnamed_018>
+                                                        }
+
+                                                        over "r_finger_left"
+                                                        {
+                                                            over "box" (
+                                                                prepend apiSchemas = ["MaterialBindingAPI"]
+                                                            )
+                                                            {
+                                                                rel material:binding = </r2d3_v1/Materials/r_finger_left_material>
+                                                            }
+                                                        }
+
+                                                        over "r_finger_right"
+                                                        {
+                                                            over "box" (
+                                                                prepend apiSchemas = ["MaterialBindingAPI"]
+                                                            )
+                                                            {
+                                                                rel material:binding = </r2d3_v1/Materials/r_finger_right_material>
+                                                            }
+                                                        }
+                                                    }
+
+                                                    over "r_wrist_camera_bottom_screw_frame"
+                                                    {
+                                                        over "r_wrist_camera_link"
+                                                        {
+                                                            over "box" (
+                                                                prepend apiSchemas = ["MaterialBindingAPI"]
+                                                            )
+                                                            {
+                                                                rel material:binding = </r2d3_v1/Materials/aluminum>
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    over "l_base_link1"
+                    {
+                        over "l_base_link1" (
+                            prepend apiSchemas = ["MaterialBindingAPI"]
+                        )
+                        {
+                            rel material:binding = </r2d3_v1/Materials/unnamed_019>
+                        }
+
+                        over "l_link1"
+                        {
+                            over "l_link1" (
+                                prepend apiSchemas = ["MaterialBindingAPI"]
+                            )
+                            {
+                                rel material:binding = </r2d3_v1/Materials/unnamed_020>
+                            }
+
+                            over "l_link2"
+                            {
+                                over "l_link2" (
+                                    prepend apiSchemas = ["MaterialBindingAPI"]
+                                )
+                                {
+                                    rel material:binding = </r2d3_v1/Materials/unnamed_021>
+                                }
+
+                                over "l_link3"
+                                {
+                                    over "l_link3" (
+                                        prepend apiSchemas = ["MaterialBindingAPI"]
+                                    )
+                                    {
+                                        rel material:binding = </r2d3_v1/Materials/unnamed_022>
+                                    }
+
+                                    over "l_link4"
+                                    {
+                                        over "l_link4" (
+                                            prepend apiSchemas = ["MaterialBindingAPI"]
+                                        )
+                                        {
+                                            rel material:binding = </r2d3_v1/Materials/unnamed_023>
+                                        }
+
+                                        over "l_link5"
+                                        {
+                                            over "l_link5" (
+                                                prepend apiSchemas = ["MaterialBindingAPI"]
+                                            )
+                                            {
+                                                rel material:binding = </r2d3_v1/Materials/unnamed_024>
+                                            }
+
+                                            over "l_link6"
+                                            {
+                                                over "l_link6" (
+                                                    prepend apiSchemas = ["MaterialBindingAPI"]
+                                                )
+                                                {
+                                                    rel material:binding = </r2d3_v1/Materials/unnamed_025>
+                                                }
+
+                                                over "l_link7"
+                                                {
+                                                    over "l_link7" (
+                                                        prepend apiSchemas = ["MaterialBindingAPI"]
+                                                    )
+                                                    {
+                                                        rel material:binding = </r2d3_v1/Materials/unnamed_026>
+                                                    }
+
+                                                    over "l_hand_link"
+                                                    {
+                                                        over "l_hand_base_link" (
+                                                            prepend apiSchemas = ["MaterialBindingAPI"]
+                                                        )
+                                                        {
+                                                            rel material:binding = </r2d3_v1/Materials/unnamed_017>
+                                                        }
+
+                                                        over "l_finger_left"
+                                                        {
+                                                            over "box" (
+                                                                prepend apiSchemas = ["MaterialBindingAPI"]
+                                                            )
+                                                            {
+                                                                rel material:binding = </r2d3_v1/Materials/l_finger_left_material>
+                                                            }
+                                                        }
+
+                                                        over "l_finger_right"
+                                                        {
+                                                            over "box" (
+                                                                prepend apiSchemas = ["MaterialBindingAPI"]
+                                                            )
+                                                            {
+                                                                rel material:binding = </r2d3_v1/Materials/l_finger_right_material>
+                                                            }
+                                                        }
+                                                    }
+
+                                                    over "l_wrist_camera_bottom_screw_frame"
+                                                    {
+                                                        over "l_wrist_camera_link"
+                                                        {
+                                                            over "box" (
+                                                                prepend apiSchemas = ["MaterialBindingAPI"]
+                                                            )
+                                                            {
+                                                                rel material:binding = </r2d3_v1/Materials/aluminum>
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

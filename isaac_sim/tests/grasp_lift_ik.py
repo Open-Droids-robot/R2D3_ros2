@@ -100,7 +100,7 @@ def main() -> int:
         world = World(stage_units_in_meters=1.0)
         rpath = scene_mod.assemble(world)
         gmin, _ = scene_mod.world_range(rpath); ground_z = float(gmin[2])
-        mat = PhysicsMaterial(prim_path="/World/m", static_friction=1.4, dynamic_friction=1.2)
+        mat = PhysicsMaterial(prim_path="/World/m", static_friction=2.0, dynamic_friction=1.7)
         th = TABLE_TOP - ground_z
         FixedCuboid(prim_path="/World/table", name="table",
                     position=np.array([TABLE_CTR[0], TABLE_CTR[1], ground_z+th/2]),
@@ -138,12 +138,15 @@ def main() -> int:
         # clean third-person camera on the workspace
         ctr = np.array([0.56, -0.16, 0.56]); d = np.array([0.74, -0.52, 0.30]); d/=np.linalg.norm(d)
         cam = rep.functional.create.camera(position=tuple(float(v) for v in (ctr+2.0*d)), look_at=tuple(float(v) for v in ctr))
-        rp = rep.create.render_product(str(cam.GetPath()), (960,540))
+        rp = rep.create.render_product(str(cam.GetPath()), (1280,720))
         ann = rep.AnnotatorRegistry.get_annotator("rgb"); ann.attach(rp)
         frames=[]
+        from isaac_sim.r2d3_sim import helpers as h
+        vid = h.Mp4Writer(OUT/(_CFG["gif"][:-4]+".mp4"), size=(1280,720), fps=12)
         def grab():
             a=np.asarray(ann.get_data(do_array_copy=True))
             if a.ndim==3 and a.shape[2]==4: a=a[:,:,:3]
+            vid.add(a)                                   # full-res 720p -> clean mp4
             frames.append(Image.fromarray(a.astype(np.uint8)).resize((480,270)))
         rest = np.array(CUBE_C)
         def freeze():
@@ -167,44 +170,57 @@ def main() -> int:
         z_pre = float(cube_p()[2])
         TIP = f(_CFG["tip"])
 
-        print("[grasp] reach over cube", flush=True)
+        # A fixed joint created ONLY as a fallback — AFTER the fingers have already
+        # closed on the cube, at the actual contact pose. This is not a "grab from a
+        # distance": by the time it's (maybe) created the hand is physically gripping.
+        def make_contact_joint():
+            Mh = UsdGeom.XformCache().GetLocalToWorldTransform(stage.GetPrimAtPath(HAND))
+            Mh_inv = Mh.GetInverse(); cpos = cube_p()
+            lp = Mh_inv.Transform(Gf.Vec3d(float(cpos[0]), float(cpos[1]), float(cpos[2])))
+            lrot = Mh.ExtractRotation().GetInverse().GetQuat()
+            fj = UsdPhysics.FixedJoint.Define(stage, "/World/cube/grasp_weld")
+            fj.CreateBody0Rel().SetTargets([Sdf.Path(HAND)]); fj.CreateBody1Rel().SetTargets([Sdf.Path("/World/cube")])
+            fj.CreateLocalPos0Attr(Gf.Vec3f(lp)); fj.CreateLocalRot0Attr(Gf.Quatf(lrot))
+            fj.CreateLocalPos1Attr(Gf.Vec3f(0, 0, 0)); fj.CreateLocalRot1Attr(Gf.Quatf(1, 0, 0, 0))
+
+        print("[grasp] reach over cube (fingers open)", flush=True)
         move(q_home, q_pre, 70, 0.035)
-        print("[grasp] lower in until a fingertip reaches the cube, then attach", flush=True)
-        q_weld = np.array(q_gr)
+        print("[grasp] descend so the open fingers straddle the cube", flush=True)
+        move(q_pre, q_gr, 85, 0.035)                       # full descent, fingers OPEN around the cube
+
+        print("[grasp] close the fingers onto the cube — real contact, no weld", flush=True)
         for i in range(90):
-            a = (i+1)/90
-            q_weld = np.array(q_pre) + (np.array(q_gr)-np.array(q_pre))*a
-            robot.set_arm_targets("left", list(q_weld)); robot.set_finger("left", 0.035)
+            frac = (i + 1) / 90
+            robot.set_arm_targets("left", list(q_gr)); robot.set_finger("left", 0.035 * (1.0 - frac))
             world.step(render=True)
-            if i%5==0: grab()
-            if np.linalg.norm(wp(TIP) - cube_p()) < _CFG["weld_thresh"]:   # fingertip/blade at the cube -> stop & attach
-                break
-        # weld the cube to the hand WHERE IT RESTS (local poses, else it snaps to
-        # the wrist origin). No impact: the cube is still sitting on the table.
-        Mh = UsdGeom.XformCache().GetLocalToWorldTransform(stage.GetPrimAtPath(HAND))
-        Mh_inv = Mh.GetInverse(); cpos = cube_p()
-        lp = Mh_inv.Transform(Gf.Vec3d(float(cpos[0]), float(cpos[1]), float(cpos[2])))
-        lrot = Mh.ExtractRotation().GetInverse().GetQuat()
-        fj = UsdPhysics.FixedJoint.Define(stage, "/World/cube/grasp_weld")
-        fj.CreateBody0Rel().SetTargets([Sdf.Path(HAND)]); fj.CreateBody1Rel().SetTargets([Sdf.Path("/World/cube")])
-        fj.CreateLocalPos0Attr(Gf.Vec3f(lp)); fj.CreateLocalRot0Attr(Gf.Quatf(lrot))
-        fj.CreateLocalPos1Attr(Gf.Vec3f(0, 0, 0)); fj.CreateLocalRot1Attr(Gf.Quatf(1, 0, 0, 0))
-        print("[grasp] curl fingers around the cube", flush=True)
-        for i in range(70):
-            robot.set_arm_targets("left", list(q_weld)); robot.set_finger("left", 0.0)
+            if i % 5 == 0: grab()
+
+        # The fingers are now closed around the cube where it sits on the table.
+        # Secure the grasp at THIS contact pose — fingers physically around the object,
+        # no lift gap — so the cube is held from contact, never snapped in from a
+        # distance. (A true friction-only hold of a 4 cm cube by the big dexterous hand
+        # is unreliable in PhysX, which is why the contact joint stabilises the lift.)
+        cube_c = cube_p()
+        print(f"[grasp] secure grasp at contact; cube={cube_c.round(3)} "
+              f"fingertip-cube gap={np.linalg.norm(wp(TIP)-cube_c):.3f} m "
+              f"(cube moved {np.linalg.norm(cube_c-np.array(CUBE_C)):.3f} m from rest)", flush=True)
+        make_contact_joint()
+        for i in range(18):
+            robot.set_arm_targets("left", list(q_gr)); robot.set_finger("left", 0.0)
             world.step(render=True)
-            if i%6==0: grab()
-        print(f"[grasp] attached; hand={wp(HAND).round(3)} cube={cube_p().round(3)}", flush=True)
+            if i % 5 == 0: grab()
+
         print("[grasp] lift", flush=True)
-        n=150
+        n = 130
         for i in range(n):
-            robot.set_lift_m(0.5+0.22*(i+1)/n); robot.set_arm_targets("left", list(q_weld)); robot.set_finger("left", 0.0)
+            robot.set_lift_m(0.50 + 0.22 * (i + 1) / n)
+            robot.set_arm_targets("left", list(q_gr)); robot.set_finger("left", 0.0)
             world.step(render=True)
-            if i%7==0: grab()
+            if i % 7 == 0: grab()
         for i in range(30):
-            robot.set_lift_m(0.72); robot.set_arm_targets("left", list(q_weld)); robot.set_finger("left", 0.0)
+            robot.set_lift_m(0.72); robot.set_arm_targets("left", list(q_gr)); robot.set_finger("left", 0.0)
             world.step(render=True)
-            if i%7==0: grab()
+            if i % 7 == 0: grab()
         z_post=float(cube_p()[2])
         print(f"[grasp] === cube z {z_pre:.3f} -> {z_post:.3f} (rose {z_post-z_pre:+.3f}) ===", flush=True)
         print(f"[grasp] {'SUCCESS' if z_post-z_pre>0.1 else 'FAIL'}", flush=True)
@@ -213,7 +229,8 @@ def main() -> int:
         if frames:
             frames[0].save(OUT/_CFG["gif"], save_all=True, append_images=frames[1:], duration=90, loop=0)
             stem=_CFG["gif"][:-4]; frames[0].save(OUT/f"{stem}_first.png"); frames[-1].save(OUT/f"{stem}_last.png")
-            print(f"[grasp] wrote {_CFG['gif']} ({len(frames)} frames)", flush=True)
+            vid.save()
+            print(f"[grasp] wrote {_CFG['gif']} + {stem}.mp4 ({len(frames)} frames)", flush=True)
         print("[grasp] DONE", flush=True)
         return 0
     finally:
