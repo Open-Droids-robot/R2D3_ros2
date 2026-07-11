@@ -32,7 +32,7 @@
 
     <!-- ── 3. Sensors ────────────────────────────────────────── -->
     <xacro:lidar_sensor parent_link="base_link_underpan"
-                        xyz="0.0 -0.24 0.0" rpy="0 0 0"/>
+                        xyz="0.0 -0.24 0.0" rpy="0 0 ${-pi/2}"/>
 
     <!-- IMU: centre of AGV chassis -->
     <xacro:imu_sensor parent_link="base_link_underpan"

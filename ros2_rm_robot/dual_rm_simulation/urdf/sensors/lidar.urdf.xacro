@@ -45,7 +45,7 @@
             <gravity>false</gravity>
         </gazebo>
 
-        <!-- ── Gazebo gpu_lidar sensor (360°) ────────────────── -->
+        <!-- ── Gazebo gpu_lidar sensor (240°: ±120° from front, matches real robot) -->
         <gazebo reference="lidar_link">
             <sensor name="lidar" type="gpu_lidar">
                 <always_on>true</always_on>
@@ -56,10 +56,10 @@
                 <ray>
                     <scan>
                         <horizontal>
-                            <samples>360</samples>
+                            <samples>240</samples>
                             <resolution>1.0</resolution>
-                            <min_angle>0.0</min_angle>
-                            <max_angle>6.28318</max_angle>
+                            <min_angle>-2.0943951</min_angle>
+                            <max_angle>2.0943951</max_angle>
                         </horizontal>
                     </scan>
                     <range>

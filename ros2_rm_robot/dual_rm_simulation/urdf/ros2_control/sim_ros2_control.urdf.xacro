@@ -8,11 +8,11 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!-- ── Helper: single position-command arm joint ─────────── -->
-    <xacro:macro name="_arm_joint" params="joint_name">
+    <xacro:macro name="_arm_joint" params="joint_name initial_value:=0">
         <joint name="${joint_name}">
             <command_interface name="position"/>
             <state_interface name="position">
-                <param name="initial_value">0</param>
+                <param name="initial_value">${initial_value}</param>
             </state_interface>
             <state_interface name="velocity"/>
         </joint>
@@ -54,29 +54,29 @@
             </joint>
 
             <!-- ── Left arm (position command) ───────────────── -->
-            <xacro:_arm_joint joint_name="l_joint1"/>
-            <xacro:_arm_joint joint_name="l_joint2"/>
-            <xacro:_arm_joint joint_name="l_joint3"/>
-            <xacro:_arm_joint joint_name="l_joint4"/>
-            <xacro:_arm_joint joint_name="l_joint5"/>
-            <xacro:_arm_joint joint_name="l_joint6"/>
+            <xacro:_arm_joint joint_name="l_joint1" initial_value="3.1099294070322805"/>
+            <xacro:_arm_joint joint_name="l_joint2" initial_value="2.0569178650780406"/>
+            <xacro:_arm_joint joint_name="l_joint3" initial_value="0.4856440765489487"/>
+            <xacro:_arm_joint joint_name="l_joint4" initial_value="1.4370323214059306"/>
+            <xacro:_arm_joint joint_name="l_joint5" initial_value="-0.5151946788810964"/>
+            <xacro:_arm_joint joint_name="l_joint6" initial_value="2.5845659583029796"/>
             <xacro:if value="${arm_dof == 7}">
                 <xacro:_arm_joint joint_name="l_joint7"/>
             </xacro:if>
 
             <!-- ── Right arm (position command) ──────────────── -->
             <xacro:_arm_joint joint_name="r_joint1"/>
-            <xacro:_arm_joint joint_name="r_joint2"/>
-            <xacro:_arm_joint joint_name="r_joint3"/>
-            <xacro:_arm_joint joint_name="r_joint4"/>
-            <xacro:_arm_joint joint_name="r_joint5"/>
-            <xacro:_arm_joint joint_name="r_joint6"/>
+            <xacro:_arm_joint joint_name="r_joint2" initial_value="2.0568736101999248"/>
+            <xacro:_arm_joint joint_name="r_joint3" initial_value="0.553739397760887"/>
+            <xacro:_arm_joint joint_name="r_joint4" initial_value="1.3360178513191066"/>
+            <xacro:_arm_joint joint_name="r_joint5" initial_value="0.627859936346868"/>
+            <xacro:_arm_joint joint_name="r_joint6" initial_value="-2.539121367103219"/>
             <xacro:if value="${arm_dof == 7}">
                 <xacro:_arm_joint joint_name="r_joint7"/>
             </xacro:if>
 
             <!-- ── Platform lift (position command) ──────────── -->
-            <xacro:_arm_joint joint_name="platform_joint"/>
+            <xacro:_arm_joint joint_name="platform_joint" initial_value="0.7905380584362347"/>
 
             <!-- ── Head joints (position command) ────────────── -->
             <xacro:_arm_joint joint_name="head_joint1"/>
