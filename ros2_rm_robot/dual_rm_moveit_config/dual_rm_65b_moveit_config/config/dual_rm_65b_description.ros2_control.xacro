@@ -6,7 +6,7 @@
         <ros2_control name="${name}" type="system">
             <hardware>
                 <!-- By default, set up controllers for simulation. This won't work on real hardware -->
-                <plugin>fake_components/GenericSystem</plugin>
+                <plugin>mock_components/GenericSystem</plugin>
             </hardware>
             <joint name="l_joint1">
                 <command_interface name="position"/>
@@ -96,6 +96,81 @@
                 <command_interface name="position"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['platform_joint']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <!-- Passive joints: head and AGV wheels (state only, no command interface).
+                 These must be present so joint_state_broadcaster publishes their state
+                 and MoveIt's planning_scene_monitor sees the complete robot state. -->
+            <joint name="head_joint1">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="head_joint2">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_left_wheel">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_right_wheel">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_swivel_wheel_1_1">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_swivel_wheel_1_2">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_swivel_wheel_2_1">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_swivel_wheel_2_2">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_swivel_wheel_3_1">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_swivel_wheel_3_2">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_swivel_wheel_4_1">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_swivel_wheel_4_2">
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>

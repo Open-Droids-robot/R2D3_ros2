@@ -28,7 +28,7 @@ find_package(realsense2 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
+rosidl_generate_interfaces(${PROJECT_NAME}_msgs
   "msg/ObjectPose.msg"
 )
 
@@ -70,7 +70,8 @@ target_link_libraries(total_demo_node
 install(TARGETS total_demo_node
 DESTINATION lib/${PROJECT_NAME})
 
-ament_python_install_package(${PROJECT_NAME}) 
+# NOTE: ament_python_install_package removed — conflicts with rosidl_generate_interfaces
+# python targets in Jazzy. Scripts are installed directly below.
 
 install(PROGRAMS 
   scripts/camera_0.py 

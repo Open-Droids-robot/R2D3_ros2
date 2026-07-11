@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+
+<robot name="r2d3_description" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:arg name="arm_model" default="65b"/>
+    <xacro:property name="arm_model" value="$(arg arm_model)"/>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Shared components (identical for both arm variants)
+         ═══════════════════════════════════════════════════════════ -->
+    <xacro:include filename="$(find dual_rm_description)/urdf/materials/colors.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/agv/woosh_agv.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/body/body_head_platform.urdf.xacro"/>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Arm-variant components (selected by arm_model argument)
+         ═══════════════════════════════════════════════════════════ -->
+    <xacro:include filename="$(find dual_rm_description)/urdf/arms/$(arg arm_model)/left_arm.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/arms/$(arg arm_model)/left_hand.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/arms/$(arg arm_model)/right_arm.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/arms/$(arg arm_model)/right_hand.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/arms/$(arg arm_model)/joints.urdf.xacro"/>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Transmissions (Only Useful For Gazebo Classic)
+         ═══════════════════════════════════════════════════════════ -->
+    <xacro:include filename="$(find dual_rm_description)/urdf/transmissions/body_head_platform_transmission.xacro"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/arms/$(arg arm_model)/left_arm_transmission.xacro"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/arms/$(arg arm_model)/right_arm_transmission.xacro"/>
+
+</robot>

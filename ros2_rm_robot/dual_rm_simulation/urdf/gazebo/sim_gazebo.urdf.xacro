@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<!--
+  Usage:
+    <xacro:include filename=".../gazebo/sim_gazebo.urdf.xacro"/>
+    <xacro:sim_gazebo_properties arm_dof="6"/>   ← 65b
+    <xacro:sim_gazebo_properties arm_dof="7"/>   ← 75b
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="_gz_no_gravity" params="link_name">
+        <gazebo reference="${link_name}">
+            <self_collide>false</self_collide>
+            <gravity>false</gravity>
+        </gazebo>
+    </xacro:macro>
+
+    <!-- ── Helper: caster wheel friction ─────────────────────── -->
+    <xacro:macro name="_gz_caster_bracket" params="link_name">
+        <gazebo reference="${link_name}">
+            <self_collide>false</self_collide>
+            <mu1>0.05</mu1>
+            <mu2>0.05</mu2>
+        </gazebo>
+    </xacro:macro>
+    <!-- Caster wheels (sphere collision): moderate friction for stability -->
+    <xacro:macro name="_gz_caster_wheel" params="link_name">
+        <gazebo reference="${link_name}">
+            <self_collide>false</self_collide>
+            <mu1>0.3</mu1>
+            <mu2>0.3</mu2>
+        </gazebo>
+    </xacro:macro>
+
+
+    <xacro:macro name="sim_gazebo_properties" params="arm_dof">
+
+        <!-- ── Robot-level ───────────────────────────────────── -->
+        <gazebo>
+            <static>false</static>
+            <self_collide>false</self_collide>
+        </gazebo>
+
+        <!-- ── Chassis & body ────────────────────────────────── -->
+        <gazebo reference="base_link_underpan">
+            <self_collide>false</self_collide>
+        </gazebo>
+        <gazebo reference="body_base_link">
+            <self_collide>false</self_collide>
+        </gazebo>
+        <gazebo reference="platform_base_link">
+            <self_collide>false</self_collide>
+            <gravity>false</gravity>
+        </gazebo>
+
+        <!-- ── Drive wheels (high friction for traction) ─────── -->
+        <gazebo reference="link_right_wheel">
+            <self_collide>false</self_collide>
+            <mu1>1.5</mu1>
+            <mu2>1.5</mu2>
+        </gazebo>
+        <gazebo reference="link_left_wheel">
+            <self_collide>false</self_collide>
+            <mu1>1.5</mu1>
+            <mu2>1.5</mu2>
+        </gazebo>
+
+        <!-- ── Caster brackets (swivel forks, low friction) ──── -->
+        <xacro:_gz_caster_bracket link_name="link_swivel_wheel_1_1"/>
+        <xacro:_gz_caster_bracket link_name="link_swivel_wheel_2_1"/>
+        <xacro:_gz_caster_bracket link_name="link_swivel_wheel_3_1"/>
+        <xacro:_gz_caster_bracket link_name="link_swivel_wheel_4_1"/>
+        <!-- ── Caster wheels (sphere collision, moderate friction) -->
+        <xacro:_gz_caster_wheel link_name="link_swivel_wheel_1_2"/>
+        <xacro:_gz_caster_wheel link_name="link_swivel_wheel_2_2"/>
+        <xacro:_gz_caster_wheel link_name="link_swivel_wheel_3_2"/>
+        <xacro:_gz_caster_wheel link_name="link_swivel_wheel_4_2"/>
+
+        <!-- ── Arm links (no gravity) ────────────────────────── -->
+        <!-- Common to both 65b and 75b: links 1-6 -->
+        <xacro:_gz_no_gravity link_name="r_link1"/>
+        <xacro:_gz_no_gravity link_name="r_link2"/>
+        <xacro:_gz_no_gravity link_name="r_link3"/>
+        <xacro:_gz_no_gravity link_name="r_link4"/>
+        <xacro:_gz_no_gravity link_name="r_link5"/>
+        <xacro:_gz_no_gravity link_name="r_link6"/>
+        <xacro:_gz_no_gravity link_name="l_link1"/>
+        <xacro:_gz_no_gravity link_name="l_link2"/>
+        <xacro:_gz_no_gravity link_name="l_link3"/>
+        <xacro:_gz_no_gravity link_name="l_link4"/>
+        <xacro:_gz_no_gravity link_name="l_link5"/>
+        <xacro:_gz_no_gravity link_name="l_link6"/>
+
+        <!-- 75b only: link7 -->
+        <xacro:if value="${arm_dof == 7}">
+            <xacro:_gz_no_gravity link_name="r_link7"/>
+            <xacro:_gz_no_gravity link_name="l_link7"/>
+        </xacro:if>
+
+        <!-- ── Head, camera, hand base links ─────────────────── -->
+        <xacro:_gz_no_gravity link_name="head_link1"/>
+        <xacro:_gz_no_gravity link_name="head_link2"/>
+        <xacro:_gz_no_gravity link_name="camera_link"/>
+        <xacro:_gz_no_gravity link_name="l_base_link1"/>
+        <xacro:_gz_no_gravity link_name="r_base_link1"/>
+        <xacro:_gz_no_gravity link_name="r_hand_base_link"/>
+        <xacro:_gz_no_gravity link_name="l_hand_base_link"/>
+
+    </xacro:macro>
+
+</robot>

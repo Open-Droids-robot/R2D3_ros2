@@ -13,6 +13,7 @@
   <test_depend>ament_lint_common</test_depend>
 
   <depend>woosh_robot_msgs</depend>
+  <depend>woosh_ros_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

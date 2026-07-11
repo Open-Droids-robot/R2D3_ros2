@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 #define REALSENSE_ROS_MAJOR_VERSION    3
 #define REALSENSE_ROS_MINOR_VERSION    2

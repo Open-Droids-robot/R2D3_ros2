@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  FastDDS profile that disables Shared Memory (SHM) transport.
+
+  Why: Complex ROS 2 launches with many nodes (Gazebo + Nav2 + SLAM +
+  controllers) exhaust the SHM port pool, causing communication failures
+  ("Failed init_port fastrtps_port…").  Falling back to UDPv4 is slightly
+  slower for same-machine traffic but 100% reliable.
+
+  Usage: set env FASTRTPS_DEFAULT_PROFILES_FILE to point to this file
+  before launching any ROS 2 node.
+-->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+    <transport_descriptors>
+        <transport_descriptor>
+            <transport_id>udp_transport</transport_id>
+            <type>UDPv4</type>
+        </transport_descriptor>
+    </transport_descriptors>
+    <participant profile_name="disable_shm" is_default_profile="true">
+        <rtps>
+            <userTransports>
+                <transport_id>udp_transport</transport_id>
+            </userTransports>
+            <useBuiltinTransports>false</useBuiltinTransports>
+        </rtps>
+    </participant>
+</profiles>

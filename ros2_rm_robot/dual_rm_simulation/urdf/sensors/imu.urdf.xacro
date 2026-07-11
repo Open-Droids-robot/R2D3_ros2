@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  IMU sensor macro for R2D3 navigation simulation (Gz Sim / Harmonic).
+  Usage:
+    <xacro:include filename=".../sensors/imu.urdf.xacro"/>
+    <xacro:imu_sensor parent_link="base_link_underpan"
+                      xyz="0 0 0" rpy="0 0 0"/>
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="imu_sensor" params="parent_link xyz:='0 0 0' rpy:='0 0 0'">
+
+        <!-- ── Link ──────────────────────────────────────────── -->
+        <link name="imu_link">
+            <inertial>
+                <mass value="0.01"/>
+                <inertia ixx="0.00001" ixy="0" ixz="0"
+                         iyy="0.00001" iyz="0" izz="0.00001"/>
+            </inertial>
+        </link>
+
+        <!-- ── Joint ─────────────────────────────────────────── -->
+        <joint name="imu_joint" type="fixed">
+            <parent link="${parent_link}"/>
+            <child link="imu_link"/>
+            <origin xyz="${xyz}" rpy="${rpy}"/>
+        </joint>
+
+        <!-- ── Gazebo physics ────────────────────────────────── -->
+        <gazebo reference="imu_link">
+            <self_collide>false</self_collide>
+            <gravity>false</gravity>
+        </gazebo>
+
+        <!-- ── Gazebo IMU sensor ─────────────────────────────── -->
+        <gazebo reference="imu_link">
+            <sensor name="imu_sensor" type="imu">
+                <always_on>true</always_on>
+                <update_rate>100</update_rate>
+                <topic>imu</topic>
+                <gz_frame_id>imu_link</gz_frame_id>
+            </sensor>
+        </gazebo>
+
+    </xacro:macro>
+
+</robot>

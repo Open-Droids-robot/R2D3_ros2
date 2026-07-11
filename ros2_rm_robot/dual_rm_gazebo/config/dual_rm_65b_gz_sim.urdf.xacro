@@ -1,0 +1,360 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_rm_65b_gazebo">
+
+    <link name="world"/>
+    <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="base_link_underpan"/>
+    </joint>
+
+    <xacro:include filename="$(find dual_rm_65b_description)/urdf/dual_rm_65b_description.urdf.xacro" />
+
+    <gazebo reference="base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="r_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link3">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link4">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link5">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_link6">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link3">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link4">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link5">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_link6">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+    <gazebo reference="head_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="head_link2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="camera_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_right_wheel">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_left_wheel">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_1_1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_1_2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_2_1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_2_2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_3_1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_3_2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_4_1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="link_swivel_wheel_4_2">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+
+
+    <gazebo reference="body_base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="platform_base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_base_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_base_link1">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="r_hand_base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="l_hand_base_link">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+    <gazebo reference="base_link_underpan">
+        <self_collide>false</self_collide>
+        <gravity>false</gravity>
+    </gazebo>
+   
+    <gazebo>
+        <is_static>true</is_static>
+        <self_collide>true</self_collide>
+    </gazebo>
+
+    <ros2_control name="GazeboSystem" type="system">
+        <hardware>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </hardware>
+        <joint name="r_joint1">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="r_joint2">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">2.0568736101999248</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="r_joint3">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0.553739397760887</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="r_joint4">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">1.3360178513191066</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="r_joint5">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0.627859936346868</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="r_joint6">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">-2.539121367103219</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="l_joint1">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">3.1099294070322805</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="l_joint2">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">2.0569178650780406</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="l_joint3">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0.4856440765489487</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="l_joint4">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">1.4370323214059306</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="l_joint5">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">-0.5151946788810964</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="l_joint6">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">2.5845659583029796</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="platform_joint">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0.7905380584362347</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="head_joint1">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="head_joint2">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="joint_right_wheel">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="joint_left_wheel">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+
+        <joint name="joint_swivel_wheel_1_1">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="joint_swivel_wheel_1_2">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="joint_swivel_wheel_2_1">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="joint_swivel_wheel_2_2">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+
+        <joint name="joint_swivel_wheel_3_1">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+
+        <joint name="joint_swivel_wheel_3_2">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="joint_swivel_wheel_4_1">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="joint_swivel_wheel_4_2">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint> 
+
+    </ros2_control>
+
+      <gazebo>
+        <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+            <parameters>$(find dual_rm_65b_moveit_config)/config/ros2_controllers_gazebo.yaml</parameters>
+            <robot_param>robot_description</robot_param>
+            <robot_param_node>robot_state_publisher</robot_param_node>
+        </plugin>
+    </gazebo>
+</robot>

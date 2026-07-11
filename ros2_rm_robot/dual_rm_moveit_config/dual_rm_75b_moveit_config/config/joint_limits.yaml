@@ -11,75 +11,75 @@ joint_limits:
   l_joint1:
     has_velocity_limits: true
     max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   l_joint2:
     has_velocity_limits: true
     max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   l_joint3:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   l_joint4:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   l_joint5:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   l_joint6:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   l_joint7:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   platform_joint:
     has_velocity_limits: true
     max_velocity: 0.14999999999999999
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 5.0
   r_joint1:
     has_velocity_limits: true
     max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   r_joint2:
     has_velocity_limits: true
     max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   r_joint3:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   r_joint4:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   r_joint5:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   r_joint6:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   r_joint7:
     has_velocity_limits: true
     max_velocity: 3.9249999999999998
-    has_acceleration_limits: false
-    max_acceleration: 0.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
