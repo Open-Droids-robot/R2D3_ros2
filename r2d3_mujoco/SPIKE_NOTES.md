@@ -271,3 +271,88 @@ PASSED.`).
   insufficient), the real fix is upstream: add named `<collision>` geometry
   to `dual_rm_description`'s wheel/caster links, which is out of scope for
   `r2d3_mujoco/`.
+
+## `/scan` lidar self-occlusion: root cause and fix (post-Task-7 follow-up)
+
+Task 7 documented `/scan` publishing at the right rate/structure but every
+range coming back `-1.0`. Root cause, confirmed with a standalone `mj_ray`
+script against the cached MJCF (see `.superpowers/sdd/task-7-report.md` for
+the original repro and `task-7-fix-report.md`-equivalent section appended to
+that same file for the full writeup):
+
+- MuJoCo's `<rangefinder>` sensor excludes exactly **one** body from ray
+  casting: `bodyexclude = m->site_bodyid[objid]` (`engine_sensor.c`), the
+  body that owns the sensor's own site. `mujoco_ros2_control` 0.0.3's
+  `add_lidar_from_sites()` (`urdf_to_mujoco_utils.py`, hard-coded, not
+  configurable from `r2d3_mujoco/`) always creates the replicated lidar ray
+  sites inside a brand-new, geometry-less `"<site>_lidar_body"`, so that
+  exclusion never reaches any geom that could actually occlude a ray. The
+  chassis geoms doing the occluding all live in the fused `base_footprint`
+  body instead.
+- `geomgroup`-based filtering is a dead end too: rangefinder sensors always
+  call `mj_ray`/`mj_multiRay` with `geomgroup=NULL` (confirmed against
+  `engine_sensor.c`), so a geom's `group` attribute has zero effect on ray
+  casting no matter what default class it's in.
+- The filter ray casting *does* honor unconditionally is alpha:
+  `ray_eliminate()` (`engine_ray.c`) drops any geom whose rgba alpha (or
+  material alpha) is exactly 0. Since every robot geom is an unnamed clone
+  of a URDF visual mesh/primitive (0/68 robot geoms carry a `name`
+  attribute — see the Task 4 finding above), `modify_element` can never
+  target an individual occluding geom by name, but mesh geoms keep their
+  `mesh="<stl-name>"` attribute and the lidar housing is the only primitive
+  geom of its exact size, so both can still be matched textually.
+- Three groups of geoms were found self-occluding, each independently
+  confirmed with `mj_ray`:
+  1. **The lidar housing itself** — modeled in
+     `dual_rm_simulation/urdf/sensors/lidar.urdf.xacro` as a
+     `<cylinder radius="0.03" length="0.05"/>` visual primitive whose origin
+     coincides exactly with the rangefinder site, so every ray starts
+     *inside* the housing and immediately exits through its own wall
+     (~0.03 m).
+  2. **`base_link_underpan` and `body_base_link`** (the chassis pan the
+     lidar mounts to) — even with the housing cleared, all 240 rays still
+     hit these two meshes' true (non-convex) surface at <0.17 m in every
+     direction; the mount sits flush against a raised boss on the chassis,
+     not just inside the collision hull's padding.
+
+**Fix applied** (`r2d3_mujoco/urdf/mujoco_inputs.urdf.xacro` +
+`r2d3_mujoco/scripts/ensure_mjcf.py`):
+
+- `mujoco_inputs.urdf.xacro`: added `rgba="1 1 1 0"` to the shared
+  `collision` default class (defense in depth — hides every collision-hull
+  copy robot-wide from ray casting, not just the three meshes above; does
+  not affect contact physics, rgba is purely visual).
+- `ensure_mjcf.py`: added `patch_lidar_housing_visibility()`, a targeted
+  text substitution over the generated MJCF that zeroes the rgba alpha on
+  the *visual* copies of the lidar housing cylinder and the two chassis
+  meshes (their inline rgba, baked from URDF material colors, would
+  otherwise override the collision-class default and stay ray-visible).
+  This can't be done via `raw_inputs`/`modify_element` because those only
+  see the *input* URDF/scene, not the converter's synthesized output geoms.
+- This required restructuring `ensure_mjcf.py`'s conversion flow: the
+  vendored converter's own `--publish_topic` publishes its raw output
+  *before* this script gets a chance to patch it, and (separately)
+  `add_mujoco_info()` only emits an absolute `<compiler meshdir=...>` (vs.
+  a relative one that fails to resolve when MuJoCo loads the MJCF from a
+  ROS string message) when `--publish_topic` is set at all. The fix: the
+  converter subprocess is still given `--publish_topic`, but pointed at a
+  throwaway internal topic (`internal_convert_topic()`) that nothing
+  subscribes to; `ensure_mjcf.py` polls the output file for size stability
+  (the converter spins forever once `--publish_topic` is set, so it can't
+  be `wait()`-ed on — same file-stability signal used manually in the Task 4
+  spike), kills the whole process group, patches the file, and is the one
+  and only publisher on the *real* topic.
+- Trade-off accepted: hiding the two chassis meshes from ray casting also
+  hides them from the RGB/depth camera's rendering (alpha is a rendering
+  property, not ray-casting-only). The `camera` site is head-mounted
+  looking outward/forward, so the underpan is not normally in frame; this
+  was judged acceptable against a `/scan` that otherwise never reports any
+  wall. If camera parity for the underpan ever matters, the real fix would
+  need per-consumer geom duplication (a ray-cast-only invisible copy plus a
+  separately-rendered visible copy), which the vendored converter has no
+  hook for from `r2d3_mujoco/`.
+
+**Result**: `/scan` on a live launch now reports all 240 ranges valid
+(sample run: min 1.97 m, max 6.73 m, 0 invalid), against a 10x10 m room —
+verified both on a cache-miss (fresh conversion) and cache-hit (patched
+file re-published from disk) run.

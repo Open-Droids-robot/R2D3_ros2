@@ -52,8 +52,29 @@
                     <default class="visual">
                         <geom group="2" type="mesh" contype="0" conaffinity="0"/>
                     </default>
+                    <!-- rgba alpha=0: MuJoCo's ray-casting eliminator (engine_ray.c
+                         ray_eliminate(), used by mj_ray/mj_multiRay and therefore by
+                         every <rangefinder> sensor) drops any geom whose rgba alpha
+                         (or material alpha) is exactly 0, regardless of geomgroup —
+                         rangefinder sensors always pass geomgroup=NULL, so group-based
+                         filtering has no effect on them, but the alpha check is
+                         unconditional. The lidar's rangefinder replicate sites live in
+                         a separate "<site>_lidar_body" the converter always injects
+                         (mujoco_ros2_control 0.0.3 urdf_to_mujoco_utils.add_lidar_from_sites,
+                         hard-coded, cannot be changed from r2d3_mujoco/ without patching
+                         the vendored converter), so MuJoCo's same-body bodyexclude
+                         cannot exclude the chassis body's own collision geoms. Since
+                         every robot collision geom is an unnamed convex-hull clone of
+                         its visual mesh (Task 4 finding: 0/68 robot geoms carry a
+                         name, so modify_element can't target only the chassis one),
+                         the fix is applied to the whole "collision" class: making
+                         collision geoms invisible to ray casting leaves only the
+                         (still ray-visible, still contype=0/conaffinity=0 non-
+                         colliding) visual mesh geoms for the rangefinder to hit. This
+                         does not affect contact physics (rgba is purely visual). -->
                     <default class="collision">
-                        <geom group="3" type="mesh" friction="1.5 0.005 0.0001" condim="4"/>
+                        <geom group="3" type="mesh" friction="1.5 0.005 0.0001" condim="4"
+                              rgba="1 1 1 0"/>
                     </default>
                 </default>
 
