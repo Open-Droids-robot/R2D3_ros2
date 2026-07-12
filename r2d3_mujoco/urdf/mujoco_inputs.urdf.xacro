@@ -45,7 +45,8 @@
                      2-DOF (swivel+roll) joints (see robot_description_formatted.urdf),
                      so they self-align under drive torque rather than needing an
                      artificially low ground-contact mu the way Gazebo's simplified
-                     single-DOF caster friction model did. See SPIKE_NOTES.md for the
+                     single-DOF caster friction model did. See git history:
+                     git show aaae018:r2d3_mujoco/SPIKE_NOTES.md for the
                      full investigation (decompose_mesh/obj2mjcf naming was also checked
                      and does not produce named geoms either). -->
                 <default>
@@ -172,7 +173,7 @@
                      modify_element, because the converter never assigns a "name"
                      to synthesized collision geoms for this (visual-only)
                      description, so there is nothing modify_element type="geom"
-                     could match. See SPIKE_NOTES.md for the full investigation. -->
+                     could match. See git history: git show aaae018:r2d3_mujoco/SPIKE_NOTES.md for the full investigation. -->
             </processed_inputs>
 
         </mujoco_inputs>

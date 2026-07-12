@@ -31,10 +31,12 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 
 # The converter subprocess is launched with --publish_topic (see build_converter_cmd()),
-# which per SPIKE_NOTES.md makes it spin forever (rclpy.spin()) after writing its output
-# files instead of exiting -- so this script cannot wait() on it for completion. Instead
-# it polls the output MJCF for having stopped changing size, the same file-stability
-# signal SPIKE_NOTES.md used manually, then kills the whole process group.
+# which per (see git history: git show aaae018:r2d3_mujoco/SPIKE_NOTES.md) makes it spin
+# forever (rclpy.spin()) after writing its output files instead of exiting -- so this
+# script cannot wait() on it for completion. Instead it polls the output MJCF for having
+# stopped changing size, the same file-stability signal (see git history:
+# git show aaae018:r2d3_mujoco/SPIKE_NOTES.md) used manually, then kills the whole
+# process group.
 CONVERT_POLL_INTERVAL_S = 0.5
 CONVERT_STABLE_FOR_S = 2.0
 CONVERT_TIMEOUT_S = 300.0
@@ -48,7 +50,7 @@ CONVERTER_ARGS_VERSION = "v3:save_only,add_free_joint,scene,lidar_and_chassis_ra
 
 # --- Lidar self-occlusion fix -------------------------------------------------------
 #
-# Root cause (see SPIKE_NOTES.md "Lidar self-occlusion" for the full investigation):
+# Root cause (see git history: git show aaae018:r2d3_mujoco/SPIKE_NOTES.md "Lidar self-occlusion" for the full investigation):
 # every ray leaving the lidar's rangefinder site immediately re-intersects the robot's
 # own chassis a few centimeters out, so every /scan range comes back below range_min
 # (0.55 m) and gets reported as -1.0 by rangefinder_lidar_plugin.cpp. MuJoCo's
@@ -66,7 +68,7 @@ CONVERTER_ARGS_VERSION = "v3:save_only,add_free_joint,scene,lidar_and_chassis_ra
 # ray_eliminate() (engine_ray.c) drops any geom whose rgba alpha (or material alpha)
 # is exactly 0. Every robot geom is an unnamed clone of a URDF visual mesh/primitive
 # (mujoco_ros2_control synthesizes an unnamed collision+visual pair from every
-# visual-only URDF <visual>, see Task 4's SPIKE_NOTES finding: 0/68 robot geoms carry
+# visual-only URDF <visual>, see Task 4's finding in git history: git show aaae018:r2d3_mujoco/SPIKE_NOTES.md: 0/68 robot geoms carry
 # a `name` attribute), so `modify_element` can never target an individual occluding
 # geom by name. Two things CAN still uniquely identify a specific geom in the
 # generated text, though: mesh geoms keep a `mesh="<stl-name>"` attribute, and the
@@ -384,7 +386,7 @@ def main() -> int:
     mjcf_path.unlink(missing_ok=True)
 
     # New process group so we can reliably kill the whole `ros2 run ... .sh -> python`
-    # descendant chain (SPIKE_NOTES.md: killing only the immediate child PID doesn't
+    # descendant chain (see git history: git show aaae018:r2d3_mujoco/SPIKE_NOTES.md: killing only the immediate child PID doesn't
     # always reach the underlying python process).
     child = subprocess.Popen(
         build_converter_cmd(urdf_file, world_path, cache_dir, args.topic),
@@ -430,6 +432,12 @@ def main() -> int:
 
     if not finalize_conversion(mjcf_path, cache_dir, checksum):
         return 1
+
+    # Conversion is done; restore default signal handling so Ctrl-C/SIGTERM can
+    # interrupt the rclpy.spin() inside publish_cached() instead of being forwarded
+    # to the (already-exited) child process group and swallowed.
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
     publish_cached(mjcf_path, args.topic)
     return 0

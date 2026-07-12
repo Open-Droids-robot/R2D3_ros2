@@ -56,6 +56,7 @@ def launch_setup(context, *args, **kwargs):
         output="both",
         emulate_tty=True,
         arguments=ensure_mjcf_args,
+        on_exit=Shutdown(),
     )
 
     # -- Robot State Publisher --
