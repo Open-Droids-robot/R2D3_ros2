@@ -104,7 +104,7 @@ ros2 launch r2d3_mujoco mujoco_sim.launch.py robot_model:=75b headless:=true
 |--------------------------------|---------------------------------------------------|
 | `ensure_mjcf.py`                | Cached URDF→MJCF conversion; publishes `/mujoco_robot_description` |
 | `robot_state_publisher`         | Publishes `/robot_description` and `/tf`          |
-| `ros2_control_node` (MuJoCo)     | Physics simulation + `controller_manager`; publishes `/scan`, `/imu`, `/camera/*`, `/ground_truth_odom` |
+| `mujoco_ros2_control_node`       | Physics simulation + `controller_manager`; publishes `/scan`, `/imu`, `/camera/*`, `/ground_truth_odom` |
 | `joint_state_broadcaster`        | Publishes `/joint_states`                          |
 | `diff_drive_controller`          | AGV base velocity control                          |
 | `left_arm_controller`            | Left arm joint trajectory control                  |
@@ -217,9 +217,9 @@ expose directly:
 | Feature                 | How                                                                 |
 |--------------------------|----------------------------------------------------------------------|
 | Ground-truth base odometry | `/ground_truth_odom` — published straight from the converter-added free joint (`floating_base_joint`), independent of the diff-drive controller's estimated odometry |
-| Pause / resume            | `ros2 service call /ros2_control_node/set_pause std_srvs/srv/SetBool "{data: true}"` |
-| Single-step (while paused) | `ros2 service call /ros2_control_node/step_simulation std_srvs/srv/Trigger {}` |
-| Reset the world           | `ros2 service call /ros2_control_node/reset_world std_srvs/srv/Trigger {}` |
+| Pause / resume            | `ros2 service call /mujoco_ros2_control_node/set_pause mujoco_ros2_control_msgs/srv/SetPause "{paused: true}"` (use `paused: false` to resume) |
+| Single-step (requires pause first) | `ros2 service call /mujoco_ros2_control_node/step_simulation mujoco_ros2_control_msgs/srv/StepSimulation "{steps: 10}"` |
+| Reset the world           | `ros2 service call /mujoco_ros2_control_node/reset_world mujoco_ros2_control_msgs/srv/ResetWorld "{keyframe: ''}"` |
 | Interactive Simulate window | Omit `headless:=true` (or set it `false`, the default) to get the MuJoCo Simulate GUI. **Space** pauses/resumes; **→** single-steps while paused. |
 
 ---
