@@ -102,9 +102,18 @@
             <xacro:_passive_joint joint_name="joint_swivel_wheel_4_1"/>
             <xacro:_passive_joint joint_name="joint_swivel_wheel_4_2"/>
 
-            <!-- IMU: maps imu_sensor_{quat,gyro,accel} MJCF sensors (0.0.3 suffix
-                 convention requires the ros2_control name "<base>_imu") -->
+            <!-- IMU: maps imu_sensor_{quat,gyro,accel} MJCF sensors. register_sensors()
+                 (mujoco_ros2_control 0.0.3) only wires up a <sensor> as an IMU/FTS hardware
+                 interface when it carries an explicit mujoco_type param; without it the
+                 sensor is silently skipped ("Not adding hardware interface for sensor...")
+                 and resource_manager then fails to find the exported state interfaces.
+                 mujoco_sensor_name is required too because the MJCF sensor base name
+                 ("imu_sensor") differs from this ros2_control sensor name
+                 ("imu_sensor_imu" - the "_imu" suffix is only a naming convention for the
+                 ros2_control side, not the MJCF side). -->
             <sensor name="imu_sensor_imu">
+                <param name="mujoco_type">imu</param>
+                <param name="mujoco_sensor_name">imu_sensor</param>
                 <state_interface name="orientation.x"/>
                 <state_interface name="orientation.y"/>
                 <state_interface name="orientation.z"/>
