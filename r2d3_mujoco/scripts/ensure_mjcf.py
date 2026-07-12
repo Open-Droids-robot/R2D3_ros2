@@ -88,8 +88,13 @@ def publish_cached(mjcf_path: Path, topic: str) -> None:
         rclpy.try_shutdown()
 
 
-def watch_and_write_checksum(topic: str, cache_dir: Path, checksum: str) -> threading.Thread:
-    """Subscribe to the MJCF topic; when the converter publishes, persist the checksum."""
+def watch_and_write_checksum(topic: str, cache_dir: Path, checksum: str) -> tuple[threading.Thread, threading.Event]:
+    """Subscribe to the MJCF topic; when the converter publishes, persist the checksum.
+
+    Returns:
+        A tuple of (watcher_thread, done_event) where done_event is set when checksum is written.
+    """
+    done = threading.Event()
 
     def _watch():
         import rclpy
@@ -104,7 +109,6 @@ def watch_and_write_checksum(topic: str, cache_dir: Path, checksum: str) -> thre
             reliability=QoSReliabilityPolicy.RELIABLE,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
-        done = threading.Event()
 
         def _cb(_msg):
             (cache_dir / CHECKSUM_FILENAME).write_text(checksum + "\n")
@@ -119,7 +123,7 @@ def watch_and_write_checksum(topic: str, cache_dir: Path, checksum: str) -> thre
 
     t = threading.Thread(target=_watch, daemon=True)
     t.start()
-    return t
+    return t, done
 
 
 def main() -> int:
@@ -151,7 +155,7 @@ def main() -> int:
     urdf_file = cache_dir / URDF_FILENAME
     urdf_file.write_text(args.robot_description)
 
-    watch_and_write_checksum(args.topic, cache_dir, checksum)
+    watcher, watcher_done = watch_and_write_checksum(args.topic, cache_dir, checksum)
     child = subprocess.Popen(build_converter_cmd(urdf_file, world_path, cache_dir, args.topic))
 
     def _forward_sigterm(_signum, _frame):
@@ -159,7 +163,10 @@ def main() -> int:
 
     signal.signal(signal.SIGTERM, _forward_sigterm)
     signal.signal(signal.SIGINT, _forward_sigterm)
-    return child.wait()
+    exit_code = child.wait()
+    watcher_done.wait(timeout=3.0)
+    watcher.join(timeout=1.0)
+    return exit_code
 
 
 if __name__ == "__main__":
