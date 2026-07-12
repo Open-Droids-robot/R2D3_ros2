@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<!--
+  ros2_control interface for the R2D3 robot under mujoco_ros2_control (0.0.3 API).
+  Joint list and initial values mirror the Gazebo sim_ros2_control.urdf.xacro.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="_arm_joint" params="joint_name initial_value:=0">
+        <joint name="${joint_name}">
+            <command_interface name="position"/>
+            <state_interface name="position">
+                <param name="initial_value">${initial_value}</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="_passive_joint" params="joint_name">
+        <joint name="${joint_name}">
+            <state_interface name="position">
+                <param name="initial_value">0</param>
+            </state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="mujoco_ros2_control" params="arm_dof headless">
+
+        <ros2_control name="MujocoSystem" type="system">
+            <hardware>
+                <plugin>mujoco_ros2_control/MujocoSystemInterface</plugin>
+
+                <!-- MJCF arrives on this topic (published by ensure_mjcf.py or the converter) -->
+                <param name="mujoco_model_topic">/mujoco_robot_description</param>
+
+                <param name="headless">${headless}</param>
+                <param name="sim_speed_factor">1.0</param>
+
+                <!-- Sensor publish rates (match Gazebo sensor update rates) -->
+                <param name="camera_publish_rate">15.0</param>
+                <param name="lidar_publish_rate">10.0</param>
+
+                <!-- Ground-truth base odometry from the converter-added free joint -->
+                <param name="odom_free_joint_name">floating_base_joint</param>
+                <param name="odom_topic">/ground_truth_odom</param>
+            </hardware>
+
+            <!-- Drive wheels (velocity command) -->
+            <joint name="joint_left_wheel">
+                <command_interface name="velocity">
+                    <param name="min">-10</param>
+                    <param name="max">10</param>
+                </command_interface>
+                <state_interface name="position"/>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint_right_wheel">
+                <command_interface name="velocity">
+                    <param name="min">-10</param>
+                    <param name="max">10</param>
+                </command_interface>
+                <state_interface name="position"/>
+                <state_interface name="velocity"/>
+            </joint>
+
+            <!-- Left arm (position command) -->
+            <xacro:_arm_joint joint_name="l_joint1" initial_value="3.1099294070322805"/>
+            <xacro:_arm_joint joint_name="l_joint2" initial_value="2.0569178650780406"/>
+            <xacro:_arm_joint joint_name="l_joint3" initial_value="0.4856440765489487"/>
+            <xacro:_arm_joint joint_name="l_joint4" initial_value="1.4370323214059306"/>
+            <xacro:_arm_joint joint_name="l_joint5" initial_value="-0.5151946788810964"/>
+            <xacro:_arm_joint joint_name="l_joint6" initial_value="2.5845659583029796"/>
+            <xacro:if value="${arm_dof == 7}">
+                <xacro:_arm_joint joint_name="l_joint7"/>
+            </xacro:if>
+
+            <!-- Right arm (position command) -->
+            <xacro:_arm_joint joint_name="r_joint1"/>
+            <xacro:_arm_joint joint_name="r_joint2" initial_value="2.0568736101999248"/>
+            <xacro:_arm_joint joint_name="r_joint3" initial_value="0.553739397760887"/>
+            <xacro:_arm_joint joint_name="r_joint4" initial_value="1.3360178513191066"/>
+            <xacro:_arm_joint joint_name="r_joint5" initial_value="0.627859936346868"/>
+            <xacro:_arm_joint joint_name="r_joint6" initial_value="-2.539121367103219"/>
+            <xacro:if value="${arm_dof == 7}">
+                <xacro:_arm_joint joint_name="r_joint7"/>
+            </xacro:if>
+
+            <!-- Platform lift (position command) -->
+            <xacro:_arm_joint joint_name="platform_joint" initial_value="0.7905380584362347"/>
+
+            <!-- Head joints (position command) -->
+            <xacro:_arm_joint joint_name="head_joint1"/>
+            <xacro:_arm_joint joint_name="head_joint2"/>
+
+            <!-- Caster wheels (passive, state only) -->
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_1_1"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_1_2"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_2_1"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_2_2"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_3_1"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_3_2"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_4_1"/>
+            <xacro:_passive_joint joint_name="joint_swivel_wheel_4_2"/>
+
+            <!-- IMU: maps imu_sensor_{quat,gyro,accel} MJCF sensors (0.0.3 suffix
+                 convention requires the ros2_control name "<base>_imu") -->
+            <sensor name="imu_sensor_imu">
+                <state_interface name="orientation.x"/>
+                <state_interface name="orientation.y"/>
+                <state_interface name="orientation.z"/>
+                <state_interface name="orientation.w"/>
+                <state_interface name="angular_velocity.x"/>
+                <state_interface name="angular_velocity.y"/>
+                <state_interface name="angular_velocity.z"/>
+                <state_interface name="linear_acceleration.x"/>
+                <state_interface name="linear_acceleration.y"/>
+                <state_interface name="linear_acceleration.z"/>
+            </sensor>
+
+            <!-- RGB-D camera: sensor name must equal the MJCF camera name -->
+            <sensor name="camera">
+                <param name="frame_name">camera_optical_frame</param>
+                <param name="info_topic">/camera/camera_info</param>
+                <param name="image_topic">/camera/image</param>
+                <param name="depth_topic">/camera/depth_image</param>
+            </sensor>
+
+            <!-- Lidar: combines the generated rangefinders into one LaserScan -->
+            <sensor name="lidar">
+                <param name="frame_name">lidar_link</param>
+                <param name="angle_increment">0.0175263</param>
+                <param name="min_angle">-2.0943951</param>
+                <param name="max_angle">2.0943951</param>
+                <param name="range_min">0.55</param>
+                <param name="range_max">12.0</param>
+                <param name="laserscan_topic">/scan</param>
+            </sensor>
+
+        </ros2_control>
+
+    </xacro:macro>
+
+</robot>
