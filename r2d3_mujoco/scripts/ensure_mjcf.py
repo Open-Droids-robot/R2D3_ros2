@@ -24,8 +24,11 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
+from xml.dom import minidom
+from xml.parsers.expat import ExpatError
 
 # The converter subprocess is launched with --publish_topic (see build_converter_cmd()),
 # which per SPIKE_NOTES.md makes it spin forever (rclpy.spin()) after writing its output
@@ -148,6 +151,81 @@ def _zero_alpha(rgba: str) -> str:
     return " ".join(parts)
 
 
+# Every matched geom is a collision+visual pair (the converter synthesizes both from
+# each URDF visual): the lidar housing plus each occluding chassis mesh.
+EXPECTED_PATCH_COUNT = 2 * (1 + len(_RAY_OCCLUDING_MESH_NAMES))
+
+
+def validate_patch_count(patched: int) -> bool:
+    """True iff the lidar self-occlusion patch matched exactly the expected geoms.
+
+    Anything else means the converter's output no longer matches the patch patterns
+    (upstream format change, renamed meshes, resized housing, ...) and the model
+    would ship with the all -1.0 /scan bug -- the caller must treat it as fatal.
+    """
+    return patched == EXPECTED_PATCH_COUNT
+
+
+def mjcf_parses_as_xml(mjcf_path: Path) -> bool:
+    """True iff mjcf_path exists and is well-formed XML (guards against a truncated
+    or partially written converter output being accepted, patched, and cached)."""
+    try:
+        minidom.parse(str(mjcf_path))
+    except (OSError, ExpatError, ValueError):
+        return False
+    return True
+
+
+def converter_exit_acceptable(returncode: int, mjcf_path: Path) -> bool:
+    """Whether an *early-exited* converter's output may be accepted.
+
+    The converter normally spins forever once --publish_topic is set, so exiting at
+    all is unexpected; only trust the output if the exit was clean (code 0) AND the
+    file is non-empty, well-formed XML.
+    """
+    return (
+        returncode == 0
+        and mjcf_path.is_file()
+        and mjcf_path.stat().st_size > 0
+        and mjcf_parses_as_xml(mjcf_path)
+    )
+
+
+def finalize_conversion(mjcf_path: Path, cache_dir: Path, checksum: str) -> bool:
+    """Validate, patch, and mark the freshly converted MJCF as cached.
+
+    Returns True only if the file is well-formed XML AND the lidar self-occlusion
+    patch matched exactly EXPECTED_PATCH_COUNT geoms; only then is the checksum
+    written (making the cache entry valid). Any failure leaves the cache entry
+    invalid (no checksum) so the next launch reconverts, and the caller must NOT
+    publish the model.
+    """
+    if not mjcf_parses_as_xml(mjcf_path):
+        print(
+            f"[ensure_mjcf] ERROR: converter output {mjcf_path} is missing or not "
+            f"well-formed XML; refusing to cache or publish it",
+            flush=True,
+        )
+        return False
+
+    patched = patch_lidar_housing_visibility(mjcf_path)
+    if not validate_patch_count(patched):
+        print(
+            f"[ensure_mjcf] ERROR: lidar self-occlusion patch matched {patched} geoms, "
+            f"expected {EXPECTED_PATCH_COUNT}. The converter output no longer matches "
+            f"the patch patterns in patch_lidar_housing_visibility() (upstream converter "
+            f"change? renamed chassis meshes? resized lidar housing?). Publishing this "
+            f"model would silently resurrect the all -1.0 /scan bug, so refusing to "
+            f"cache or publish it -- inspect {mjcf_path} and update the patterns.",
+            flush=True,
+        )
+        return False
+
+    print(f"[ensure_mjcf] patched {patched} ray-occluding geoms for lidar self-occlusion fix", flush=True)
+    (cache_dir / CHECKSUM_FILENAME).write_text(checksum + "\n")
+    return True
+
+
 def compute_checksum(urdf: str, world_content: str, extra: str) -> str:
     h = hashlib.sha256()
     h.update(urdf.encode())
@@ -235,8 +313,9 @@ def publish_cached(mjcf_path: Path, topic: str) -> None:
         rclpy.try_shutdown()
 
 
-def _wait_for_stable_output(child: subprocess.Popen, mjcf_path: Path) -> bool:
-    """Poll mjcf_path until its size stops changing, the child exits, or we time out.
+def _wait_for_stable_output(child: subprocess.Popen, mjcf_path: Path, abort: threading.Event) -> bool:
+    """Poll mjcf_path until its size stops changing, the child exits, we are told to
+    abort, or we time out.
 
     Returns True if the file appeared and its size held steady for
     CONVERT_STABLE_FOR_S seconds (the converter has finished writing it).
@@ -245,6 +324,8 @@ def _wait_for_stable_output(child: subprocess.Popen, mjcf_path: Path) -> bool:
     last_size = -1
     stable_since = None
     while time.monotonic() < deadline:
+        if abort.is_set():
+            return False
         if mjcf_path.is_file():
             size = mjcf_path.stat().st_size
             if size > 0 and size == last_size:
@@ -256,10 +337,17 @@ def _wait_for_stable_output(child: subprocess.Popen, mjcf_path: Path) -> bool:
                 stable_since = None
             last_size = size
         if child.poll() is not None:
-            # Converter process exited (crash, or -- since it should spin forever
-            # with --publish_topic -- something unexpected). Give the file one more
-            # look in case it exited immediately after the last write.
-            return mjcf_path.is_file() and mjcf_path.stat().st_size > 0
+            # Converter process exited. It should spin forever once --publish_topic
+            # is set, so exiting at all is unexpected -- only accept the output on a
+            # clean exit (code 0) with non-empty, well-formed XML on disk.
+            if converter_exit_acceptable(child.returncode, mjcf_path):
+                return True
+            print(
+                f"[ensure_mjcf] ERROR: converter exited early (code {child.returncode}) "
+                f"without valid output at {mjcf_path}",
+                flush=True,
+            )
+            return False
         time.sleep(CONVERT_POLL_INTERVAL_S)
     return False
 
@@ -303,6 +391,8 @@ def main() -> int:
         preexec_fn=os.setsid,
     )
 
+    abort = threading.Event()
+
     def _kill_child_group():
         try:
             os.killpg(os.getpgid(child.pid), signal.SIGTERM)
@@ -310,12 +400,16 @@ def main() -> int:
             pass
 
     def _forward_signal(_signum, _frame):
+        # Mark the run as aborted BEFORE killing the child: main() must not go on
+        # to patch/checksum/publish a possibly truncated file (and then sit in
+        # rclpy.spin() ignoring the shutdown request).
+        abort.set()
         _kill_child_group()
 
     signal.signal(signal.SIGTERM, _forward_signal)
     signal.signal(signal.SIGINT, _forward_signal)
 
-    converted = _wait_for_stable_output(child, mjcf_path)
+    converted = _wait_for_stable_output(child, mjcf_path, abort)
     _kill_child_group()
     try:
         child.wait(timeout=5.0)
@@ -326,23 +420,17 @@ def main() -> int:
             pass
         child.wait(timeout=5.0)
 
-    if not converted:
-        print(f"[ensure_mjcf] conversion timed out or failed; {mjcf_path} not produced", flush=True)
+    if abort.is_set():
+        print("[ensure_mjcf] interrupted; aborting without caching or publishing", flush=True)
         return 1
 
-    patched = patch_lidar_housing_visibility(mjcf_path)
-    expected = 2 * (1 + len(_RAY_OCCLUDING_MESH_NAMES))
-    if patched != expected:
-        print(
-            f"[ensure_mjcf] WARNING: expected to patch {expected} ray-occluding geoms "
-            f"for lidar self-occlusion, patched {patched} (the fix may not have fully "
-            f"applied -- check {mjcf_path} for the lidar housing / chassis mesh geoms)",
-            flush=True,
-        )
-    else:
-        print(f"[ensure_mjcf] patched {patched} ray-occluding geoms for lidar self-occlusion fix", flush=True)
+    if not converted:
+        print(f"[ensure_mjcf] conversion timed out or failed; {mjcf_path} not usable", flush=True)
+        return 1
 
-    (cache_dir / CHECKSUM_FILENAME).write_text(checksum + "\n")
+    if not finalize_conversion(mjcf_path, cache_dir, checksum):
+        return 1
+
     publish_cached(mjcf_path, args.topic)
     return 0
 

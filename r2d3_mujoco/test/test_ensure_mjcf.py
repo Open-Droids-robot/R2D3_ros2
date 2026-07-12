@@ -129,5 +129,125 @@ class TestPatchLidarHousingVisibility(unittest.TestCase):
         self.assertEqual(before_mtime, self.mjcf_path.stat().st_mtime_ns)
 
 
+# A minimal MJCF body containing exactly the geoms the lidar self-occlusion patch
+# must match: the lidar housing pair plus a collision+visual pair for each
+# occluding chassis mesh (EXPECTED_PATCH_COUNT total).
+ALL_OCCLUDING_GEOMS = (
+    '<geom size="0.03 0.025" type="cylinder" class="collision"/>'
+    '<geom size="0.03 0.025" type="cylinder" rgba="0.1 0.1 0.1 1" class="visual"/>'
+    '<geom type="mesh" mesh="base_link_underpan" class="collision"/>'
+    '<geom type="mesh" rgba="0.79216 0.81961 0.93333 1" mesh="base_link_underpan" class="visual"/>'
+    '<geom type="mesh" mesh="body_base_link" class="collision"/>'
+    '<geom type="mesh" rgba="0.79216 0.81961 0.93333 1" mesh="body_base_link" class="visual"/>'
+)
+
+
+class TestValidatePatchCount(unittest.TestCase):
+    def test_expected_count_is_valid(self):
+        self.assertTrue(ensure_mjcf.validate_patch_count(ensure_mjcf.EXPECTED_PATCH_COUNT))
+
+    def test_any_other_count_is_invalid(self):
+        for bad in (0, 1, ensure_mjcf.EXPECTED_PATCH_COUNT - 1, ensure_mjcf.EXPECTED_PATCH_COUNT + 1):
+            self.assertFalse(ensure_mjcf.validate_patch_count(bad), bad)
+
+
+class TestXmlValidity(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp.name) / "out.xml"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_wellformed_xml_accepted(self):
+        self.path.write_text("<mujoco><worldbody/></mujoco>")
+        self.assertTrue(ensure_mjcf.mjcf_parses_as_xml(self.path))
+
+    def test_truncated_xml_rejected(self):
+        self.path.write_text("<mujoco><worldbody><geom type=")
+        self.assertFalse(ensure_mjcf.mjcf_parses_as_xml(self.path))
+
+    def test_missing_file_rejected(self):
+        self.assertFalse(ensure_mjcf.mjcf_parses_as_xml(self.path))
+
+
+class TestConverterExitAcceptable(unittest.TestCase):
+    """Early converter exits are only trusted on clean exit + valid XML output."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp.name) / "out.xml"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_clean_exit_with_valid_xml_accepted(self):
+        self.path.write_text("<mujoco/>")
+        self.assertTrue(ensure_mjcf.converter_exit_acceptable(0, self.path))
+
+    def test_nonzero_exit_rejected_even_with_valid_xml(self):
+        self.path.write_text("<mujoco/>")
+        self.assertFalse(ensure_mjcf.converter_exit_acceptable(1, self.path))
+        self.assertFalse(ensure_mjcf.converter_exit_acceptable(-15, self.path))
+
+    def test_clean_exit_with_truncated_xml_rejected(self):
+        self.path.write_text("<mujoco><geom ")
+        self.assertFalse(ensure_mjcf.converter_exit_acceptable(0, self.path))
+
+    def test_clean_exit_with_missing_or_empty_file_rejected(self):
+        self.assertFalse(ensure_mjcf.converter_exit_acceptable(0, self.path))
+        self.path.write_text("")
+        self.assertFalse(ensure_mjcf.converter_exit_acceptable(0, self.path))
+
+
+class TestFinalizeConversion(unittest.TestCase):
+    """Hard-failure gate for the cache-miss path: no checksum written on any failure,
+    so the cache entry stays invalid and the next launch reconverts."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.cache = Path(self.tmp.name)
+        self.mjcf = self.cache / ensure_mjcf.MJCF_FILENAME
+        self.checksum_file = self.cache / ensure_mjcf.CHECKSUM_FILENAME
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_success_patches_and_writes_checksum(self):
+        self.mjcf.write_text(f"<mujoco><worldbody>{ALL_OCCLUDING_GEOMS}</worldbody></mujoco>")
+        self.assertTrue(ensure_mjcf.finalize_conversion(self.mjcf, self.cache, "abc"))
+        self.assertEqual(self.checksum_file.read_text().strip(), "abc")
+        text = self.mjcf.read_text()
+        self.assertIn('rgba="0.1 0.1 0.1 0"', text)
+        self.assertIn('rgba="0.79216 0.81961 0.93333 0"', text)
+
+    def test_patch_count_mismatch_fails_hard_without_checksum(self):
+        # Well-formed XML, but none of the expected occluding geoms present:
+        # simulates the converter output no longer matching the patch patterns.
+        self.mjcf.write_text('<mujoco><worldbody><geom type="mesh" mesh="l_link1"/></worldbody></mujoco>')
+        self.assertFalse(ensure_mjcf.finalize_conversion(self.mjcf, self.cache, "abc"))
+        self.assertFalse(self.checksum_file.exists())
+
+    def test_partial_patch_count_fails_hard_without_checksum(self):
+        # Only the housing pair present (e.g. upstream renamed the chassis meshes).
+        self.mjcf.write_text(
+            "<mujoco><worldbody>"
+            '<geom size="0.03 0.025" type="cylinder" class="collision"/>'
+            '<geom size="0.03 0.025" type="cylinder" rgba="0.1 0.1 0.1 1" class="visual"/>'
+            "</worldbody></mujoco>"
+        )
+        self.assertFalse(ensure_mjcf.finalize_conversion(self.mjcf, self.cache, "abc"))
+        self.assertFalse(self.checksum_file.exists())
+
+    def test_invalid_xml_fails_hard_without_checksum(self):
+        self.mjcf.write_text("<mujoco><worldbody><geom ")
+        self.assertFalse(ensure_mjcf.finalize_conversion(self.mjcf, self.cache, "abc"))
+        self.assertFalse(self.checksum_file.exists())
+
+    def test_missing_file_fails_hard_without_checksum(self):
+        self.assertFalse(ensure_mjcf.finalize_conversion(self.mjcf, self.cache, "abc"))
+        self.assertFalse(self.checksum_file.exists())
+
+
 if __name__ == "__main__":
     unittest.main()
