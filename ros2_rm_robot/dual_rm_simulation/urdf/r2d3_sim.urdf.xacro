@@ -31,8 +31,8 @@
     <xacro:include filename="$(find dual_rm_description)/urdf/r2d3_description.urdf.xacro"/>
 
     <!-- ── 3. Sensors ────────────────────────────────────────── -->
-    <xacro:lidar_sensor parent_link="base_link_underpan"
-                        xyz="0.0 -0.24 0.0" rpy="0 0 ${-pi/2}"/>
+    <xacro:lidar_sensor parent_link="base_footprint"
+                        xyz="0.325 0 0.210" rpy="0 0 0"/>
 
     <!-- IMU: centre of AGV chassis -->
     <xacro:imu_sensor parent_link="base_link_underpan"
