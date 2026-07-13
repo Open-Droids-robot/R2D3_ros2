@@ -168,7 +168,7 @@
     type="fixed">
     <origin
       xyz="-0.0032391 -0.051866 0.061606"
-      rpy="0 0 ${-pi/2}" />
+      rpy="0 0 0" />
     <parent
       link="head_link2" />
     <child
