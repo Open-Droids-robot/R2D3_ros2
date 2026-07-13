@@ -6,12 +6,11 @@ Hashes the xacro-generated URDF plus the world file. On a cache hit the
 previously generated MJCF is published directly (skipping the expensive mesh
 conversion); on a miss the upstream converter is invoked (--publish_topic pointed at
 a throwaway internal topic -- see build_converter_cmd() -- so its own publish is
-harmless) to save the MJCF and assets into the cache directory, this script patches
-the lidar/chassis geoms that self-occlude the rangefinder rays for ray-cast
-visibility (see patch_lidar_housing_visibility()), and only then publishes the
-patched model on the real --topic itself -- this script is always the one true
-publisher on that topic, so a cache-miss run never lets a subscriber see the
-unpatched converter output.
+harmless) to save the MJCF and assets into the cache directory, this script raises the
+lidar scan plane above the chassis so the rangefinder rays clear the robot body (see
+raise_lidar_scan_plane()), and only then publishes the patched model on the real
+--topic itself -- this script is always the one true publisher on that topic, so a
+cache-miss run never lets a subscriber see the unpatched converter output.
 
 The MJCF is published on --topic with RELIABLE + TRANSIENT_LOCAL QoS, matching
 the subscriber inside mujoco_ros2_control.
@@ -19,6 +18,7 @@ the subscriber inside mujoco_ros2_control.
 
 import argparse
 import hashlib
+import math
 import os
 import re
 import signal
@@ -45,127 +45,348 @@ MJCF_FILENAME = "mujoco_description_formatted.xml"
 CHECKSUM_FILENAME = "checksum"
 URDF_FILENAME = "robot_input.urdf"
 # Bump when converter flags in build_converter_cmd change, or when
-# patch_lidar_housing_visibility()'s matching logic changes, to invalidate caches.
-CONVERTER_ARGS_VERSION = "v3:save_only,add_free_joint,scene,lidar_and_chassis_ray_fix"
+# raise_lidar_scan_plane()'s patch logic changes, to invalidate caches.
+CONVERTER_ARGS_VERSION = "v6:save_only,add_free_joint,scene,lidar_scan_raise,wheel_primitives,base_inertial"
 
-# --- Lidar self-occlusion fix -------------------------------------------------------
+# --- Lidar scan-height fix ----------------------------------------------------------
 #
-# Root cause (see git history: git show aaae018:r2d3_mujoco/SPIKE_NOTES.md "Lidar self-occlusion" for the full investigation):
-# every ray leaving the lidar's rangefinder site immediately re-intersects the robot's
-# own chassis a few centimeters out, so every /scan range comes back below range_min
-# (0.55 m) and gets reported as -1.0 by rangefinder_lidar_plugin.cpp. MuJoCo's
-# rangefinder always excludes exactly one body from ray casting -- the body owning its
-# own site (engine_sensor.c: `bodyexclude = m->site_bodyid[objid]`) -- but
-# mujoco_ros2_control's converter unconditionally creates the replicated lidar rays'
-# sites in their own dedicated, geometry-less "<site>_lidar_body"
-# (urdf_to_mujoco_utils.add_lidar_from_sites(), hard-coded, not configurable from
-# r2d3_mujoco/), so that exclusion never reaches the chassis geoms doing the occluding.
-# geomgroup-based filtering doesn't help either: rangefinder sensors always call
-# mj_ray/mj_multiRay with geomgroup=NULL (confirmed against engine_sensor.c), so a
-# geom's `group` has no effect on ray casting regardless of default-class settings.
+# The lidar is mounted low, inside the chassis body envelope: the rangefinder site sits
+# at lidar_link (world ~0.24, 0, 0.233), and the base_link_underpan / body_base_link
+# meshes surround it, so every ray leaves the site and immediately re-intersects the
+# chassis a few cm out -- every /scan range comes back below range_min and is reported
+# as -1.0. (MuJoCo's rangefinder only excludes the site's OWN body from ray casting,
+# and the converter puts the rays' site in a dedicated geometry-less
+# "<site>_lidar_body", so that exclusion never covers the chassis; geomgroup filtering
+# does not apply to rangefinders either -- they call mj_ray with geomgroup=NULL.)
 #
-# The one filter ray casting DOES honor unconditionally is alpha: MuJoCo's
-# ray_eliminate() (engine_ray.c) drops any geom whose rgba alpha (or material alpha)
-# is exactly 0. Every robot geom is an unnamed clone of a URDF visual mesh/primitive
-# (mujoco_ros2_control synthesizes an unnamed collision+visual pair from every
-# visual-only URDF <visual>, see Task 4's finding in git history: git show aaae018:r2d3_mujoco/SPIKE_NOTES.md: 0/68 robot geoms carry
-# a `name` attribute), so `modify_element` can never target an individual occluding
-# geom by name. Two things CAN still uniquely identify a specific geom in the
-# generated text, though: mesh geoms keep a `mesh="<stl-name>"` attribute, and the
-# lidar housing is the only primitive geom of its exact size. Both are matched here
-# and patched to alpha=0, in order of what was found occluding rays in this
-# investigation (each verified independently with a standalone mj_ray script against
-# the cached MJCF -- see task-7-report.md):
+# An earlier fix hid the chassis meshes from ray casting by zeroing their rgba alpha
+# (the one filter ray casting honors -- ray_eliminate() in engine_ray.c). That worked
+# but also hid the chassis from the renderer (alpha is a rendering property too), so the
+# robot looked gutted. Instead we now RAISE the horizontal scan plane above the chassis:
+# the converter's rangefinder body (lidar_link_lidar_body) carries the sensor pos in its
+# `pos` attribute and the ray orientation in its `quat`, so bumping its Z lifts the whole
+# scan plane while keeping the rays horizontal. Verified in standalone MuJoCo: at the
+# nominal height every ray self-hits the body (<0.2 m); raised by 0.15 m all 240 rays
+# clear the chassis and read the world walls (~2-7 m) with the full body left visible.
 #
-#   1. The lidar housing itself: modeled in
-#      dual_rm_simulation/urdf/sensors/lidar.urdf.xacro as a
-#      <cylinder radius="0.03" length="0.05"/> visual primitive on lidar_link, whose
-#      origin coincides exactly with the rangefinder site -- the sensor's own optical
-#      center sits at the geometric center of its own housing, so every ray starts
-#      inside solid geometry and immediately exits through the housing wall (~0.03 m,
-#      the housing radius). This is the ONLY geom pair in the generated MJCF of this
-#      exact size/type.
-#   2. base_link_underpan and body_base_link (the chassis pan geometry the lidar is
-#      mounted to): even with the housing cleared, ALL 240 rays still self-hit these
-#      two meshes' true (non-convex) surface at <0.17 m in every direction -- the
-#      mount sits flush against a raised boss on the chassis, not just inside the
-#      collision hull's padding. Hiding these two meshes from ray casting also hides
-#      them from the RGB/depth camera's rendering (alpha is a rendering property, not
-#      a ray-casting-only one), but the camera is head-mounted looking outward/forward
-#      (see the `camera` site's pose in the generated MJCF), so the underpan is not
-#      normally in frame; this was judged an acceptable trade-off against a /scan that
-#      never reports any wall (see task-7-report.md fix report for the accepted
-#      trade-off discussion).
-#
-# Collision-class geoms already get rgba="... 0" unconditionally via the shared
-# "collision" default class in mujoco_inputs.urdf.xacro (defense in depth: the cruder
-# convex-hull collision copies are hidden from ray casting robot-wide, not just for
-# these three meshes) -- the matchers below additionally cover the VISUAL copies,
-# which carry their own inline rgba (baked from URDF material colors) that overrides
-# the class default and must be patched explicitly.
-_RAY_OCCLUDING_GEOM_SIZE = "0.03 0.025"  # lidar housing cylinder (radius, half-length)
-_RAY_OCCLUDING_MESH_NAMES = ("base_link_underpan", "body_base_link")
+# NOTE: this is a temporary workaround for a lidar_link that is currently placed inside
+# the chassis material rather than in the chassis's lidar opening. The mount pose is to
+# be corrected upstream (measured on the real robot); once lidar_link sits in the
+# opening this raise can be reduced to 0.
+LIDAR_SCAN_RAISE_M = 0.15
+_LIDAR_BODY_NAME = "lidar_link_lidar_body"
 
 
-def _is_ray_occluding_geom_tag(tag: str) -> bool:
-    if 'type="cylinder"' in tag and f'size="{_RAY_OCCLUDING_GEOM_SIZE}"' in tag:
-        return True
-    return any(f'mesh="{name}"' in tag for name in _RAY_OCCLUDING_MESH_NAMES)
+def raise_lidar_scan_plane(mjcf_path: Path) -> int:
+    """Raise the lidar rangefinder body's Z by LIDAR_SCAN_RAISE_M so the horizontal scan
+    plane clears the chassis, leaving the chassis fully visible to the renderer/camera.
 
-
-def patch_lidar_housing_visibility(mjcf_path: Path) -> int:
-    """Make the lidar-self-occluding geoms (see module docstring above) invisible to
-    ray casting by zeroing their rgba alpha, while leaving contact physics untouched
-    (rgba is a purely visual/ray-casting property).
-
-    Returns the number of <geom> elements patched (expected: 6 -- the lidar housing's
-    collision+visual pair, plus the collision+visual pair for each of the two
-    occluding chassis meshes). Uses a targeted text substitution (not a full XML
-    re-serialization) so the rest of the generated file -- comments, attribute order,
-    formatting -- is left untouched.
+    Returns the number of lidar bodies patched (expected: 1). Uses a targeted text
+    substitution (not a full XML re-serialization) so the rest of the generated file --
+    comments, attribute order, formatting -- is left untouched.
     """
     text = mjcf_path.read_text()
-    pattern = re.compile(r"<geom\b[^>]*/>")
     patched_count = 0
 
-    def _patch_tag(match: "re.Match") -> str:
+    def _raise_pos(pos_match: "re.Match") -> str:
+        x, y, z = pos_match.group(1).split()
+        new_z = round(float(z) + LIDAR_SCAN_RAISE_M, 6)
+        return f'pos="{x} {y} {new_z}"'
+
+    def _patch_body(body_match: "re.Match") -> str:
         nonlocal patched_count
-        tag = match.group(0)
-        if not _is_ray_occluding_geom_tag(tag):
-            return tag
-        patched_count += 1
-        if "rgba=" in tag:
-            tag = re.sub(r'rgba="([^"]*)"', lambda m: f'rgba="{_zero_alpha(m.group(1))}"', tag)
-        else:
-            tag = tag.replace("<geom ", '<geom rgba="1 1 1 0" ', 1)
+        tag, n = re.subn(r'pos="([^"]+)"', _raise_pos, body_match.group(0), count=1)
+        patched_count += n
         return tag
 
-    patched_text = pattern.sub(_patch_tag, text)
+    pattern = re.compile(r'<body name="' + re.escape(_LIDAR_BODY_NAME) + r'"[^>]*>')
+    patched_text = pattern.sub(_patch_body, text)
     if patched_count:
         mjcf_path.write_text(patched_text)
     return patched_count
 
 
-def _zero_alpha(rgba: str) -> str:
-    parts = rgba.split()
-    if len(parts) == 4:
-        parts[3] = "0"
-    return " ".join(parts)
-
-
-# Every matched geom is a collision+visual pair (the converter synthesizes both from
-# each URDF visual): the lidar housing plus each occluding chassis mesh.
-EXPECTED_PATCH_COUNT = 2 * (1 + len(_RAY_OCCLUDING_MESH_NAMES))
+# Exactly one lidar rangefinder body is generated, so exactly one Z should be raised.
+EXPECTED_PATCH_COUNT = 1
 
 
 def validate_patch_count(patched: int) -> bool:
-    """True iff the lidar self-occlusion patch matched exactly the expected geoms.
+    """True iff the lidar scan-height patch matched exactly the expected body.
 
-    Anything else means the converter's output no longer matches the patch patterns
-    (upstream format change, renamed meshes, resized housing, ...) and the model
-    would ship with the all -1.0 /scan bug -- the caller must treat it as fatal.
+    Anything else means the converter's output no longer matches the patch pattern
+    (upstream format change, renamed lidar body, ...) and the model would ship with the
+    all -1.0 /scan bug -- the caller must treat it as fatal.
     """
     return patched == EXPECTED_PATCH_COUNT
+
+
+# --- Wheel collision primitives -----------------------------------------------------
+#
+# The R2D3 description is visual-only, so the converter synthesizes every collision geom
+# as an unnamed convex HULL of the visual mesh. For the wheels this is wrong two ways:
+#   1. A hull is a faceted polyhedron, not a smooth surface -- as a caster swivels its
+#      ground-contact point jumps between facets, so the contact depth varies with
+#      orientation (measured: one caster penetrated 19.5 mm while another floated +2 mm).
+#      That inconsistency makes the base rock/wobble and the robot drive jerkily.
+#   2. The hulls are not coplanar: the caster hull bottoms sit ~7-12 mm BELOW the drive
+#      wheel hull bottoms, so the robot rests on the casters and the drive wheels float
+#      off the ground (poor traction, nose-down tip onto the front skirt).
+#
+# Fix: replace the wheel collision hulls with smooth primitives, coplanar at the base
+# frame's z=0 (== the ground plane). This mirrors the Gazebo model, which uses sphere
+# collision for the casters (dual_rm_simulation/urdf/gazebo/sim_gazebo.urdf.xacro).
+# Each wheel body's origin is its axle, so a primitive of radius == the axle's height
+# above base_footprint puts its bottom at z=0; the drive-wheel radius that does this is
+# also exactly the diff_drive_controller wheel_radius (0.08), so odometry stays correct.
+#
+# NOTE: these radii/half-width are measured from the CURRENT mesh geometry. If the wheel
+# link poses change upstream (the lidar/wheel geometry is being re-measured on the real
+# robot), re-derive them.
+_DRIVE_WHEEL_BODIES = ("link_left_wheel", "link_right_wheel")
+_CASTER_WHEEL_BODIES = (
+    "link_swivel_wheel_1_2", "link_swivel_wheel_2_2",
+    "link_swivel_wheel_3_2", "link_swivel_wheel_4_2",
+)
+# The caster swivel brackets (forks). Their convex-hull collision hangs low enough to
+# drag on the ground during motion (measured: 1000+ ground-contact frames each while
+# driving), so their collision is disabled entirely -- only the wheels should touch the
+# floor. No replacement primitive: the brackets never contact the ground in reality.
+_CASTER_BRACKET_BODIES = (
+    "link_swivel_wheel_1_1", "link_swivel_wheel_2_1",
+    "link_swivel_wheel_3_1", "link_swivel_wheel_4_1",
+)
+DRIVE_WHEEL_RADIUS = 0.08        # = diff_drive wheel_radius = drive axle height -> bottom z=0
+DRIVE_WHEEL_HALF_WIDTH = 0.055   # half the drive wheel's axial extent
+CASTER_WHEEL_RADIUS = 0.0253     # = caster axle height -> bottom coplanar with drive at z=0
+
+# 2 drive wheels + 4 casters each get a primitive geom AND their hull disabled (2 patches
+# each); the 4 brackets only get their hull disabled (1 patch each).
+EXPECTED_WHEEL_PATCH_COUNT = (
+    2 * (len(_DRIVE_WHEEL_BODIES) + len(_CASTER_WHEEL_BODIES))
+    + len(_CASTER_BRACKET_BODIES)
+)
+
+
+def _add_primitive_and_disable_hull(text: str, body: str, primitive: str) -> "tuple[str, int]":
+    """Insert `primitive` as the body's first geom and disable the body's convex-hull
+    collision geom (contype=0 -> collides with nothing; conaffinity is already 0 via the
+    collision default class). Returns (new_text, patches_applied) where a full success is
+    2 (primitive inserted + hull disabled)."""
+    patches = 0
+
+    new_text, n_open = re.subn(
+        r'(<body name="' + re.escape(body) + r'"[^>]*>)',
+        lambda m: m.group(1) + primitive,
+        text,
+        count=1,
+    )
+    patches += n_open
+
+    # Disable the hull collision geom for this body (mesh="<body>" + class="collision").
+    new_text, n_hull = re.subn(
+        r'(<geom type="mesh" mesh="' + re.escape(body) + r'" class="collision")(/>)',
+        r'\1 contype="0"\2',
+        new_text,
+        count=1,
+    )
+    patches += n_hull
+    return new_text, patches
+
+
+def replace_wheel_collision_with_primitives(mjcf_path: Path) -> int:
+    """Swap the wheels' faceted convex-hull collision for smooth, coplanar primitives:
+    cylinders for the drive wheels (axis along the spin axis == body-local X) and spheres
+    for the casters. Returns the number of patches applied
+    (expected: EXPECTED_WHEEL_PATCH_COUNT)."""
+    text = mjcf_path.read_text()
+    total = 0
+
+    cylinder = (
+        f'<geom type="cylinder" '
+        f'fromto="{-DRIVE_WHEEL_HALF_WIDTH} 0 0 {DRIVE_WHEEL_HALF_WIDTH} 0 0" '
+        f'size="{DRIVE_WHEEL_RADIUS}" class="collision"/>'
+    )
+    for body in _DRIVE_WHEEL_BODIES:
+        text, patches = _add_primitive_and_disable_hull(text, body, cylinder)
+        total += patches
+
+    sphere = f'<geom type="sphere" size="{CASTER_WHEEL_RADIUS}" class="collision"/>'
+    for body in _CASTER_WHEEL_BODIES:
+        text, patches = _add_primitive_and_disable_hull(text, body, sphere)
+        total += patches
+
+    for body in _CASTER_BRACKET_BODIES:
+        text, n = re.subn(
+            r'(<geom type="mesh" mesh="' + re.escape(body) + r'" class="collision")(/>)',
+            r'\1 contype="0"\2',
+            text,
+            count=1,
+        )
+        total += n
+
+    if total:
+        mjcf_path.write_text(text)
+    return total
+
+
+def validate_wheel_patch_count(patched: int) -> bool:
+    """True iff every wheel got both its primitive and its hull disabled."""
+    return patched == EXPECTED_WHEEL_PATCH_COUNT
+
+
+# --- base_footprint inertial --------------------------------------------------------
+#
+# The converter merges every fixed-jointed child (base_link_underpan, body_base_link,
+# lidar_link, imu_link, ...) into the root base_footprint body but DROPS their <inertial>
+# elements, and base_footprint has none of its own (it is a virtual Nav2 frame). MuJoCo
+# then synthesizes the body's mass from its geoms -- i.e. from the bloated chassis convex
+# HULL volume at the default 1000 kg/m^3 (water) density -- yielding ~962 kg instead of
+# the real ~15 kg. That crushing phantom mass sags the soft contacts, drops the chassis
+# onto its skirt, and makes the base tip/wobble and drive jerkily. We recompute the true
+# combined inertial from the URDF and inject it so MuJoCo uses it instead of the geoms.
+_MERGED_BASE_BODY = "base_footprint"
+
+
+def compute_merged_base_inertial(urdf_str: str):
+    """Combine the inertials of base_footprint and every link rigidly (fixed-joint)
+    attached to it, expressed in the base_footprint frame. Returns
+    (mass, (cx, cy, cz), (ixx, iyy, izz, ixy, ixz, iyz)) or None if base_footprint has no
+    rigidly-attached mass in the URDF."""
+    import numpy as np
+
+    dom = minidom.parseString(urdf_str)
+
+    def rpy_to_R(r, p, y):
+        cr, sr = math.cos(r), math.sin(r)
+        cp, sp = math.cos(p), math.sin(p)
+        cy, sy = math.cos(y), math.sin(y)
+        return np.array([
+            [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr],
+            [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr],
+            [-sp, cp * sr, cp * cr],
+        ])
+
+    def origin(el):
+        o = el.getElementsByTagName("origin")
+        if not o:
+            return np.zeros(3), np.eye(3)
+        o = o[0]
+        xyz = ([float(v) for v in o.getAttribute("xyz").split()]
+               if o.getAttribute("xyz").strip() else [0, 0, 0])
+        rpy = ([float(v) for v in o.getAttribute("rpy").split()]
+               if o.getAttribute("rpy").strip() else [0, 0, 0])
+        return np.array(xyz), rpy_to_R(*rpy)
+
+    joints = {}  # child -> (parent, xyz, R, type)
+    for j in dom.getElementsByTagName("joint"):
+        parent = j.getElementsByTagName("parent")
+        child = j.getElementsByTagName("child")
+        if not parent or not child:
+            continue
+        xyz, R = origin(j)
+        joints[child[0].getAttribute("link")] = (
+            parent[0].getAttribute("link"), xyz, R, j.getAttribute("type"),
+        )
+
+    links = {}  # name -> (mass, com_xyz, com_R, I_3x3)
+    for link in dom.getElementsByTagName("link"):
+        inertial = link.getElementsByTagName("inertial")
+        if not inertial:
+            continue
+        inertial = inertial[0]
+        mass = float(inertial.getElementsByTagName("mass")[0].getAttribute("value"))
+        xyz, R = origin(inertial)
+        I_el = inertial.getElementsByTagName("inertia")[0]
+        g = lambda a: float(I_el.getAttribute(a))
+        I = np.array([
+            [g("ixx"), g("ixy"), g("ixz")],
+            [g("ixy"), g("iyy"), g("iyz")],
+            [g("ixz"), g("iyz"), g("izz")],
+        ])
+        links[link.getAttribute("name")] = (mass, xyz, R, I)
+
+    def base_transform(link):
+        if link == _MERGED_BASE_BODY or link not in joints:
+            return np.zeros(3), np.eye(3)
+        parent, xyz, R, _typ = joints[link]
+        tp, Rp = base_transform(parent)
+        return tp + Rp @ xyz, Rp @ R
+
+    def fixed_members(root):
+        members = [root] if root in links else []
+        for child, (parent, _xyz, _R, typ) in joints.items():
+            if parent == root and typ == "fixed":
+                members += fixed_members(child)
+        return members
+
+    components = []
+    total_mass = 0.0
+    weighted_com = np.zeros(3)
+    for name in fixed_members(_MERGED_BASE_BODY):
+        mass, com_local, com_R, I_local = links[name]
+        t_base, R_base = base_transform(name)
+        com_base = t_base + R_base @ com_local
+        R_full = R_base @ com_R
+        I_base = R_full @ I_local @ R_full.T
+        components.append((mass, com_base, I_base))
+        total_mass += mass
+        weighted_com += mass * com_base
+
+    if total_mass <= 0.0:
+        return None
+
+    com = weighted_com / total_mass
+    I_total = np.zeros((3, 3))
+    for mass, com_i, I_i in components:
+        d = com_i - com
+        I_total += I_i + mass * (float(d @ d) * np.eye(3) - np.outer(d, d))
+
+    return (
+        total_mass,
+        (float(com[0]), float(com[1]), float(com[2])),
+        (
+            float(I_total[0, 0]), float(I_total[1, 1]), float(I_total[2, 2]),
+            float(I_total[0, 1]), float(I_total[0, 2]), float(I_total[1, 2]),
+        ),
+    )
+
+
+def inject_base_footprint_inertial(mjcf_path: Path, urdf_str: str) -> bool:
+    """Insert the true merged <inertial> into the base_footprint body (which the converter
+    leaves inertial-less, forcing MuJoCo to invent a ~962 kg mass from the hull volume).
+    Returns True on success, False if the inertial can't be computed or base_footprint is
+    missing / already has an <inertial>."""
+    result = compute_merged_base_inertial(urdf_str)
+    if result is None:
+        return False
+    mass, com, I = result
+
+    text = mjcf_path.read_text()
+    body_match = re.search(r'<body name="' + re.escape(_MERGED_BASE_BODY) + r'"[^>]*>', text)
+    if not body_match:
+        return False
+    # Guard against double-counting: only inject if the body has no inertial before its
+    # first nested child body.
+    body_start = body_match.end()
+    next_child = text.find('<body name="', body_start)
+    scope = text[body_start:next_child if next_child != -1 else len(text)]
+    if "<inertial" in scope:
+        return False
+
+    inertial = (
+        f'<inertial pos="{com[0]:.6f} {com[1]:.6f} {com[2]:.6f}" mass="{mass:.6f}" '
+        f'fullinertia="{I[0]:.6f} {I[1]:.6f} {I[2]:.6f} {I[3]:.6f} {I[4]:.6f} {I[5]:.6f}"/>'
+    )
+    new_text, n = re.subn(
+        r'(<body name="' + re.escape(_MERGED_BASE_BODY) + r'"[^>]*>)',
+        lambda m: m.group(1) + inertial,
+        text,
+        count=1,
+    )
+    if n != 1:
+        return False
+    mjcf_path.write_text(new_text)
+    return True
 
 
 def mjcf_parses_as_xml(mjcf_path: Path) -> bool:
@@ -193,14 +414,14 @@ def converter_exit_acceptable(returncode: int, mjcf_path: Path) -> bool:
     )
 
 
-def finalize_conversion(mjcf_path: Path, cache_dir: Path, checksum: str) -> bool:
+def finalize_conversion(mjcf_path: Path, cache_dir: Path, checksum: str, urdf_str: str) -> bool:
     """Validate, patch, and mark the freshly converted MJCF as cached.
 
-    Returns True only if the file is well-formed XML AND the lidar self-occlusion
-    patch matched exactly EXPECTED_PATCH_COUNT geoms; only then is the checksum
-    written (making the cache entry valid). Any failure leaves the cache entry
-    invalid (no checksum) so the next launch reconverts, and the caller must NOT
-    publish the model.
+    Applies (in order) the lidar scan-height raise, the wheel-collision primitives, and
+    the base_footprint inertial injection. Returns True only if the file is well-formed
+    XML and every patch matched its expected count; only then is the checksum written
+    (making the cache entry valid). Any failure leaves the cache entry invalid (no
+    checksum) so the next launch reconverts, and the caller must NOT publish the model.
     """
     if not mjcf_parses_as_xml(mjcf_path):
         print(
@@ -210,20 +431,61 @@ def finalize_conversion(mjcf_path: Path, cache_dir: Path, checksum: str) -> bool
         )
         return False
 
-    patched = patch_lidar_housing_visibility(mjcf_path)
+    patched = raise_lidar_scan_plane(mjcf_path)
     if not validate_patch_count(patched):
         print(
-            f"[ensure_mjcf] ERROR: lidar self-occlusion patch matched {patched} geoms, "
+            f"[ensure_mjcf] ERROR: lidar scan-height patch matched {patched} bodies, "
             f"expected {EXPECTED_PATCH_COUNT}. The converter output no longer matches "
-            f"the patch patterns in patch_lidar_housing_visibility() (upstream converter "
-            f"change? renamed chassis meshes? resized lidar housing?). Publishing this "
-            f"model would silently resurrect the all -1.0 /scan bug, so refusing to "
-            f"cache or publish it -- inspect {mjcf_path} and update the patterns.",
+            f"the patch pattern in raise_lidar_scan_plane() (upstream converter change? "
+            f"renamed lidar body?). Publishing this model would silently resurrect the "
+            f"all -1.0 /scan bug, so refusing to cache or publish it -- inspect "
+            f"{mjcf_path} and update the pattern.",
             flush=True,
         )
         return False
 
-    print(f"[ensure_mjcf] patched {patched} ray-occluding geoms for lidar self-occlusion fix", flush=True)
+    print(f"[ensure_mjcf] raised {patched} lidar scan plane by {LIDAR_SCAN_RAISE_M} m (chassis left visible)", flush=True)
+
+    wheel_patched = replace_wheel_collision_with_primitives(mjcf_path)
+    if not validate_wheel_patch_count(wheel_patched):
+        print(
+            f"[ensure_mjcf] ERROR: wheel-collision patch applied {wheel_patched} changes, "
+            f"expected {EXPECTED_WHEEL_PATCH_COUNT}. The converter output no longer matches "
+            f"the patterns in replace_wheel_collision_with_primitives() (upstream converter "
+            f"change? renamed wheel bodies?). The faceted convex-hull wheels cause base "
+            f"wobble/jerky drive, so refusing to cache or publish it -- inspect {mjcf_path} "
+            f"and update the patterns.",
+            flush=True,
+        )
+        return False
+    if not mjcf_parses_as_xml(mjcf_path):
+        print(
+            f"[ensure_mjcf] ERROR: wheel-collision patch produced malformed XML at "
+            f"{mjcf_path}; refusing to cache or publish it",
+            flush=True,
+        )
+        return False
+    print(f"[ensure_mjcf] replaced wheel collision hulls with smooth primitives ({wheel_patched} patches)", flush=True)
+
+    if not inject_base_footprint_inertial(mjcf_path, urdf_str):
+        print(
+            f"[ensure_mjcf] ERROR: could not inject base_footprint inertial into {mjcf_path} "
+            f"(base_footprint missing, already has an <inertial>, or no rigidly-attached mass "
+            f"found in the URDF). Without it MuJoCo invents a ~962 kg base from the hull "
+            f"volume, which sags the contacts and makes the base wobble -- refusing to cache "
+            f"or publish it.",
+            flush=True,
+        )
+        return False
+    if not mjcf_parses_as_xml(mjcf_path):
+        print(
+            f"[ensure_mjcf] ERROR: base_footprint inertial injection produced malformed XML "
+            f"at {mjcf_path}; refusing to cache or publish it",
+            flush=True,
+        )
+        return False
+    print("[ensure_mjcf] injected true base_footprint inertial (fixes the ~962 kg phantom mass)", flush=True)
+
     (cache_dir / CHECKSUM_FILENAME).write_text(checksum + "\n")
     return True
 
@@ -430,7 +692,7 @@ def main() -> int:
         print(f"[ensure_mjcf] conversion timed out or failed; {mjcf_path} not usable", flush=True)
         return 1
 
-    if not finalize_conversion(mjcf_path, cache_dir, checksum):
+    if not finalize_conversion(mjcf_path, cache_dir, checksum, args.robot_description):
         return 1
 
     # Conversion is done; restore default signal handling so Ctrl-C/SIGTERM can
