@@ -1,0 +1,31 @@
+# servo_sim_bridge neck calibration + read-back layout.
+#
+# Seeded from the real robot's get_states_publishers.py (issue #5). These are
+# assumptions to be confirmed on hardware (servo ids, mechanical stops, slew
+# speed) -- see the follow-up ready-for-human ticket. Override this file to
+# correct the calibration after measuring the real robot; no code change needed.
+#
+# Per servo:  deg = (units - center_units) * deg_per_unit + offset_deg
+#             rad = radians(deg)
+servos:
+  2:   # pan  -> head_joint1  (~ +/-60 deg over the usable band)
+    joint_name: head_joint1
+    joint_index: 0
+    center_units: 500
+    deg_per_unit: 0.2                    # 60 deg / 300 units
+    offset_deg: 0.0
+    min_units: 200
+    max_units: 800
+  5:   # tilt -> head_joint2  (asymmetric due to the -7.766 deg centre offset)
+    joint_name: head_joint2
+    joint_index: 1
+    center_units: 500
+    deg_per_unit: 0.23366666666666666    # 70.1 deg / 300 units
+    offset_deg: -7.766
+    min_units: 200
+    max_units: 800
+
+# Load-bearing read-back order: index 0 = tilt servo (id 5) units,
+# index 1 = pan servo (id 2) units, matching the real get_states_publishers.
+readback_order: [5, 2]
+num_joints: 2

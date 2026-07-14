@@ -157,9 +157,13 @@
       link="head_link2" />
     <axis
       xyz="-1 0 0" />
+    <!-- Tilt range widened to match the real neck's pitch, derived from the
+         servo-unit calibration over the usable band (units 200-800):
+         deg = (units-500)*(70.1/300) - 7.766 -> approx -1.359 .. +1.088 rad.
+         See servo_sim_bridge and issue #8. -->
     <limit
-      lower="-0.419"
-      upper="0.419"
+      lower="-1.359"
+      upper="1.088"
       effort="2"
       velocity="1.57" />
   </joint>
