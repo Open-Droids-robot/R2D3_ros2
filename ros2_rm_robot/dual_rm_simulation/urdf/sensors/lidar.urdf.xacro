@@ -8,10 +8,10 @@
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <xacro:macro name="lidar_sensor" params="parent_link xyz:='0.0 0.24 0.0' rpy:='0 0 0'">
+    <xacro:macro name="lidar_sensor" params="parent_link xyz:='0.325 0 0.210' rpy:='0 0 0'">
 
         <!-- ── Link ──────────────────────────────────────────── -->
-        <link name="lidar_link">
+        <link name="laser_link">
             <visual>
                 <geometry>
                     <cylinder length="0.05" radius="0.03"/>
@@ -35,24 +35,24 @@
         <!-- ── Joint ─────────────────────────────────────────── -->
         <joint name="lidar_joint" type="fixed">
             <parent link="${parent_link}"/>
-            <child link="lidar_link"/>
+            <child link="laser_link"/>
             <origin xyz="${xyz}" rpy="${rpy}"/>
         </joint>
 
         <!-- ── Gazebo physics ────────────────────────────────── -->
-        <gazebo reference="lidar_link">
+        <gazebo reference="laser_link">
             <self_collide>false</self_collide>
             <gravity>false</gravity>
         </gazebo>
 
         <!-- ── Gazebo gpu_lidar sensor (240°: ±120° from front, matches real robot) -->
-        <gazebo reference="lidar_link">
+        <gazebo reference="laser_link">
             <sensor name="lidar" type="gpu_lidar">
                 <always_on>true</always_on>
                 <visualize>true</visualize>
                 <update_rate>10</update_rate>
                 <topic>scan</topic>
-                <gz_frame_id>lidar_link</gz_frame_id>
+                <gz_frame_id>laser_link</gz_frame_id>
                 <ray>
                     <scan>
                         <horizontal>
