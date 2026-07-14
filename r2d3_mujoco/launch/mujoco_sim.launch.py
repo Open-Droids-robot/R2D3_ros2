@@ -100,9 +100,19 @@ def launch_setup(context, *args, **kwargs):
                 spawner("left_arm_controller"),
                 spawner("right_arm_controller"),
                 spawner("platform_controller"),
+                spawner("neck_controller"),
                 spawner("imu_sensor_broadcaster"),
             ],
         )
+    )
+
+    # -- Neck servo bridge: real servo contract -> /neck_controller/commands --
+    neck_servo_bridge = Node(
+        package="servo_sim_bridge",
+        executable="neck_servo_bridge",
+        name="neck_servo_bridge",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
     )
 
     # -- /camera/points from depth + camera_info (composable: works on Humble too) --
@@ -134,6 +144,7 @@ def launch_setup(context, *args, **kwargs):
         control_node,
         jsb_spawner,
         evt_jsb_done,
+        neck_servo_bridge,
         pointcloud_container,
     ]
 

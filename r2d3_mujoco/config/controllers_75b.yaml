@@ -21,6 +21,9 @@ controller_manager:
     platform_controller:
       type: position_controllers/GripperActionController
 
+    neck_controller:
+      type: position_controllers/JointGroupPositionController
+
     imu_sensor_broadcaster:
       type: imu_sensor_broadcaster/IMUSensorBroadcaster
 
@@ -100,6 +103,14 @@ right_arm_controller:
 platform_controller:
   ros__parameters:
     joint: platform_joint
+
+# Neck: 2-DOF head (pan head_joint1, tilt head_joint2). Driven by neck_servo_bridge,
+# which publishes [head_joint1, head_joint2] setpoints on /neck_controller/commands.
+neck_controller:
+  ros__parameters:
+    joints:
+      - head_joint1
+      - head_joint2
 
 imu_sensor_broadcaster:
   ros__parameters:

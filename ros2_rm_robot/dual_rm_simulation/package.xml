@@ -19,7 +19,11 @@
   <exec_depend>diff_drive_controller</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
+  <exec_depend>position_controllers</exec_depend>
   <exec_depend>gz_ros2_control</exec_depend>
+
+  <!-- Neck servo bridge (engine-neutral sim stand-in for the real servo_driver) -->
+  <exec_depend>servo_sim_bridge</exec_depend>
 
   <!-- Gazebo Harmonic -->
   <exec_depend>ros_gz_sim</exec_depend>

@@ -155,6 +155,19 @@ def generate_launch_description():
         package='controller_manager', executable='spawner',
         arguments=['platform_controller'],
     )
+    neck_controller_spawner = Node(
+        package='controller_manager', executable='spawner',
+        arguments=['neck_controller'],
+    )
+
+    # ── Neck servo bridge: real servo contract → /neck_controller/commands ──
+    neck_servo_bridge = Node(
+        package='servo_sim_bridge',
+        executable='neck_servo_bridge',
+        name='neck_servo_bridge',
+        output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
 
     # ── Event sequencing: spawn → JSB → other controllers ────────
     evt_spawn_done = RegisterEventHandler(
@@ -171,6 +184,7 @@ def generate_launch_description():
                 left_arm_controller_spawner,
                 right_arm_controller_spawner,
                 platform_controller_spawner,
+                neck_controller_spawner,
             ],
         )
     )
@@ -191,4 +205,5 @@ def generate_launch_description():
         spawn_entity,
         evt_spawn_done,
         evt_jsb_done,
+        neck_servo_bridge,
     ])
