@@ -243,6 +243,26 @@
                 <modify_element type="joint" name="platform_joint"
                                 damping="1500" actuatorfrcrange="-225 225"/>
 
+                <!-- Neck slew limiting (same force-saturated-slew technique as the
+                     platform lift above). The neck is driven by a
+                     JointGroupPositionController, which sends an instantaneous
+                     position step (unlike the arms' trajectory controller, which
+                     feeds interpolated setpoints). MuJoCo has no per-joint velocity
+                     clamp, so the stiff head position actuator tracks that step
+                     almost instantly and the head snaps (Gazebo's joint ramps to the
+                     step gradually, so it looks smooth there). The head actuator is
+                     already force-saturated for any real move (kp=500 * error > the
+                     2 N*m actuatorfrcrange whenever error > 0.004 rad), so adding
+                     native joint damping b gives a constant force-saturated terminal
+                     velocity v = F/b = 2/2 = 1.0 rad/s - a smooth, hardware-plausible
+                     head speed. As with the platform, mujoco_ros2_control honours only
+                     the joint's passive damping + actuatorfrcrange (not the actuator
+                     kp), so the slew must be set on the JOINT here. The real servo
+                     slew speed is still to be confirmed on hardware (issue #6); tune
+                     this damping once measured (lower = faster). -->
+                <xacro:_mj_joint_damp joint_name="head_joint1" damping="2"/>
+                <xacro:_mj_joint_damp joint_name="head_joint2" damping="2"/>
+
                 <!-- Wheel/caster friction tuning (Task 4): applied via the shared
                      "collision" default class in raw_inputs above, not via
                      modify_element, because the converter never assigns a "name"
