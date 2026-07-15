@@ -116,9 +116,10 @@ cd /home/r2d3/sim_ws/src/R2D3_ros2
 git add ros2_rm_robot/dual_rm_description/dual_rm_description/urdf/body/body_head_platform.urdf.xacro
 git commit -m "fix(desc): revert camera_joint yaw to 0 (camera is mounted straight)
 
-Removes the sim-only -90deg render hack from the shared description so the
-core description matches the real robot (camera_joint rpy 0 0 0). The
-sideways-image issue is addressed at the sim sensor/frame layer, not here.
+Removes the -90deg base-yaw compensation from the shared description so the
+core camera_joint matches the real robot (rpy 0 0 0). This reversion requires
+adding the equivalent compensation to the sim overlay's camera_optical_joint
+(rpy -π/2 0 -π) to keep the optical frame nav-aligned in simulation.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -352,7 +353,7 @@ In a second sourced terminal:
 ros2 run tf2_ros tf2_echo base_footprint laser_link
 ros2 run tf2_ros tf2_echo base_footprint camera_link
 ```
-Expected: `base_footprint`→`laser_link` translation `[0.325, 0.000, 0.210]`, rotation identity. Camera translation/orientation consistent with the head pose and **no** residual 90° yaw.
+Expected: `base_footprint`→`laser_link` translation `[0.325, 0.000, 0.210]`, rotation identity. Camera: `base_footprint`→`camera_link` **still carries** the +90° mesh→nav yaw (since `camera_joint=0`); verify the nav-forward bore at `base_footprint`→`camera_optical_frame` instead (optical +Z ≈ nav +X).
 
 - [ ] **Step 3: Verify drive direction**
 
