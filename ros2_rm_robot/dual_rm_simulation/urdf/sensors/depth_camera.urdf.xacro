@@ -11,8 +11,18 @@
         <joint name="camera_optical_joint" type="fixed">
             <parent link="camera_link"/>
             <child link="camera_optical_frame"/>
-            <!-- Rotate from body frame (X-fwd) to optical frame (Z-fwd) -->
-            <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+            <!-- Body-frame (X-fwd) -> optical (Z-fwd) is the standard
+                 rpy="-pi/2 0 -pi/2". The trailing yaw carries an EXTRA -pi/2
+                 (net "-pi/2 0 -pi") to compensate the sim overlay's mesh->nav
+                 +pi/2 yaw at base_footprint_to_base, which yaws the whole
+                 mechanical tree - including this head-mounted camera_link
+                 (camera_link X = base_footprint +Y). Without it the optical
+                 bore points nav +Y and the MuJoCo /camera/image looks 90 deg
+                 to the robot's left. The core description's camera_joint stays
+                 0 (real-faithful); this compensation is sim-only. Do NOT
+                 "simplify" back to -pi/2 - see commit 9a01958 and
+                 docs/superpowers/plans/2026-07-15-camera-optical-frame-yaw-fix.md. -->
+            <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi}"/>
         </joint>
 
         <!-- ── Gazebo physics ──────────────────────────────────────── -->
