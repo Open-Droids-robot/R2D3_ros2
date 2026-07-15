@@ -43,7 +43,7 @@ index so `$(find dual_rm_description)` resolves) and compared structurally.
 
 | Delta | SIM | REAL | Root cause / verdict |
 |-------|-----|------|----------------------|
-| `camera_joint` yaw | `0 0 -π/2` | `0 0 0` | Sim-render hack in the **shared** description to mask a sideways image. Camera is physically **straight**. → revert to `0` |
+| `camera_joint` yaw | `0 0 -π/2` | `0 0 0` | Core description is real-faithful (real robot `camera_joint`=0). The −90° that lived here was **not** a render hack — it compensated the sim overlay's `base_footprint_to_base` +90° mesh→nav yaw. When reverting it here, the equivalent −90° MUST be re-added in the **sim overlay** (see `depth_camera.urdf.xacro` row), or the head-mounted camera bores nav +Y and `/camera/image` looks 90° left. |
 | lidar mount | `0 0.24 0` (in sim overlay, `lidar_link`) | `0.325 0 0.210` (`laser_link`) | Sim value is a wrong placeholder. Real value is correct. → adopt real |
 | `joint_left_wheel` axis | `1 0 0` | `-1 0 0` | Changed by Nitin in `521e03e` "Refactored Description". Correct for ros2_control `diff_drive_controller` (needs both wheels same axis to drive straight). → **keep** |
 | left wrist (`l_joint6`+`l_hand_joint`) rpy | different literals | different literals | Net `l_hand_base_link` orientation identical to 0.02°. Cosmetic. → ignore |
@@ -105,7 +105,7 @@ The core description carries **no** `base_footprint`, **no** sensor plugins,
 |------|--------|
 | `urdf/r2d3_sim.urdf.xacro` | Keep the single `base_footprint_to_base` +90° as the only mesh→nav mapping. Update the `lidar_sensor` call: drop the `−π/2` compensation and the `0 -0.24 0` placeholder; mount the laser at the real value (final numbers pinned empirically, see §5) |
 | `urdf/sensors/lidar.urdf.xacro` | Rename `lidar_link` → **`laser_link`**; set `gz_frame_id` to match; default mount = real value; no compensation rpy |
-| `urdf/sensors/depth_camera.urdf.xacro` | **Unchanged** — optical frame `(-π/2,0,-π/2)` is already correct; with `camera_joint`=0° the image is upright |
+| `urdf/sensors/depth_camera.urdf.xacro` | `camera_optical_joint` rpy `-π/2 0 -π/2` → **`-π/2 0 -π`** — folds the −90° base-yaw compensation into the sim-only optical frame so the camera bores nav +X. |
 | `urdf/sensors/imu.urdf.xacro` | Confirm mount; no compensation rpy |
 
 **Deliberate open item — exact sensor xyz/rpy in the overlay.** The sim
@@ -124,7 +124,9 @@ implementation fixes the last decimals empirically.
    (validates wheel-axis + base_footprint mapping end-to-end).
 4. `ros2 run tf2_ros tf2_echo <nav_frame> laser_link` (and camera) in sim equals
    the real-robot values.
-5. Camera image **upright** in RViz/rqt with `camera_joint`=0° (no hack).
+5. Camera image **upright and forward** in RViz/rqt: `camera_joint`=0° in the
+   core description AND the −90° base-yaw compensation present in the sim
+   overlay's `camera_optical_joint` (`-π/2 0 -π`).
 6. (Out of scope now) MJCF export consumes the same canonical description.
 
 ## 6. Cleanup / cruft noted (not required, but recommended)

@@ -367,7 +367,13 @@ Expected: robot drives **forward** (along +X of `base_footprint`), not sideways 
 ```bash
 ros2 run rqt_image_view rqt_image_view /camera/image
 ```
-Expected: image is upright (not rotated 90°) with `camera_joint` at 0°. If it is rotated, the root cause is in the Gz camera sensor pose/optical convention — debug at the sensor layer (do **not** re-add the −90° to the description).
+Expected: image is upright AND forward-facing (you see the robot's drive
+direction, not the scene 90° to its left). This requires the sim-overlay
+compensation `camera_optical_joint rpy="-π/2 0 -π"` in
+`dual_rm_simulation/urdf/sensors/depth_camera.urdf.xacro`. Do **not** re-add
+the −90° to the core description (`camera_joint` stays 0). If MuJoCo is fixed
+but Gazebo is still off, that is the known Gz sensor-convention gap — track
+separately, do not change the core description.
 
 - [ ] **Step 5: Record results**
 
