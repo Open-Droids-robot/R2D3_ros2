@@ -13,6 +13,7 @@ install(DIRECTORY
 
 install(PROGRAMS
   scripts/ensure_mjcf.py
+  scripts/wait_for_sim_ready.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

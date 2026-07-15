@@ -2,6 +2,13 @@
 Full-stack MuJoCo bringup: sim + Nav2 (SLAM/localization) + optional MoveIt2.
 Self-contained MuJoCo counterpart of dual_rm_navigation/bringup_sim.launch.py
 and r2d3_bringup/bringup_sim.launch.py; reuses their sub-launches and configs.
+
+Startup ordering: Nav2/SLAM/MoveIt are NOT started on a blind timer. A
+readiness-gate node (scripts/wait_for_sim_ready.py) blocks until the MuJoCo sim
+is genuinely ready (/scan flowing + odom->base_footprint + base_footprint->laser_link
+TF available), then the nav stack fires off that node's exit. This is what makes
+the map come up reliably regardless of how long the sim takes to start (cold
+MJCF cache, GUI/MoveIt/RViz CPU contention, slower machines).
 """
 
 import os
@@ -10,9 +17,10 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
-    TimerAction,
+    RegisterEventHandler,
 )
 from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
@@ -51,6 +59,10 @@ def generate_launch_description():
     declare_headless = DeclareLaunchArgument(
         "headless", default_value="false",
         description="Run MuJoCo without the Simulate window")
+    declare_ready_timeout = DeclareLaunchArgument(
+        "ready_timeout", default_value="90.0",
+        description="Fallback: start Nav2/SLAM after this many seconds even if "
+                    "the sim never reports ready")
 
     robot_model = LaunchConfiguration("robot_model")
     world = LaunchConfiguration("world")
@@ -60,6 +72,7 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration("use_rviz")
     use_moveit = LaunchConfiguration("use_moveit")
     headless = LaunchConfiguration("headless")
+    ready_timeout = LaunchConfiguration("ready_timeout")
 
     nav2_params = os.path.join(pkg_nav, "config", "nav2_params.yaml")
     slam_params = os.path.join(pkg_nav, "config", "slam_toolbox_params.yaml")
@@ -98,101 +111,106 @@ def generate_launch_description():
         condition=IfCondition(use_rviz),
     )
 
-    # 3a. SLAM Toolbox (mapping, 2D lidar)
-    slam_toolbox_launch = TimerAction(
-        period=10.0,
-        actions=[IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(pkg_nav, "launch", "slam.launch.py")),
-            launch_arguments={"use_sim_time": "true", "params_file": slam_params}.items(),
-            condition=IfCondition(PythonExpression(
-                ["'", mode, "' == 'slam' and '", slam_type, "' == 'slam_toolbox'"])),
-        )],
+    # 3. Readiness gate: blocks until the sim can actually feed Nav2/SLAM,
+    #    then exits 0. Everything downstream fires off its exit (below).
+    sim_ready_gate = Node(
+        package="r2d3_mujoco",
+        executable="wait_for_sim_ready.py",
+        name="wait_for_sim_ready",
+        output="screen",
+        arguments=["--timeout", ready_timeout],
     )
 
-    # 3b. RTAB-Map SLAM (RGB-D + lidar)
-    rtabmap_slam_launch = TimerAction(
-        period=10.0,
-        actions=[IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(pkg_nav, "launch", "rtabmap.launch.py")),
-            launch_arguments={
-                "use_sim_time": "true", "params_file": rtabmap_params,
-                "localization": "false"}.items(),
-            condition=IfCondition(PythonExpression(
-                ["'", mode, "' == 'slam' and '", slam_type, "' == 'rtabmap'"])),
-        )],
+    # --- Actions deferred until the sim reports ready ---------------------
+
+    # 4a. SLAM Toolbox (mapping, 2D lidar)
+    slam_toolbox_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(pkg_nav, "launch", "slam.launch.py")),
+        launch_arguments={"use_sim_time": "true", "params_file": slam_params}.items(),
+        condition=IfCondition(PythonExpression(
+            ["'", mode, "' == 'slam' and '", slam_type, "' == 'slam_toolbox'"])),
     )
 
-    # 3c. RTAB-Map localization
-    rtabmap_loc_launch = TimerAction(
-        period=10.0,
-        actions=[IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(pkg_nav, "launch", "rtabmap.launch.py")),
-            launch_arguments={
-                "use_sim_time": "true", "params_file": rtabmap_params,
-                "localization": "true"}.items(),
-            condition=IfCondition(PythonExpression(
-                ["'", mode, "' == 'localization' and '", slam_type, "' == 'rtabmap'"])),
-        )],
+    # 4b. RTAB-Map SLAM (RGB-D + lidar)
+    rtabmap_slam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(pkg_nav, "launch", "rtabmap.launch.py")),
+        launch_arguments={
+            "use_sim_time": "true", "params_file": rtabmap_params,
+            "localization": "false"}.items(),
+        condition=IfCondition(PythonExpression(
+            ["'", mode, "' == 'slam' and '", slam_type, "' == 'rtabmap'"])),
     )
 
-    # 3d. RTAB-Map depth-only SLAM
-    rtabmap_depth_slam_launch = TimerAction(
-        period=10.0,
-        actions=[IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(pkg_nav, "launch", "rtabmap_depth_only.launch.py")),
-            launch_arguments={"use_sim_time": "true", "localization": "false"}.items(),
-            condition=IfCondition(PythonExpression(
-                ["'", mode, "' == 'slam' and '", slam_type, "' == 'rtabmap_depth_only'"])),
-        )],
+    # 4c. RTAB-Map localization
+    rtabmap_loc_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(pkg_nav, "launch", "rtabmap.launch.py")),
+        launch_arguments={
+            "use_sim_time": "true", "params_file": rtabmap_params,
+            "localization": "true"}.items(),
+        condition=IfCondition(PythonExpression(
+            ["'", mode, "' == 'localization' and '", slam_type, "' == 'rtabmap'"])),
     )
 
-    # 3e. RTAB-Map depth-only localization
-    rtabmap_depth_loc_launch = TimerAction(
-        period=10.0,
-        actions=[IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(pkg_nav, "launch", "rtabmap_depth_only.launch.py")),
-            launch_arguments={"use_sim_time": "true", "localization": "true"}.items(),
-            condition=IfCondition(PythonExpression(
-                ["'", mode, "' == 'localization' and '", slam_type, "' == 'rtabmap_depth_only'"])),
-        )],
+    # 4d. RTAB-Map depth-only SLAM
+    rtabmap_depth_slam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_nav, "launch", "rtabmap_depth_only.launch.py")),
+        launch_arguments={"use_sim_time": "true", "localization": "false"}.items(),
+        condition=IfCondition(PythonExpression(
+            ["'", mode, "' == 'slam' and '", slam_type, "' == 'rtabmap_depth_only'"])),
     )
 
-    # 4. AMCL + map_server localization (slam_toolbox backend)
-    localization_launch = TimerAction(
-        period=10.0,
-        actions=[IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(pkg_nav, "launch", "localization.launch.py")),
-            launch_arguments={
-                "use_sim_time": "true", "params_file": nav2_params,
-                "map": map_yaml}.items(),
-            condition=IfCondition(PythonExpression(
-                ["'", mode, "' == 'localization' and '", slam_type, "' == 'slam_toolbox'"])),
-        )],
+    # 4e. RTAB-Map depth-only localization
+    rtabmap_depth_loc_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_nav, "launch", "rtabmap_depth_only.launch.py")),
+        launch_arguments={"use_sim_time": "true", "localization": "true"}.items(),
+        condition=IfCondition(PythonExpression(
+            ["'", mode, "' == 'localization' and '", slam_type, "' == 'rtabmap_depth_only'"])),
     )
 
-    # 5. Nav2 stack
-    nav2_launch = TimerAction(
-        period=10.0,
-        actions=[IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(pkg_nav, "launch", "navigation.launch.py")),
-            launch_arguments={
-                "use_sim_time": "true", "params_file": nav2_params}.items(),
-        )],
+    # 4f. AMCL + map_server localization (slam_toolbox backend)
+    localization_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_nav, "launch", "localization.launch.py")),
+        launch_arguments={
+            "use_sim_time": "true", "params_file": nav2_params,
+            "map": map_yaml}.items(),
+        condition=IfCondition(PythonExpression(
+            ["'", mode, "' == 'localization' and '", slam_type, "' == 'slam_toolbox'"])),
     )
 
-    # 6. MoveIt2 move_group (reused from r2d3_bringup)
-    moveit_launch = TimerAction(
-        period=12.0,
-        actions=[IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(pkg_bringup, "launch", "moveit_sim.launch.py")),
-            launch_arguments={"robot_model": robot_model}.items(),
-            condition=IfCondition(use_moveit),
-        )],
+    # 4g. Nav2 stack
+    nav2_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_nav, "launch", "navigation.launch.py")),
+        launch_arguments={
+            "use_sim_time": "true", "params_file": nav2_params}.items(),
+    )
+
+    # 4h. MoveIt2 move_group (reused from r2d3_bringup)
+    moveit_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_bringup, "launch", "moveit_sim.launch.py")),
+        launch_arguments={"robot_model": robot_model}.items(),
+        condition=IfCondition(use_moveit),
+    )
+
+    # Fire the whole nav/slam/moveit stack once the sim reports ready.
+    start_stack_when_ready = RegisterEventHandler(
+        OnProcessExit(
+            target_action=sim_ready_gate,
+            on_exit=[
+                slam_toolbox_launch,
+                rtabmap_slam_launch,
+                rtabmap_loc_launch,
+                rtabmap_depth_slam_launch,
+                rtabmap_depth_loc_launch,
+                localization_launch,
+                nav2_launch,
+                moveit_launch,
+            ],
+        )
     )
 
     return LaunchDescription([
@@ -204,14 +222,9 @@ def generate_launch_description():
         declare_use_rviz,
         declare_use_moveit,
         declare_headless,
+        declare_ready_timeout,
         sim_launch,
         rviz_node,
-        slam_toolbox_launch,
-        rtabmap_slam_launch,
-        rtabmap_loc_launch,
-        rtabmap_depth_slam_launch,
-        rtabmap_depth_loc_launch,
-        localization_launch,
-        nav2_launch,
-        moveit_launch,
+        sim_ready_gate,
+        start_stack_when_ready,
     ])
