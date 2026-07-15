@@ -90,7 +90,7 @@ class TestRaiseLidarScanPlane(unittest.TestCase):
 
     def test_raises_lidar_body_z(self):
         self._write(
-            '<body name="lidar_link_lidar_body" pos="0.24 0 0.233" quat="0.5 0.5 -0.5 -0.5">'
+            '<body name="laser_link_lidar_body" pos="0.24 0 0.233" quat="0.5 0.5 -0.5 -0.5">'
             '<site name="rf"/></body>'
         )
         patched = ensure_mjcf.raise_lidar_scan_plane(self.mjcf_path)
@@ -103,7 +103,7 @@ class TestRaiseLidarScanPlane(unittest.TestCase):
         # only the named lidar body's pos is raised.
         self._write(
             '<geom size="0.03 0.025" pos="0.24 0 0.233" type="cylinder"/>'
-            '<body name="lidar_link_lidar_body" pos="0.24 0 0.233"><site name="rf"/></body>'
+            '<body name="laser_link_lidar_body" pos="0.24 0 0.233"><site name="rf"/></body>'
         )
         ensure_mjcf.raise_lidar_scan_plane(self.mjcf_path)
         text = self.mjcf_path.read_text()
@@ -123,7 +123,7 @@ class TestRaiseLidarScanPlane(unittest.TestCase):
 # A minimal MJCF containing exactly the one lidar rangefinder body the scan-height
 # patch must match (EXPECTED_PATCH_COUNT == 1).
 LIDAR_BODY_MJCF = (
-    '<body name="lidar_link_lidar_body" pos="0.24 0 0.233" quat="0.5 0.5 -0.5 -0.5">'
+    '<body name="laser_link_lidar_body" pos="0.24 0 0.233" quat="0.5 0.5 -0.5 -0.5">'
     '<site name="rf"/></body>'
 )
 

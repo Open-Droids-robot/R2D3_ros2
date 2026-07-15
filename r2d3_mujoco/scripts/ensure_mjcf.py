@@ -51,8 +51,9 @@ CONVERTER_ARGS_VERSION = "v6:save_only,add_free_joint,scene,lidar_scan_raise,whe
 # --- Lidar scan-height fix ----------------------------------------------------------
 #
 # The lidar is mounted low, inside the chassis body envelope: the rangefinder site sits
-# at lidar_link (world ~0.24, 0, 0.233), and the base_link_underpan / body_base_link
-# meshes surround it, so every ray leaves the site and immediately re-intersects the
+# at laser_link (world ~0.325, 0, 0.210 -- the real robot's measured mount), and the
+# base_link_underpan / body_base_link meshes surround it, so every ray leaves the site
+# and immediately re-intersects the
 # chassis a few cm out -- every /scan range comes back below range_min and is reported
 # as -1.0. (MuJoCo's rangefinder only excludes the site's OWN body from ray casting,
 # and the converter puts the rays' site in a dedicated geometry-less
@@ -63,18 +64,21 @@ CONVERTER_ARGS_VERSION = "v6:save_only,add_free_joint,scene,lidar_scan_raise,whe
 # (the one filter ray casting honors -- ray_eliminate() in engine_ray.c). That worked
 # but also hid the chassis from the renderer (alpha is a rendering property too), so the
 # robot looked gutted. Instead we now RAISE the horizontal scan plane above the chassis:
-# the converter's rangefinder body (lidar_link_lidar_body) carries the sensor pos in its
+# the converter's rangefinder body (laser_link_lidar_body) carries the sensor pos in its
 # `pos` attribute and the ray orientation in its `quat`, so bumping its Z lifts the whole
 # scan plane while keeping the rays horizontal. Verified in standalone MuJoCo: at the
 # nominal height every ray self-hits the body (<0.2 m); raised by 0.15 m all 240 rays
 # clear the chassis and read the world walls (~2-7 m) with the full body left visible.
 #
-# NOTE: this is a temporary workaround for a lidar_link that is currently placed inside
-# the chassis material rather than in the chassis's lidar opening. The mount pose is to
-# be corrected upstream (measured on the real robot); once lidar_link sits in the
-# opening this raise can be reduced to 0.
+# NOTE: laser_link is now mounted at the real robot's measured pose (0.325 0 0.210 in
+# base_footprint -- see r2d3_mujoco.urdf.xacro), so the mount is no longer a placeholder.
+# The raise is STILL required, though: the sim chassis mesh is solid and has no lidar
+# opening cut into it, so even the correct real mount sits inside the mesh envelope
+# (verified in standalone MuJoCo: at the true height all 240 rays self-hit the chassis at
+# ~0.03 m; raised 0.15 m all 240 clear it and read the world walls at ~1.9-6.7 m). This
+# raise can only be reduced to 0 once the chassis mesh itself models the lidar opening.
 LIDAR_SCAN_RAISE_M = 0.15
-_LIDAR_BODY_NAME = "lidar_link_lidar_body"
+_LIDAR_BODY_NAME = "laser_link_lidar_body"
 
 
 def raise_lidar_scan_plane(mjcf_path: Path) -> int:
@@ -237,7 +241,7 @@ def validate_wheel_patch_count(patched: int) -> bool:
 # --- base_footprint inertial --------------------------------------------------------
 #
 # The converter merges every fixed-jointed child (base_link_underpan, body_base_link,
-# lidar_link, imu_link, ...) into the root base_footprint body but DROPS their <inertial>
+# laser_link, imu_link, ...) into the root base_footprint body but DROPS their <inertial>
 # elements, and base_footprint has none of its own (it is a virtual Nav2 frame). MuJoCo
 # then synthesizes the body's mass from its geoms -- i.e. from the bloated chassis convex
 # HULL volume at the default 1000 kg/m^3 (water) density -- yielding ~962 kg instead of

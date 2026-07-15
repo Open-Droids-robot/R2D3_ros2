@@ -136,7 +136,7 @@
 
             <!-- Lidar: combines the generated rangefinders into one LaserScan -->
             <sensor name="lidar">
-                <param name="frame_name">lidar_link</param>
+                <param name="frame_name">laser_link</param>
                 <param name="angle_increment">0.0175263</param>
                 <param name="min_angle">-2.0943951</param>
                 <param name="max_angle">2.0943951</param>

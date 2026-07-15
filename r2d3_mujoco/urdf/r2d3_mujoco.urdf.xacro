@@ -14,7 +14,7 @@
 
     <!-- Sensor frame macros reused from the Gazebo sim package.
          Their <gazebo> sensor tags are ignored by the MuJoCo converter;
-         only the links/joints (lidar_link, imu_link, camera_optical_frame) matter. -->
+         only the links/joints (laser_link, imu_link, camera_optical_frame) matter. -->
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/lidar.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/imu.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/depth_camera.urdf.xacro"/>
@@ -32,11 +32,14 @@
     <!-- Full robot mechanical description -->
     <xacro:include filename="$(find dual_rm_description)/urdf/r2d3_description.urdf.xacro"/>
 
-    <!-- Sensor frames (same placement as Gazebo sim) -->
-    <xacro:lidar_sensor parent_link="base_link_underpan"
-                        xyz="0.0 -0.24 0.0" rpy="0 0 ${-pi/2}"/>
-    <xacro:imu_sensor parent_link="base_link_underpan"
-                      xyz="0 0 0" rpy="0 0 0"/>
+    <!-- Sensor frames (same placement as Gazebo sim, r2d3_sim.urdf.xacro):
+         mounted in the +X-forward nav frame (base_footprint) at the real robot's
+         coordinates, with zero compensation rotations (see the URDF unification
+         spec, docs/superpowers/specs/2026-07-13-r2d3-urdf-unification-design.md). -->
+    <xacro:lidar_sensor parent_link="base_footprint"
+                        xyz="0.325 0 0.210" rpy="0 0 0"/>
+    <xacro:imu_sensor parent_link="base_footprint"
+                      xyz="0 0 0.233" rpy="0 0 0"/>
     <xacro:depth_camera_sensor/>
 
     <!-- MuJoCo conversion inputs (actuators, sensors, camera, lidar, scene tweaks) -->
