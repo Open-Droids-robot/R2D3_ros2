@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!--
+  ZED 2 stereo sensor pair for Gz Sim (Harmonic).
+
+  Both eyes are rgbd_camera sensors mounted DIRECTLY on the ZED left/right
+  camera frames (X-forward). No sim-only compensation frames: the physical
+  -pi/2 mount yaw at zed_mount_joint (dual_rm_description zed2.urdf.xacro)
+  cancels the sim overlay's +pi/2 mesh->nav yaw, so the frames already bore
+  nav-forward. Per the issue #11 postmortem, never orient a sensor with a
+  <pose> - only via the frame it is mounted on. Guarded by
+  test/test_gz_camera_bore.py.
+
+  The right eye is also an rgbd_camera purely for topic-layout consistency
+  with the left (image/camera_info/depth_image/points under one prefix);
+  only its image + camera_info get bridged in gz_sim.launch.py.
+
+  ZED 2 optics: 110 deg hfov, 1280x720, 0.3-20 m.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="_zed2_gz_eye" params="side">
+        <gazebo reference="zed_${side}_camera_frame">
+            <sensor name="zed_${side}" type="rgbd_camera">
+                <always_on>true</always_on>
+                <update_rate>15</update_rate>
+                <topic>zed/${side}</topic>
+                <gz_frame_id>zed_${side}_camera_frame_optical</gz_frame_id>
+
+                <camera name="zed_${side}">
+                    <horizontal_fov>1.9199</horizontal_fov>  <!-- 110 deg, ZED 2 -->
+                    <image>
+                        <width>1280</width>
+                        <height>720</height>
+                        <format>R8G8B8</format>
+                    </image>
+                    <depth_camera>
+                        <clip>
+                            <near>0.3</near>
+                            <far>20.0</far>
+                        </clip>
+                    </depth_camera>
+                    <clip>
+                        <near>0.3</near>
+                        <far>20.0</far>
+                    </clip>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.007</stddev>
+                    </noise>
+                </camera>
+            </sensor>
+        </gazebo>
+    </xacro:macro>
+
+    <xacro:macro name="zed2_sim_sensors">
+        <gazebo reference="zed_camera_center">
+            <self_collide>false</self_collide>
+        </gazebo>
+        <xacro:_zed2_gz_eye side="left"/>
+        <xacro:_zed2_gz_eye side="right"/>
+    </xacro:macro>
+
+</robot>

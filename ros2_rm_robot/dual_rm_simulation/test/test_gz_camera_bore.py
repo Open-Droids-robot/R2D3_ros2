@@ -1,28 +1,26 @@
-"""Regression guard: the Gazebo (Gz Sim) camera must render along the robot's
-nav-forward direction (base_footprint +X), upright, and agree with the
-``camera_optical_frame`` it labels its output with.
+"""Regression guard: both simulated ZED eyes must render along the robot's
+nav-forward direction, upright, agree with the optical frames they label
+their output with, and sit 120 mm apart (the ZED 2 baseline).
 
 A Gz camera renders along the +X of the frame its ``<sensor>`` is mounted on
 (+Z up, +Y left -- the SDF camera body convention). ``gz_frame_id`` only
 LABELS the published output; it does NOT reorient the render. The sim overlay
 yaws the whole mechanical tree +90deg about Z at ``base_footprint_to_base``
-(mesh -> Nav2), so ``camera_link`` +X = base_footprint +Y and an
-uncompensated camera images 90deg to the robot's left (issue #11).
+(mesh -> Nav2); the ZED's physical mount yaw (-90deg at zed_mount_joint,
+the ZED body is X-forward while the head is mesh -Y-forward) cancels it, so
+the sensors mount directly on the ZED left/right camera frames with NO
+sim-only compensation frames (retires the issue #11 camera_gz_frame
+mechanism). Per the issue #11 postmortem the Gz ``<sensor>`` ``<pose>`` must
+NOT be used for orientation.
 
-The fix mounts the sensor on the sim-only ``camera_gz_frame`` -- a massless
-fixed link yawed -90deg off ``camera_link`` -- so the render bores nav +X.
-This is the Gz analog of the MuJoCo fix (commit c7bbfec), which reoriented
-the frame MuJoCo's camera hangs on. Per the issue #11 postmortem the Gz
-``<sensor>`` ``<pose>`` must NOT be used for this compensation.
+The zed2 case is wedge-shaped: zed_camera_center carries a +0.05 rad pitch
+(bottom_slope, from Stereolabs' own model), so the expected bore is nav +X
+pitched down by exactly that angle -- the assertions account for it. Any YAW
+error (the issue #11 failure mode) still fails loudly.
 
-This test recomputes base_footprint -> sensor-mount orientation from the
-flattened sim URDF (joint chain at q=0, composed with any direct ``<pose>``
-on the sensor, so the guard holds regardless of mechanism) and asserts the
-render bore and the render/label consistency.
-
-NOTE: the xacro include resolves via $(find dual_rm_simulation) -> the
-INSTALL space. Rebuild (colcon build --packages-select dual_rm_simulation)
-after editing the xacro, or this test sees the old file.
+NOTE: the xacro include resolves via $(find ...) -> the INSTALL space.
+Rebuild (colcon build --packages-select dual_rm_description
+dual_rm_simulation) after editing xacros, or this test sees old files.
 """
 import math
 import shutil
@@ -34,6 +32,9 @@ from xml.dom import minidom
 import numpy as np
 
 XACRO = Path(__file__).resolve().parent.parent / "urdf" / "r2d3_sim.urdf.xacro"
+
+SLOPE = 0.05      # zed2 bottom_slope (rad) -- keep equal to zed2.urdf.xacro
+BASELINE = 0.12   # ZED 2 stereo baseline (m)
 
 
 def _rpy_to_R(r, p, y):
@@ -59,48 +60,51 @@ def _flatten_urdf():
     return out.stdout
 
 
-def _joint_orientation_chain(urdf_str, child, root="base_footprint"):
-    """Compose the fixed/neutral-config rotation from root down to `child`.
+def _joint_chain(urdf_str, child, root="base_footprint"):
+    """Compose the fixed/neutral-config pose (R, p) from root down to `child`.
 
-    Revolute/prismatic joints are evaluated at q=0, so only their <origin> rpy
-    contributes to orientation. Returns R (child axes expressed in root frame).
+    Revolute/prismatic joints are evaluated at q=0, so only their <origin>
+    contributes. Returns (R, p): child axes / position in root frame.
     """
     dom = minidom.parseString(urdf_str)
-    joints = {}  # child_link -> (parent_link, R_origin)
+    joints = {}  # child_link -> (parent_link, R_origin, p_origin)
     for j in dom.getElementsByTagName("joint"):
-        p = j.getElementsByTagName("parent")
-        c = j.getElementsByTagName("child")
-        if not p or not c:
+        par = j.getElementsByTagName("parent")
+        ch = j.getElementsByTagName("child")
+        if not par or not ch:
             continue
         o = j.getElementsByTagName("origin")
-        rpy = (0.0, 0.0, 0.0)
-        if o and o[0].getAttribute("rpy").strip():
-            rpy = tuple(float(v) for v in o[0].getAttribute("rpy").split())
-        joints[c[0].getAttribute("link")] = (p[0].getAttribute("link"), _rpy_to_R(*rpy))
+        rpy, xyz = (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)
+        if o:
+            if o[0].getAttribute("rpy").strip():
+                rpy = tuple(float(v) for v in o[0].getAttribute("rpy").split())
+            if o[0].getAttribute("xyz").strip():
+                xyz = tuple(float(v) for v in o[0].getAttribute("xyz").split())
+        joints[ch[0].getAttribute("link")] = (
+            par[0].getAttribute("link"), _rpy_to_R(*rpy), np.array(xyz))
 
     chain = []
     node = child
     while node != root:
         if node not in joints:
             raise AssertionError(f"no joint chain from {root} to {child} (stuck at {node})")
-        parent, R = joints[node]
-        chain.append(R)
+        parent, R, p = joints[node]
+        chain.append((R, p))
         node = parent
-    R_total = np.eye(3)
-    for R in reversed(chain):  # root -> ... -> child
+    R_total, p_total = np.eye(3), np.zeros(3)
+    for R, p in reversed(chain):  # root -> ... -> child
+        p_total = p_total + R_total @ p
         R_total = R_total @ R
-    return R_total
+    return R_total, p_total
 
 
-def _gz_camera_sensor(urdf_str):
-    """Return (reference_link, R_pose) for the Gz camera <sensor>.
-
-    reference_link is the link named by the enclosing <gazebo reference=...>.
-    R_pose is the rotation of an optional direct-child <pose> ("x y z r p y",
-    identity if absent) so the bore assertion holds no matter which mechanism
-    orients the render.
+def _gz_camera_sensors(urdf_str):
+    """Return {reference_link: (sensor_name, R_pose)} for all camera-type
+    Gz sensors. R_pose is a direct-child <pose> rotation (identity if absent)
+    so the bore assertions hold no matter which mechanism orients the render.
     """
     dom = minidom.parseString(urdf_str)
+    found = {}
     for gz in dom.getElementsByTagName("gazebo"):
         for s in gz.getElementsByTagName("sensor"):
             if "camera" not in s.getAttribute("type"):
@@ -112,8 +116,11 @@ def _gz_camera_sensor(urdf_str):
                     if len(vals) == 6:
                         rpy = tuple(vals[3:])
                     break
-            return gz.getAttribute("reference"), _rpy_to_R(*rpy)
-    raise AssertionError("no camera <sensor> found in any <gazebo> block")
+            found[gz.getAttribute("reference")] = (
+                s.getAttribute("name"), _rpy_to_R(*rpy))
+    if not found:
+        raise AssertionError("no camera <sensor> found in any <gazebo> block")
+    return found
 
 
 # Gz builds the published optical frame from the sensor body frame by the fixed
@@ -124,44 +131,70 @@ _SENSOR_TO_OPTICAL = np.array([[0.0, 0.0, 1.0],
                                [-1.0, 0.0, 0.0],
                                [0.0, -1.0, 0.0]])
 
+# Expected sensor-body orientation in base_footprint: the +pi/2 overlay yaw and
+# the -pi/2 physical mount yaw cancel, leaving only the zed2 bottom_slope
+# pitch. bore = +X pitched down by SLOPE; up = +Z pitched forward by SLOPE.
+_EXPECTED_BORE = np.array([math.cos(SLOPE), 0.0, -math.sin(SLOPE)])
+_EXPECTED_UP = np.array([math.sin(SLOPE), 0.0, math.cos(SLOPE)])
 
-class TestGzCameraBore(unittest.TestCase):
+
+class TestGzZedCameraBore(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.urdf = _flatten_urdf()
-        ref, R_pose = _gz_camera_sensor(cls.urdf)
-        cls.sensor_ref = ref
-        cls.R_sensor = _joint_orientation_chain(cls.urdf, ref) @ R_pose
+        cls.sensors = _gz_camera_sensors(cls.urdf)
 
-    def test_sensor_mounted_on_gz_frame(self):
-        """Issue #11 postmortem: compensation must be a mount frame, not a
-        sensor <pose>. Guards against silently moving it back."""
-        self.assertEqual(self.sensor_ref, "camera_gz_frame")
+    def test_sensors_mounted_on_zed_camera_frames(self):
+        """Issue #11 postmortem: orientation lives in mount frames, never a
+        sensor <pose>. Both eyes mount directly on the ZED camera frames."""
+        self.assertEqual(
+            set(self.sensors.keys()),
+            {"zed_left_camera_frame", "zed_right_camera_frame"})
 
-    def test_render_bore_points_nav_forward(self):
-        """The Gz render direction must be nav-forward and upright."""
-        bore = self.R_sensor[:, 0]  # sensor +X = Gz viewing direction
-        up = self.R_sensor[:, 2]    # sensor +Z = up in image
-        np.testing.assert_allclose(bore, [1.0, 0.0, 0.0], atol=1e-6,
-                                   err_msg=f"Gz render bore should be nav +X, got {bore}")
-        np.testing.assert_allclose(up, [0.0, 0.0, 1.0], atol=1e-6,
-                                   err_msg=f"Gz image up should be nav +Z (upright), got {up}")
+    def _sensor_R(self, ref):
+        _, R_pose = self.sensors[ref]
+        R_chain, _ = _joint_chain(self.urdf, ref)
+        return R_chain @ R_pose
+
+    def test_render_bores_nav_forward_both_eyes(self):
+        for ref in ("zed_left_camera_frame", "zed_right_camera_frame"):
+            R = self._sensor_R(ref)
+            bore, up = R[:, 0], R[:, 2]
+            np.testing.assert_allclose(
+                bore, _EXPECTED_BORE, atol=1e-6,
+                err_msg=f"{ref}: render bore should be nav +X (pitched down "
+                        f"bottom_slope={SLOPE}), got {bore}")
+            # Yaw error is the issue #11 failure mode -- assert it separately
+            # and explicitly.
+            self.assertLess(abs(bore[1]), 1e-6,
+                            f"{ref}: render bore has a YAW error: {bore}")
+            np.testing.assert_allclose(
+                up, _EXPECTED_UP, atol=1e-6,
+                err_msg=f"{ref}: image up should be nav +Z (pitched by "
+                        f"bottom_slope={SLOPE}), got {up}")
 
     def test_render_matches_optical_frame_label(self):
-        """The Gz render must agree with the frame it is LABELLED with.
+        """The render axes must agree with the optical frame each sensor is
+        LABELLED with (gz_frame_id), or consumers place clouds wrong."""
+        for ref, side in (("zed_left_camera_frame", "left"),
+                          ("zed_right_camera_frame", "right")):
+            R_optical_render = self._sensor_R(ref) @ _SENSOR_TO_OPTICAL
+            R_optical_label, _ = _joint_chain(
+                self.urdf, f"zed_{side}_camera_frame_optical")
+            np.testing.assert_allclose(
+                R_optical_render, R_optical_label, atol=1e-6,
+                err_msg=f"{side}: rendered optical axes disagree with the "
+                        f"zed_{side}_camera_frame_optical label")
 
-        Gz stamps its output ``gz_frame_id=camera_optical_frame`` but derives
-        the actual optical axes from the sensor body frame. If those disagree
-        with the URDF's ``camera_optical_frame`` TF, consumers place the cloud
-        wrong -- the "potentially worse (inconsistent)" failure issue #11
-        flagged.
-        """
-        R_optical_render = self.R_sensor @ _SENSOR_TO_OPTICAL
-        R_optical_label = _joint_orientation_chain(self.urdf, "camera_optical_frame")
+    def test_stereo_baseline(self):
+        """Right eye sits exactly BASELINE along the left eye's -Y (the ZED
+        left camera is the +Y eye of camera_center)."""
+        R_left, p_left = _joint_chain(self.urdf, "zed_left_camera_frame")
+        _, p_right = _joint_chain(self.urdf, "zed_right_camera_frame")
+        offset_in_left = R_left.T @ (p_right - p_left)
         np.testing.assert_allclose(
-            R_optical_render, R_optical_label, atol=1e-6,
-            err_msg="Gz-rendered optical axes disagree with the camera_optical_frame "
-                    f"label:\nrender=\n{R_optical_render}\nlabel=\n{R_optical_label}")
+            offset_in_left, [0.0, -BASELINE, 0.0], atol=1e-9,
+            err_msg=f"stereo baseline wrong: {offset_in_left}")
 
 
 if __name__ == "__main__":

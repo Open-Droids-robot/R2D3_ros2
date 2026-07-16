@@ -124,11 +124,23 @@ def generate_launch_description():
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
-            # Depth camera (rgbd_camera sensor)
-            '/camera/image@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
-            '/camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            # ZED 2 head camera: two rgbd_camera sensors (topics zed/left,
+            # zed/right). Right depth/points exist in Gz but are not bridged.
+            '/zed/left/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/zed/left/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/zed/left/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/zed/left/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            '/zed/right/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/zed/right/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+        ],
+        remappings=[
+            # Gz topic names -> the real zed-ros2-wrapper topic contract.
+            ('/zed/left/image', '/zed/zed_node/left/image_rect_color'),
+            ('/zed/left/camera_info', '/zed/zed_node/left/camera_info'),
+            ('/zed/left/depth_image', '/zed/zed_node/depth/depth_registered'),
+            ('/zed/left/points', '/zed/zed_node/point_cloud/cloud_registered'),
+            ('/zed/right/image', '/zed/zed_node/right/image_rect_color'),
+            ('/zed/right/camera_info', '/zed/zed_node/right/camera_info'),
         ],
         parameters=[{'use_sim_time': False}],
         output='screen',
@@ -165,6 +177,15 @@ def generate_launch_description():
         package='servo_sim_bridge',
         executable='neck_servo_bridge',
         name='neck_servo_bridge',
+        output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
+
+    # ── Sim-only ZED shim: side-by-side stereo + rgb alias ──────
+    stereo_concat = Node(
+        package='dual_rm_simulation',
+        executable='stereo_concat.py',
+        name='stereo_concat',
         output='screen',
         parameters=[{'use_sim_time': True}],
     )
@@ -206,4 +227,5 @@ def generate_launch_description():
         evt_spawn_done,
         evt_jsb_done,
         neck_servo_bridge,
+        stereo_concat,
     ])
