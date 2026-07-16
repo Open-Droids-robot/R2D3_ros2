@@ -41,12 +41,17 @@ plus its full native set — IMU, pose, disparity, etc. — for free):
 | `/zed/zed_node/depth/depth_registered` | ● | Depth registered to the **left** eye (matches real ZED behavior) |
 | `/zed/zed_node/point_cloud/cloud_registered` | ● | Point cloud |
 
-Frames (from `zed_macro.urdf.xacro`):
+Frames (from `zed_macro.urdf.xacro`, wrapper ≥ v5 naming — the CHANGELOG
+renamed `*_camera_optical_frame` to `*_camera_frame_optical`):
 `zed_camera_link → zed_camera_center → zed_{left,right}_camera_frame →
-zed_{left,right}_camera_optical_frame`, with the ZED 2's 120 mm baseline baked
-in. `zed_left_camera_optical_frame` is the frame_id of RGB, depth, and point
+zed_{left,right}_camera_frame_optical`, with the ZED 2's 120 mm baseline baked
+in. `zed_left_camera_frame_optical` is the frame_id of RGB, depth, and point
 cloud — the canonical head-camera optical frame. The old `camera_link` /
-`camera_optical_frame` / `camera_gz_frame` names disappear entirely; no aliases.
+`camera_optical_frame` / `camera_gz_frame` names disappear entirely; no
+aliases. Note the zed2 model carries a `bottom_slope` of 0.05 rad (the
+wedge-shaped case pitches the sensor block ~2.9° about Y at
+`zed_camera_center`) — Stereolabs models the physical camera this way, we keep
+it, and the bore tests account for it.
 
 ## §2 — Robot description (`dual_rm_description`)
 
@@ -55,21 +60,23 @@ cloud — the canonical head-camera optical frame. The old `camera_link` /
   `realsense2_camera`). The robot model never `$(find)`s SDK-gated packages, so
   every dev machine builds and visualizes without CUDA.
 - **`body_head_platform.urdf.xacro`**: delete the `camera_link` link and
-  `camera_joint`; instantiate `<xacro:zed_camera name="zed" model="zed2"
-  parent="head_link2">` at the old camera origin
+  `camera_joint`; instantiate `<xacro:zed2_camera name="zed"
+  parent="head_link2">` (the copied macro, trimmed to zed2-only — mag/baro/
+  temp/GNSS links dropped, nothing consumes them) at the old camera origin
   (`xyz="-0.0032391 -0.051866 0.061606"`). This origin is a starting point;
   the real mount offset must be calibrated on hardware (tracked as a follow-up,
   not part of this change).
-- **Single mount-yaw compensation point**: the ZED mounts via an intermediate
-  `zed_mount_joint` whose yaw is a xacro argument. The core description passes
-  its real-faithful value; the Gz/MuJoCo sim overlay passes the mesh→nav de-yaw
-  (today's `-pi/2` at `base_footprint_to_base`). Everything below the mount —
-  left/right frames, optical frames, mesh — is then correct once, in both
-  worlds. This **retires** the per-frame hacks in `depth_camera.urdf.xacro`
-  (`camera_gz_frame`, the extra `-pi/2` in the optical joint; see issue #11
-  and commit 9a01958). Exact angles are pinned by the updated bore tests, not
-  eyeballed. Per the issue #11 postmortem: compensation is frame-level only —
-  never a `<pose>` inside `<sensor>`.
+- **Single fixed mount yaw — no per-context compensation needed** (simpler
+  than originally sketched): the ZED body is X-forward while the head meshes
+  are modeled −Y-forward, so `zed_mount_joint` carries one fixed physical
+  `rpy="0 0 -pi/2"`. In the sim overlay the `+pi/2` mesh→nav yaw at
+  `base_footprint_to_base` cancels it exactly, and on the real robot the same
+  angle is simply the correct physical mount orientation — one value, correct
+  in both worlds, no xacro argument. This **retires** the per-frame hacks in
+  `depth_camera.urdf.xacro` (`camera_gz_frame`, the extra `-pi/2` in the
+  optical joint; see issue #11 and commit 9a01958). The angle is pinned by
+  the updated bore tests, not eyeballed. Per the issue #11 postmortem:
+  orientation is frame-level only — never a `<pose>` inside `<sensor>`.
 
 ## §3 — Simulation
 
@@ -78,25 +85,28 @@ cloud — the canonical head-camera optical frame. The old `camera_link` /
 - `urdf/sensors/depth_camera.urdf.xacro` is retired, replaced by
   `urdf/sensors/zed2_sim.urdf.xacro`:
   - **Left eye**: `rgbd_camera` sensor on `zed_left_camera_frame` (X-forward,
-    nav-correct via §2 mount-yaw) → RGB + depth + points,
-    `gz_frame_id = zed_left_camera_optical_frame`.
-  - **Right eye**: plain `camera` sensor on `zed_right_camera_frame` → RGB only,
-    `gz_frame_id = zed_right_camera_optical_frame`.
+    nav-correct via §2 mount yaw) → RGB + depth + points,
+    `gz_frame_id = zed_left_camera_frame_optical`.
+  - **Right eye**: also an `rgbd_camera` sensor (identical topic layout to the
+    left — no camera-sensor topic-name guesswork), on
+    `zed_right_camera_frame`, `gz_frame_id = zed_right_camera_frame_optical`;
+    only its image + camera_info are bridged (depth/points left unbridged).
   - ZED 2 optics: `horizontal_fov ≈ 1.919` (110°), 1280×720 default
     (configurable), clip 0.3–20 m, gaussian noise as today.
 - `gz_sim.launch.py` bridge: the four `/camera/*` entries are replaced by the
   §1 topic set, remapped from Gz sensor topics to `/zed/zed_node/...` names.
-  The `rgb/*` alias is produced by bridging the left topics twice or a relay —
-  whichever is fewer moving parts, decided at plan time.
 - **`stereo_concat`** (new node in `dual_rm_simulation`): `message_filters`
   exact-time sync on left + right (sim stamps are identical), `hconcat`,
-  publish `/zed/zed_node/stereo/image_rect_color` with the left header.
-  Launched only in sim (the real wrapper publishes this topic natively).
+  publish `/zed/zed_node/stereo/image_rect_color` with the left header. It
+  also republishes the left stream as the `rgb/image_rect_color` +
+  `rgb/camera_info` alias (it already subscribes to left; no extra relay
+  node). Launched only in sim (the real wrapper publishes all of these
+  natively).
 
 ### MuJoCo (`r2d3_mujoco`)
 
 - Two `<camera>` entries in `mujoco_inputs.urdf.xacro` at the
-  `zed_left_camera_optical_frame` / `zed_right_camera_optical_frame` sites;
+  `zed_left_camera_frame_optical` / `zed_right_camera_frame_optical` sites;
   fovy recomputed for the ZED 2 vertical FOV (~70° at 16:9). Depth from the
   left camera. Same ROS topic names; `stereo_concat` reused.
 - **Parity requirement**: both sims publish the identical §1 topic set.
@@ -132,7 +142,7 @@ cloud — the canonical head-camera optical frame. The old `camera_link` /
 
   Left is also the physically correct choice: depth is registered to the left
   eye, so image, camera_info, and depth share
-  `zed_left_camera_optical_frame`.
+  `zed_left_camera_frame_optical`.
 - `rtabmap_params.yaml`, rviz configs, and any other `/camera/*` or
   `camera_optical_frame` references updated to the new names in the same
   change.
