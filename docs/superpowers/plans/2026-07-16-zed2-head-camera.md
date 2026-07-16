@@ -37,7 +37,7 @@ Adds the ZED 2 model and mounts it on the head **alongside** the old
 **Interfaces:**
 - Produces: xacro macro `zed2_camera(name, parent, *origin)` creating links `${name}_camera_link`, `${name}_camera_center`, `${name}_left_camera_frame`, `${name}_left_camera_frame_optical`, `${name}_right_camera_frame`, `${name}_right_camera_frame_optical`; instantiated with `name="zed"` on `head_link2`. Later tasks mount Gz sensors on `zed_left_camera_frame`/`zed_right_camera_frame` and MuJoCo cameras on the `_frame_optical` sites.
 
-- [ ] **Step 1: Download the ZED 2 mesh**
+- [x] **Step 1: Download the ZED 2 mesh**
 
 ```bash
 curl -sL https://raw.githubusercontent.com/stereolabs/zed-ros2-interfaces/master/meshes/zed2.stl \
@@ -48,7 +48,7 @@ Expected: file exists, size > 100 KB. If the URL 404s, find the mesh path with
 `gh api repos/stereolabs/zed-ros2-interfaces/git/trees/master?recursive=1 --jq '.tree[].path' | grep -i stl`
 and use that path.
 
-- [ ] **Step 2: Write the zed2 macro**
+- [x] **Step 2: Write the zed2 macro**
 
 Create `ros2_rm_robot/dual_rm_description/dual_rm_description/urdf/sensors/zed2.urdf.xacro`:
 
@@ -160,7 +160,7 @@ Create `ros2_rm_robot/dual_rm_description/dual_rm_description/urdf/sensors/zed2.
 </robot>
 ```
 
-- [ ] **Step 3: Instantiate on the head (old camera_link stays for now)**
+- [x] **Step 3: Instantiate on the head (old camera_link stays for now)**
 
 In `ros2_rm_robot/dual_rm_description/dual_rm_description/urdf/body/body_head_platform.urdf.xacro`, add immediately after the opening `<robot ...>` / `mesh_path` property block (before the first `<link>`):
 
@@ -186,7 +186,7 @@ and add at the end of the file, just before `</robot>` (after the `camera_joint`
   </xacro:zed2_camera>
 ```
 
-- [ ] **Step 4: Rebuild and verify the flattened URDF**
+- [x] **Step 4: Rebuild and verify the flattened URDF**
 
 ```bash
 cd ~/code/r2d3 && colcon build --packages-select dual_rm_description dual_rm_simulation r2d3_mujoco && source install/setup.bash
@@ -195,14 +195,14 @@ grep -c 'zed_left_camera_frame_optical\|zed_right_camera_frame_optical\|zed_came
 ```
 Expected: xacro exits 0; grep count ≥ 6 (each frame appears as link + joint child). Also flatten `r2d3_mujoco.urdf.xacro` the same way — exits 0.
 
-- [ ] **Step 5: Verify existing bore tests still pass (old camera untouched)**
+- [x] **Step 5: Verify existing bore tests still pass (old camera untouched)**
 
 ```bash
 cd ~/code/r2d3 && python3 -m pytest src/R2D3_ros2/ros2_rm_robot/dual_rm_simulation/test/test_gz_camera_bore.py src/R2D3_ros2/r2d3_mujoco/test/test_camera_optical_frame.py -v
 ```
 Expected: all PASS (not skipped — if skipped, the workspace isn't sourced/built).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add ros2_rm_robot/dual_rm_description/dual_rm_description/urdf/sensors/zed2.urdf.xacro \
@@ -228,7 +228,7 @@ the rgb alias from the simulated left/right streams.
 - Consumes: `/zed/zed_node/left/image_rect_color`, `/zed/zed_node/right/image_rect_color`, `/zed/zed_node/left/camera_info` (published by Tasks 3/4).
 - Produces: node executable `stereo_concat.py` (package `dual_rm_simulation`) publishing `/zed/zed_node/stereo/image_rect_color`, `/zed/zed_node/rgb/image_rect_color`, `/zed/zed_node/rgb/camera_info`; pure function `hconcat_images(left: Image, right: Image) -> Image`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `ros2_rm_robot/dual_rm_simulation/test/test_stereo_concat.py`:
 
@@ -295,14 +295,14 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 cd ~/code/r2d3 && python3 -m pytest src/R2D3_ros2/ros2_rm_robot/dual_rm_simulation/test/test_stereo_concat.py -v
 ```
 Expected: FAIL/ERROR with `ModuleNotFoundError: No module named 'stereo_concat'`.
 
-- [ ] **Step 3: Write the node**
+- [x] **Step 3: Write the node**
 
 Create `ros2_rm_robot/dual_rm_simulation/scripts/stereo_concat.py` (mode 755):
 
@@ -419,14 +419,14 @@ if __name__ == "__main__":
 chmod +x ros2_rm_robot/dual_rm_simulation/scripts/stereo_concat.py
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 cd ~/code/r2d3 && python3 -m pytest src/R2D3_ros2/ros2_rm_robot/dual_rm_simulation/test/test_stereo_concat.py -v
 ```
 Expected: 5 PASS.
 
-- [ ] **Step 5: Install the script and declare deps**
+- [x] **Step 5: Install the script and declare deps**
 
 In `ros2_rm_robot/dual_rm_simulation/CMakeLists.txt`, after the existing `install(DIRECTORY ...)` block add:
 
@@ -447,7 +447,7 @@ In `ros2_rm_robot/dual_rm_simulation/package.xml`, add alongside the existing ex
 ```
 (skip any line already present)
 
-- [ ] **Step 6: Build and verify the executable resolves**
+- [x] **Step 6: Build and verify the executable resolves**
 
 ```bash
 cd ~/code/r2d3 && colcon build --packages-select dual_rm_simulation && source install/setup.bash
@@ -455,7 +455,7 @@ ros2 pkg executables dual_rm_simulation 2>/dev/null; ls install/dual_rm_simulati
 ```
 Expected: `stereo_concat.py` listed in `lib/dual_rm_simulation/`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add ros2_rm_robot/dual_rm_simulation/scripts/stereo_concat.py \
@@ -479,7 +479,7 @@ git commit -m "feat(sim): add stereo_concat node (side-by-side stereo + rgb alia
 - Consumes: `zed_left_camera_frame` / `zed_right_camera_frame` / `*_frame_optical` links (Task 1); `stereo_concat.py` executable (Task 2).
 - Produces: xacro macro `zed2_sim_sensors()` (no params); Gz sensors named `zed_left`/`zed_right` on topics `zed/left`, `zed/right`; bridged+remapped ROS topics per the §1 contract.
 
-- [ ] **Step 1: Rewrite the bore test (failing first)**
+- [x] **Step 1: Rewrite the bore test (failing first)**
 
 Replace the entire content of `ros2_rm_robot/dual_rm_simulation/test/test_gz_camera_bore.py` with:
 
@@ -687,14 +687,14 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run to verify it fails for the right reason**
+- [x] **Step 2: Run to verify it fails for the right reason**
 
 ```bash
 cd ~/code/r2d3 && python3 -m pytest src/R2D3_ros2/ros2_rm_robot/dual_rm_simulation/test/test_gz_camera_bore.py -v
 ```
 Expected: FAIL — `test_sensors_mounted_on_zed_camera_frames` sees `{"camera_gz_frame"}` instead of the two ZED frames.
 
-- [ ] **Step 3: Write the ZED Gz sensor macro**
+- [x] **Step 3: Write the ZED Gz sensor macro**
 
 Create `ros2_rm_robot/dual_rm_simulation/urdf/sensors/zed2_sim.urdf.xacro`:
 
@@ -765,7 +765,7 @@ Create `ros2_rm_robot/dual_rm_simulation/urdf/sensors/zed2_sim.urdf.xacro`:
 </robot>
 ```
 
-- [ ] **Step 4: Switch r2d3_sim.urdf.xacro to the ZED sensors**
+- [x] **Step 4: Switch r2d3_sim.urdf.xacro to the ZED sensors**
 
 In `ros2_rm_robot/dual_rm_simulation/urdf/r2d3_sim.urdf.xacro`:
 
@@ -788,7 +788,7 @@ with
     <xacro:zed2_sim_sensors/>
 ```
 
-- [ ] **Step 5: Update the bridge + launch stereo_concat**
+- [x] **Step 5: Update the bridge + launch stereo_concat**
 
 In `ros2_rm_robot/dual_rm_simulation/launch/gz_sim.launch.py`, replace the bridge `arguments` camera entries and add `remappings` so the node reads:
 
@@ -839,7 +839,7 @@ After the `neck_servo_bridge` node definition, add:
 
 and append `stereo_concat,` to the `LaunchDescription([...])` list (after `neck_servo_bridge`).
 
-- [ ] **Step 6: Rebuild, run the bore test**
+- [x] **Step 6: Rebuild, run the bore test**
 
 ```bash
 cd ~/code/r2d3 && colcon build --packages-select dual_rm_description dual_rm_simulation && source install/setup.bash
@@ -847,7 +847,7 @@ python3 -m pytest src/R2D3_ros2/ros2_rm_robot/dual_rm_simulation/test/test_gz_ca
 ```
 Expected: 4 PASS. (MuJoCo's `test_camera_optical_frame.py` still passes too — old camera untouched until Task 5.)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add ros2_rm_robot/dual_rm_simulation/urdf/sensors/zed2_sim.urdf.xacro \
@@ -872,7 +872,7 @@ git commit -m "feat(sim): Gz renders ZED 2 stereo pair on zed-ros2-wrapper topic
 - Consumes: `zed_*` links/sites (Task 1); `stereo_concat.py` (Task 2).
 - Produces: MJCF cameras `zed_left`/`zed_right`; ros2_control camera sensors publishing the §1 ZED topics; MuJoCo point cloud via `depth_image_proc` on `/zed/zed_node/point_cloud/cloud_registered`.
 
-- [ ] **Step 1: Rewrite the optical-frame test (failing first)**
+- [x] **Step 1: Rewrite the optical-frame test (failing first)**
 
 Replace the entire content of `r2d3_mujoco/test/test_camera_optical_frame.py` with:
 
@@ -1012,14 +1012,14 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run to verify it fails for the right reason**
+- [x] **Step 2: Run to verify it fails for the right reason**
 
 ```bash
 cd ~/code/r2d3 && python3 -m pytest src/R2D3_ros2/r2d3_mujoco/test/test_camera_optical_frame.py -v
 ```
 Expected: PASS actually — the zed frames already exist since Task 1 and the geometry is already correct. If it fails, STOP: the mount yaw or macro geometry is wrong — fix Task 1 before continuing. (The failing-first signal for this task is the MJCF camera rename below; this test locks the frames the cameras hang on.)
 
-- [ ] **Step 3: Swap the MuJoCo camera definitions**
+- [x] **Step 3: Swap the MuJoCo camera definitions**
 
 In `r2d3_mujoco/urdf/mujoco_inputs.urdf.xacro`, replace:
 
@@ -1045,7 +1045,7 @@ with:
                         fovy="77.56" mode="fixed" resolution="1280 720"/>
 ```
 
-- [ ] **Step 4: Swap the ros2_control camera sensors**
+- [x] **Step 4: Swap the ros2_control camera sensors**
 
 In `r2d3_mujoco/urdf/ros2_control/mujoco_ros2_control.urdf.xacro`, replace:
 
@@ -1087,7 +1087,7 @@ grep -rn "depth_topic" ~/code/r2d3/src --include="*.cpp" --include="*.hpp" | gre
 ```
 If the source shows `depth_topic` is optional (e.g. a `has_parameter`/default guard), delete the `depth_topic` line from the `zed_right` sensor. If mandatory (or you can't tell), keep `/zed/zed_node/right/depth_unused` — it's harmless and outside the wrapper's namespace contract.
 
-- [ ] **Step 5: Point the MuJoCo top-level xacro at the new sensor macro file**
+- [x] **Step 5: Point the MuJoCo top-level xacro at the new sensor macro file**
 
 In `r2d3_mujoco/urdf/r2d3_mujoco.urdf.xacro`, replace:
 
@@ -1110,7 +1110,7 @@ with
 ```
 Also update the stale header comment on the includes (`camera_optical_frame` → `zed_*_camera_frame_optical` in the "only the links/joints ... matter" comment).
 
-- [ ] **Step 6: Update the MuJoCo launch (point cloud + stereo_concat)**
+- [x] **Step 6: Update the MuJoCo launch (point cloud + stereo_concat)**
 
 In `r2d3_mujoco/launch/mujoco_sim.launch.py`, replace the `depth_image_proc` remappings:
 
@@ -1144,7 +1144,7 @@ After the `neck_servo_bridge` node, add and register in the returned actions lis
     )
 ```
 
-- [ ] **Step 7: Rebuild and run both sims' static tests**
+- [x] **Step 7: Rebuild and run both sims' static tests**
 
 ```bash
 cd ~/code/r2d3 && colcon build --packages-select dual_rm_description dual_rm_simulation r2d3_mujoco && source install/setup.bash
@@ -1152,7 +1152,7 @@ python3 -m pytest src/R2D3_ros2/r2d3_mujoco/test/ src/R2D3_ros2/ros2_rm_robot/du
 ```
 Expected: all PASS (both bore tests, stereo_concat, wait_for_sim_ready).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add r2d3_mujoco/urdf/r2d3_mujoco.urdf.xacro r2d3_mujoco/urdf/mujoco_inputs.urdf.xacro \
@@ -1179,11 +1179,11 @@ Now nothing references `camera_link`/`camera_optical_frame` — delete them.
 - Consumes: everything switched off the old camera (Tasks 3–4).
 - Produces: a tree with no `camera_link`, `camera_joint`, `camera_optical_frame`, or `camera_gz_frame` anywhere.
 
-- [ ] **Step 1: Delete the old camera from the head**
+- [x] **Step 1: Delete the old camera from the head**
 
 In `body_head_platform.urdf.xacro` delete the whole `<link name="camera_link">...</link>` block (the link with mesh `camera_link.STL`) and the whole `<joint name="camera_joint" ...>...</joint>` block.
 
-- [ ] **Step 2: Delete the retired sensor macro and its no-gravity entry**
+- [x] **Step 2: Delete the retired sensor macro and its no-gravity entry**
 
 ```bash
 git rm ros2_rm_robot/dual_rm_simulation/urdf/sensors/depth_camera.urdf.xacro
@@ -1195,7 +1195,7 @@ In `ros2_rm_robot/dual_rm_simulation/urdf/gazebo/sim_gazebo.urdf.xacro`, delete 
 ```
 (No replacement: `zed_camera_center` is fixed-jointed to `head_link2`, which Gz lumps; the head links already carry the no-gravity tags.)
 
-- [ ] **Step 3: Update the MoveIt SRDFs**
+- [x] **Step 3: Update the MoveIt SRDFs**
 
 The SRDFs pair with the same core description (their config URDF includes
 `$(find dual_rm_description)/urdf/r2d3_description.urdf.xacro`), and
@@ -1209,7 +1209,7 @@ grep -c zed_camera_center ros2_rm_robot/dual_rm_moveit_config/dual_rm_65b_moveit
 ```
 Expected: 19 per file.
 
-- [ ] **Step 4: Sweep remaining references**
+- [x] **Step 4: Sweep remaining references**
 
 ```bash
 grep -rn "camera_link\|camera_optical_frame\|camera_gz_frame\|/camera/" \
@@ -1219,7 +1219,7 @@ grep -rn "camera_link\|camera_optical_frame\|camera_gz_frame\|/camera/" \
 ```
 Fix every hit (quickstart docs: replace the `/camera/*` bridge-table rows with the `/zed/zed_node/*` set; any rviz topic/frame references → new names). `dual_rm_gazebo/` and `dual_rm_description/urdf/legacy/` are self-contained legacy trees — leave them. Re-run until the only remaining hits are legacy/realsense.
 
-- [ ] **Step 5: Rebuild everything touched, run all tests**
+- [x] **Step 5: Rebuild everything touched, run all tests**
 
 ```bash
 cd ~/code/r2d3 && colcon build --packages-select dual_rm_description dual_rm_simulation r2d3_mujoco dual_rm_65b_moveit_config dual_rm_75b_moveit_config && source install/setup.bash
@@ -1228,7 +1228,7 @@ python3 -m pytest src/R2D3_ros2/r2d3_mujoco/test/ src/R2D3_ros2/ros2_rm_robot/du
 ```
 Expected: grep count `0` (xacro still exits 0); all tests PASS. Repeat the xacro check for `r2d3_mujoco.urdf.xacro` and the 75b variant.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A ros2_rm_robot r2d3_mujoco simulation_quickstart_gz.md simulation_quickstart_mujoco.md simulation_quickstart.md
@@ -1249,7 +1249,7 @@ git commit -m "refactor!: remove legacy head camera_link/camera_optical_frame (r
 - Consumes: `/zed/zed_node/left/*` + depth topics (Tasks 3–4).
 - Produces: `signals_ready(got_scan, got_camera, odom_tf_ok, laser_tf_ok)` and `missing_signal_names(..., camera_topic=...)` (new signatures).
 
-- [ ] **Step 1: Update the failing gate tests first**
+- [x] **Step 1: Update the failing gate tests first**
 
 In `r2d3_mujoco/test/test_wait_for_sim_ready.py`, replace both test classes with:
 
@@ -1306,7 +1306,7 @@ class TestMissingSignalNames(unittest.TestCase):
 
 Run: `python3 -m pytest src/R2D3_ros2/r2d3_mujoco/test/test_wait_for_sim_ready.py -v` → Expected: FAIL (wrong arity).
 
-- [ ] **Step 2: Update wait_for_sim_ready.py**
+- [x] **Step 2: Update wait_for_sim_ready.py**
 
 Replace `signals_ready` and `missing_signal_names`:
 
@@ -1358,7 +1358,7 @@ Update `_check()` to pass `self._got_camera` into both functions (and `camera_to
 ```
 and pass it through to `SimReadyGate`.
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 cd ~/code/r2d3 && colcon build --packages-select r2d3_mujoco && source install/setup.bash
@@ -1366,7 +1366,7 @@ python3 -m pytest src/R2D3_ros2/r2d3_mujoco/test/test_wait_for_sim_ready.py -v
 ```
 Expected: all PASS.
 
-- [ ] **Step 4: RTAB-Map remaps**
+- [x] **Step 4: RTAB-Map remaps**
 
 In `ros2_rm_robot/dual_rm_navigation/launch/rtabmap.launch.py` replace the remappings block with:
 
@@ -1386,7 +1386,7 @@ In `ros2_rm_robot/dual_rm_navigation/launch/rtabmap.launch.py` replace the remap
 
 Apply the same three camera remap lines in `rtabmap_depth_only.launch.py` (keep its other remaps untouched).
 
-- [ ] **Step 5: Rebuild + full static sweep**
+- [x] **Step 5: Rebuild + full static sweep**
 
 ```bash
 cd ~/code/r2d3 && colcon build --packages-select dual_rm_navigation r2d3_mujoco && source install/setup.bash
@@ -1395,7 +1395,7 @@ grep -rn "/camera/" ros2_rm_robot/dual_rm_navigation/ | grep -v ".git"
 ```
 Expected: tests PASS; grep returns nothing.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add ros2_rm_robot/dual_rm_navigation/launch/rtabmap.launch.py \
@@ -1416,7 +1416,7 @@ git commit -m "feat(nav): RTAB-Map consumes ZED left eye; sim-ready gate checks 
 **Interfaces:**
 - Produces: `zed_wrapper` package share (`launch/zed_camera.launch.py`) used by Task 8's bringup launch on the robot.
 
-- [ ] **Step 1: Clone and strip**
+- [x] **Step 1: Clone and strip**
 
 ```bash
 mkdir -p ros2_zed && cd ros2_zed
@@ -1429,7 +1429,7 @@ touch zed-ros2-wrapper/COLCON_IGNORE
 cd ..
 ```
 
-- [ ] **Step 2: Write ros2_zed/README.md**
+- [x] **Step 2: Write ros2_zed/README.md**
 
 ```markdown
 # ros2_zed — vendored ZED ROS 2 stack
@@ -1462,7 +1462,7 @@ keep building clean.
   the ZED TF from the URDF; zed_node must not double-publish it.
 ```
 
-- [ ] **Step 3: Verify the dev-machine build story**
+- [x] **Step 3: Verify the dev-machine build story**
 
 ```bash
 cd ~/code/r2d3 && colcon build --packages-select zed_msgs
@@ -1470,7 +1470,7 @@ colcon list 2>/dev/null | grep -i zed
 ```
 Expected: `zed_msgs` builds; `zed_wrapper`/`zed_components` absent from `colcon list` (COLCON_IGNOREd).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add ros2_zed
@@ -1491,7 +1491,7 @@ git commit -m "feat(zed): vendor zed-ros2-wrapper (COLCON_IGNORE) + zed_msgs und
 - Consumes: vendored `zed_wrapper` share (Task 7; robot only).
 - Produces: `ros2 launch r2d3_bringup zed2.launch.py` → real `/zed/zed_node/...` topics matching the sim contract.
 
-- [ ] **Step 1: Write the params override**
+- [x] **Step 1: Write the params override**
 
 Create `ros2_r2d3_apps/r2d3_bringup/config/zed2_params.yaml`:
 
@@ -1512,7 +1512,7 @@ Create `ros2_r2d3_apps/r2d3_bringup/config/zed2_params.yaml`:
       pos_tracking_enabled: false
 ```
 
-- [ ] **Step 2: Write the launch file**
+- [x] **Step 2: Write the launch file**
 
 Create `ros2_r2d3_apps/r2d3_bringup/launch/zed2.launch.py`:
 
@@ -1556,7 +1556,7 @@ def generate_launch_description():
     return LaunchDescription([zed_camera])
 ```
 
-- [ ] **Step 3: Ensure config/ + launch/ are installed**
+- [x] **Step 3: Ensure config/ + launch/ are installed**
 
 Check `ros2_r2d3_apps/r2d3_bringup/CMakeLists.txt` — if its `install(DIRECTORY ...)` already covers `launch` and `config`, no change. Otherwise extend it to:
 
@@ -1566,7 +1566,7 @@ install(DIRECTORY launch config rviz
 )
 ```
 
-- [ ] **Step 4: Build + syntax-check**
+- [x] **Step 4: Build + syntax-check**
 
 ```bash
 cd ~/code/r2d3 && colcon build --packages-select r2d3_bringup && source install/setup.bash
@@ -1575,7 +1575,7 @@ ls install/r2d3_bringup/share/r2d3_bringup/config/zed2_params.yaml
 ```
 Expected: `OK`; params file installed. (A full `ros2 launch` dry-run needs `zed_wrapper` built — robot only; do not attempt here.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add ros2_r2d3_apps/r2d3_bringup
@@ -1588,21 +1588,21 @@ git commit -m "feat(bringup): real-robot ZED 2 launch (wrapper TF off, URDF owns
 
 **Files:** none new — verification only.
 
-- [ ] **Step 1: Clean full build**
+- [x] **Step 1: Clean full build**
 
 ```bash
 cd ~/code/r2d3 && colcon build && source install/setup.bash
 ```
 Expected: all packages build; `zed_wrapper` absent (ignored).
 
-- [ ] **Step 2: All unit/static tests**
+- [x] **Step 2: All unit/static tests**
 
 ```bash
 python3 -m pytest src/R2D3_ros2/r2d3_mujoco/test/ src/R2D3_ros2/ros2_rm_robot/dual_rm_simulation/test/ -v
 ```
 Expected: all PASS, none skipped.
 
-- [ ] **Step 3: Flatten every URDF entrypoint**
+- [x] **Step 3: Flatten every URDF entrypoint**
 
 ```bash
 for m in 65b 75b; do
@@ -1612,7 +1612,7 @@ done
 ```
 Expected: four OKs.
 
-- [ ] **Step 4 (best-effort): Live MuJoCo smoke test**
+- [x] **Step 4 (best-effort): Live MuJoCo smoke test**
 
 MuJoCo is the reliable sim on this machine (Gz headless rendering is a
 coin-flip — EGL/driver issues; don't treat a Gz render failure as a
@@ -1632,7 +1632,7 @@ Expected: all §1 topics listed; left image ~15 Hz; stereo width `2560`;
 frame_id `zed_left_camera_frame_optical`. If the sim itself fails to start
 for environment reasons, note it and rely on the static suite.
 
-- [ ] **Step 5: Update memory/docs notes and finish**
+- [x] **Step 5: Update memory/docs notes and finish**
 
 - Mark the plan checkboxes done.
 - Commit any stragglers.
