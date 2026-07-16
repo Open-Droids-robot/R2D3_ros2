@@ -369,12 +369,16 @@ Expected: robot drives **forward** (along +X of `base_footprint`), not sideways 
 ros2 run rqt_image_view rqt_image_view /camera/image
 ```
 Expected: image is upright AND forward-facing (you see the robot's drive
-direction, not the scene 90° to its left). This requires the sim-overlay
-compensation `camera_optical_joint rpy="-π/2 0 -π"` in
-`dual_rm_simulation/urdf/sensors/depth_camera.urdf.xacro`. Do **not** re-add
-the −90° to the core description (`camera_joint` stays 0). If MuJoCo is fixed
-but Gazebo is still off, that is the known Gz sensor-convention gap — track
-separately, do not change the core description.
+direction, not the scene 90° to its left). Do **not** re-add the −90° to the
+core description (`camera_joint` stays 0); both sims are compensated in the
+sim-only `dual_rm_simulation/urdf/sensors/depth_camera.urdf.xacro`:
+- **MuJoCo** takes its bore from the `camera_optical_frame` site → fixed via
+  `camera_optical_joint rpy="-π/2 0 -π"` (commit `c7bbfec`).
+- **Gazebo** renders along its sensor mounting frame's +X (`gz_frame_id` only
+  labels output) → fixed by mounting the sensor on the sim-only
+  `camera_gz_frame`, a massless frame yawed −90° off `camera_link` (issue
+  #11; a `<pose>` inside the `<sensor>` is banned by the issue #11
+  postmortem). Guarded by `dual_rm_simulation/test/test_gz_camera_bore.py`.
 
 - [ ] **Step 5: Record results**
 

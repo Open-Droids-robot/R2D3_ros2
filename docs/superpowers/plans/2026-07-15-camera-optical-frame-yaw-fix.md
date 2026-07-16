@@ -312,14 +312,26 @@ git commit -m "docs: correct unification camera claim (needs sim-overlay -90 com
 
 ---
 
-## Gazebo caveat (out of scope — read before executing)
+## Gazebo caveat — RESOLVED (issue #11, mount-frame fix)
 
-The fix edits the **shared** `depth_camera.urdf.xacro`, but the scope is **MuJoCo only**. The two sims derive the camera bore differently:
+The fix above edits the **shared** `depth_camera.urdf.xacro` but its scope was **MuJoCo only**. The two sims derive the camera bore differently, so Gazebo needed its own sensor-layer fix, tracked as issue #11 and now done:
 
-- **MuJoCo** attaches its `<camera>` to the `camera_optical_frame` *site* (`mujoco_inputs.urdf.xacro:181`), so reorienting that frame fixes the render. ✅ handled here.
-- **Gazebo**'s `rgbd_camera` sensor is referenced to `camera_link` and uses `gz_frame_id` to *label* its output. Its actual render direction likely follows `camera_link` (unverified), which this edit does **not** change — so after this fix Gz may render nav +Y while labeling the frame nav +X (inconsistent), or may already handle optical framing itself.
+- **MuJoCo** attaches its `<camera>` to the `camera_optical_frame` *site* (`mujoco_inputs.urdf.xacro:181`), so reorienting that frame fixes the render. ✅ handled above.
+- **Gazebo**'s `rgbd_camera` renders along its **mounting-frame +X**;
+  `gz_frame_id` only *labels* the output. After the MuJoCo fix it rendered
+  nav +Y (90° left) while labeling the frame nav-forward — the inconsistency
+  this caveat warned about. Fixed by re-mounting the sensor (see below).
 
-Do not try to fix Gz in this plan. After Task 3, if you have a Gz sim available, sanity-check `/camera/image` there; if it is wrong, open a separate task to fix Gz at the sensor layer (e.g. de-yaw `camera_link` in the Gz overlay or set a sensor pose offset). The current `2026-07-13` plan already flags Gz camera as separate sensor-layer work.
+**Gz fix (issue #11):** the sensor is mounted on the sim-only
+`camera_gz_frame` — a massless fixed frame yawed −90° off `camera_link` — so
+the render bores nav +X and the Gz-derived optical cloud axes match the URDF
+`camera_optical_frame`. sdformat's fixed-joint lumping composes the yaw into
+the SDF sensor pose on `head_link2`. Gz-only (MuJoCo ignores `<gazebo>`
+blocks; the extra massless link is inert there). Note: an earlier attempt
+that put the yaw in a `<pose>` inside the `<sensor>` was reverted after a
+failed bringup verification and is banned per the issue #11 postmortem — the
+mount frame achieves the same composed SDF without it. Guarded by
+`dual_rm_simulation/test/test_gz_camera_bore.py`.
 
 ---
 
