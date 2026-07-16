@@ -240,5 +240,5 @@ r2d3_test_nodes         Simple test executables for AGV and arm motion
 | `libEGL warning: egl: failed to create dri2 screen` | GPU driver issue | Harmless; simulation runs with headless software rendering |
 | Robot not moving in Gazebo but moves in RViz | Wheel collision geometry mismatch | Already fixed: cylinder primitives for drive wheels |
 | Nav2 lifecycle manager fails to bring up nodes | Race condition at startup | Relaunch; transient issue with sim clock settling |
-| RTAB-Map: `Waiting for data on topic ...` | Camera topics not bridged or not publishing | Verify `ros2 topic hz /zed/zed_node/left/image_rect_color` and `/zed/zed_node/depth/depth_registered` |
+| RTAB-Map: `Waiting for data on topic ...` | Camera topics not bridged or not publishing | Verify `ros2 topic hz /zed/zed_node/left/color/rect/image` and `/zed/zed_node/depth/depth_registered` |
 | RTAB-Map: no map generated | Textureless environment (depth_only mode) | Use `slam_type:=rtabmap` (adds LiDAR) or add visual features to the world |

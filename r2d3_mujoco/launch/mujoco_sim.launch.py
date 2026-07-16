@@ -137,8 +137,8 @@ def launch_setup(context, *args, **kwargs):
                 name="point_cloud_xyzrgb",
                 parameters=[{"use_sim_time": True}],
                 remappings=[
-                    ("rgb/camera_info", "/zed/zed_node/left/camera_info"),
-                    ("rgb/image_rect_color", "/zed/zed_node/left/image_rect_color"),
+                    ("rgb/camera_info", "/zed/zed_node/left/color/rect/camera_info"),
+                    ("rgb/image_rect_color", "/zed/zed_node/left/color/rect/image"),
                     ("depth_registered/image_rect", "/zed/zed_node/depth/depth_registered"),
                     ("points", "/zed/zed_node/point_cloud/cloud_registered"),
                 ],

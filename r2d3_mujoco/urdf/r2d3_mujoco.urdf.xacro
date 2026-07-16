@@ -14,10 +14,12 @@
 
     <!-- Sensor frame macros reused from the Gazebo sim package.
          Their <gazebo> sensor tags are ignored by the MuJoCo converter;
-         only the links/joints (laser_link, imu_link, zed_*_camera_frame_optical) matter. -->
+         only the links/joints (laser_link, imu_link) matter. The ZED frames
+         (zed_*_camera_frame_optical) come from the core robot description via
+         body_head_platform below, not from a Gz-sensor macro:
+         zed2_sim.urdf.xacro's Gz-sensor macro is never instantiated in MuJoCo. -->
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/lidar.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/imu.urdf.xacro"/>
-    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/zed2_sim.urdf.xacro"/>
     <xacro:include filename="$(find r2d3_mujoco)/urdf/mujoco_inputs.urdf.xacro"/>
     <xacro:include filename="$(find r2d3_mujoco)/urdf/ros2_control/mujoco_ros2_control.urdf.xacro"/>
 

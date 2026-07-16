@@ -134,13 +134,13 @@ def generate_launch_description():
             '/zed/right/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
         ],
         remappings=[
-            # Gz topic names -> the real zed-ros2-wrapper topic contract.
-            ('/zed/left/image', '/zed/zed_node/left/image_rect_color'),
-            ('/zed/left/camera_info', '/zed/zed_node/left/camera_info'),
+            # Gz topic names -> the real zed-ros2-wrapper (v5.x) topic contract.
+            ('/zed/left/image', '/zed/zed_node/left/color/rect/image'),
+            ('/zed/left/camera_info', '/zed/zed_node/left/color/rect/camera_info'),
             ('/zed/left/depth_image', '/zed/zed_node/depth/depth_registered'),
             ('/zed/left/points', '/zed/zed_node/point_cloud/cloud_registered'),
-            ('/zed/right/image', '/zed/zed_node/right/image_rect_color'),
-            ('/zed/right/camera_info', '/zed/zed_node/right/camera_info'),
+            ('/zed/right/image', '/zed/zed_node/right/color/rect/image'),
+            ('/zed/right/camera_info', '/zed/zed_node/right/color/rect/camera_info'),
         ],
         parameters=[{'use_sim_time': False}],
         output='screen',

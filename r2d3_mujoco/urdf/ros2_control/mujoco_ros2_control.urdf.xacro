@@ -131,14 +131,17 @@
                  eye (the real ZED registers depth to the left eye). -->
             <sensor name="zed_left">
                 <param name="frame_name">zed_left_camera_frame_optical</param>
-                <param name="info_topic">/zed/zed_node/left/camera_info</param>
-                <param name="image_topic">/zed/zed_node/left/image_rect_color</param>
+                <param name="info_topic">/zed/zed_node/left/color/rect/camera_info</param>
+                <param name="image_topic">/zed/zed_node/left/color/rect/image</param>
                 <param name="depth_topic">/zed/zed_node/depth/depth_registered</param>
             </sensor>
             <sensor name="zed_right">
                 <param name="frame_name">zed_right_camera_frame_optical</param>
-                <param name="info_topic">/zed/zed_node/right/camera_info</param>
-                <param name="image_topic">/zed/zed_node/right/image_rect_color</param>
+                <param name="info_topic">/zed/zed_node/right/color/rect/camera_info</param>
+                <param name="image_topic">/zed/zed_node/right/color/rect/image</param>
+                <!-- Intentionally out-of-contract: the right eye's depth is never
+                     consumed (real ZED registers depth to the left eye only), so
+                     this topic is junk and stays unrenamed/unpublished elsewhere. -->
                 <param name="depth_topic">/zed/zed_node/right/depth_unused</param>
             </sensor>
 

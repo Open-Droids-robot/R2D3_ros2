@@ -5,9 +5,13 @@ Requires the vendored wrapper to be enabled (robot only):
 
 publish_tf/publish_urdf are false: robot_state_publisher owns the ZED frames
 via the zed2 macro in dual_rm_description; zed_node must not double-publish.
-The resulting topics/frames are byte-for-byte the sim contract
+publish_map_tf is also explicitly false: nav owns map->odom, the camera must
+not publish it even if pos_tracking were ever turned on.
+The resulting topics/frames follow the same sim/real contract
 (/zed/zed_node/..., zed_left_camera_frame_optical, ...), so RTAB-Map & co.
-run unchanged against sim or hardware.
+run largely unchanged against sim or hardware -- see
+ros2_zed/README.md "Known sim/real deltas" for the handful of places
+(point-cloud frame_id, image encoding) where sim and real still differ.
 """
 import os
 
@@ -29,6 +33,7 @@ def generate_launch_description():
             'camera_name': 'zed',
             'publish_tf': 'false',
             'publish_urdf': 'false',
+            'publish_map_tf': 'false',
             'ros_params_override_path':
                 os.path.join(bringup_dir, 'config', 'zed2_params.yaml'),
         }.items(),

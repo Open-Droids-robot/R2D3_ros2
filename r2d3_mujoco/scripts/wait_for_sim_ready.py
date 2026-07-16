@@ -13,6 +13,7 @@ so the stack starts as soon as -- and no sooner than -- the sim can feed it.
 
 Ready means all of:
   * at least one /scan message received (lidar sensor pipeline alive), and
+  * at least one camera image message received (ZED sim camera pipeline alive), and
   * TF ``odom`` -> ``base_footprint`` available (diff-drive odom TF flowing), and
   * TF ``base_footprint`` -> ``laser_link`` available (robot_state_publisher up).
 
@@ -131,7 +132,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scan-topic", default="/scan")
     parser.add_argument("--camera-topic",
-                        default="/zed/zed_node/left/image_rect_color",
+                        default="/zed/zed_node/left/color/rect/image",
                         help="camera image readiness topic ('' disables)")
     parser.add_argument("--odom-frame", default="odom")
     parser.add_argument("--base-frame", default="base_footprint")

@@ -6,6 +6,12 @@
       grab_resolution: 'HD720'   # 1280x720, matches the sim sensors
       pub_resolution: 'NATIVE'
       grab_frame_rate: 15        # matches the sim update_rate
+    video:
+      # Wrapper defaults leave these off; the sim/real topic contract (see
+      # docs/superpowers/specs/2026-07-16-zed2-head-camera-design.md §1)
+      # requires left/right and stereo images, so opt in explicitly.
+      publish_left_right: true
+      publish_stereo: true
     depth:
       depth_mode: 'NEURAL'
     pos_tracking:

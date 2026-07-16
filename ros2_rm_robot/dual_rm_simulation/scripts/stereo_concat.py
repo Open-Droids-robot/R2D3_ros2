@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Sim-only ZED topic shim: side-by-side stereo image + rgb alias.
 
-The real zed-ros2-wrapper natively publishes
-  /zed/zed_node/stereo/image_rect_color  (left|right side-by-side), and
-  /zed/zed_node/rgb/image_rect_color(+camera_info)  (alias of the left eye).
+The real zed-ros2-wrapper (v5.x) natively publishes
+  /zed/zed_node/stereo/color/rect/image  (left|right side-by-side), and
+  /zed/zed_node/rgb/color/rect/image(+camera_info)  (alias of the left eye).
 Neither Gz Sim nor MuJoCo has a side-by-side stereo sensor, so this node
 synthesizes both from the simulated left/right streams. It must NOT run on
 the real robot -- zed_node already publishes these topics there.
@@ -56,26 +56,26 @@ class StereoConcat(Node):
     def __init__(self):
         super().__init__("stereo_concat")
         self._stereo_pub = self.create_publisher(
-            Image, "/zed/zed_node/stereo/image_rect_color",
+            Image, "/zed/zed_node/stereo/color/rect/image",
             qos_profile_sensor_data)
         self._rgb_pub = self.create_publisher(
-            Image, "/zed/zed_node/rgb/image_rect_color",
+            Image, "/zed/zed_node/rgb/color/rect/image",
             qos_profile_sensor_data)
         self._rgb_info_pub = self.create_publisher(
-            CameraInfo, "/zed/zed_node/rgb/camera_info",
+            CameraInfo, "/zed/zed_node/rgb/color/rect/camera_info",
             qos_profile_sensor_data)
 
         left_sub = Subscriber(
-            self, Image, "/zed/zed_node/left/image_rect_color",
+            self, Image, "/zed/zed_node/left/color/rect/image",
             qos_profile=qos_profile_sensor_data)
         right_sub = Subscriber(
-            self, Image, "/zed/zed_node/right/image_rect_color",
+            self, Image, "/zed/zed_node/right/color/rect/image",
             qos_profile=qos_profile_sensor_data)
         self._sync = TimeSynchronizer([left_sub, right_sub], 5)
         self._sync.registerCallback(self._on_pair)
 
         self._info_sub = self.create_subscription(
-            CameraInfo, "/zed/zed_node/left/camera_info",
+            CameraInfo, "/zed/zed_node/left/color/rect/camera_info",
             self._on_left_info, qos_profile_sensor_data)
 
     def _on_pair(self, left: Image, right: Image):

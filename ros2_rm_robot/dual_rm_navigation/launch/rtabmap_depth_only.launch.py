@@ -26,8 +26,8 @@ def _launch_rtabmap(context):
     # camera_info and depth all share zed_left_camera_frame_optical. Never
     # feed RTAB-Map the rgb/ alias or the double-width stereo/ image.
     remappings = [
-        ('rgb/image', '/zed/zed_node/left/image_rect_color'),
-        ('rgb/camera_info', '/zed/zed_node/left/camera_info'),
+        ('rgb/image', '/zed/zed_node/left/color/rect/image'),
+        ('rgb/camera_info', '/zed/zed_node/left/color/rect/camera_info'),
         ('depth/image', '/zed/zed_node/depth/depth_registered'),
         ('odom', '/diff_drive_controller/odom'),
     ]

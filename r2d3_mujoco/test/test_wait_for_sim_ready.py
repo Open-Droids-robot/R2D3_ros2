@@ -29,31 +29,31 @@ class TestMissingSignalNames(unittest.TestCase):
         missing = gate.missing_signal_names(
             got_scan=True, got_camera=True, odom_tf_ok=False, laser_tf_ok=True,
             odom_frame="odom", base_frame="base_footprint", laser_frame="laser_link",
-            camera_topic="/zed/zed_node/left/image_rect_color")
+            camera_topic="/zed/zed_node/left/color/rect/image")
         self.assertEqual(missing, ["TF odom->base_footprint"])
 
     def test_camera_missing_is_named(self):
         missing = gate.missing_signal_names(
             got_scan=True, got_camera=False, odom_tf_ok=True, laser_tf_ok=True,
             odom_frame="odom", base_frame="base_footprint", laser_frame="laser_link",
-            camera_topic="/zed/zed_node/left/image_rect_color")
-        self.assertEqual(missing, ["/zed/zed_node/left/image_rect_color"])
+            camera_topic="/zed/zed_node/left/color/rect/image")
+        self.assertEqual(missing, ["/zed/zed_node/left/color/rect/image"])
 
     def test_all_missing(self):
         missing = gate.missing_signal_names(
             got_scan=False, got_camera=False, odom_tf_ok=False, laser_tf_ok=False,
             odom_frame="odom", base_frame="base_footprint", laser_frame="laser_link",
-            camera_topic="/zed/zed_node/left/image_rect_color")
+            camera_topic="/zed/zed_node/left/color/rect/image")
         self.assertEqual(
             missing,
-            ["/scan", "/zed/zed_node/left/image_rect_color",
+            ["/scan", "/zed/zed_node/left/color/rect/image",
              "TF odom->base_footprint", "TF base_footprint->laser_link"])
 
     def test_none_missing(self):
         missing = gate.missing_signal_names(
             got_scan=True, got_camera=True, odom_tf_ok=True, laser_tf_ok=True,
             odom_frame="odom", base_frame="base_footprint", laser_frame="laser_link",
-            camera_topic="/zed/zed_node/left/image_rect_color")
+            camera_topic="/zed/zed_node/left/color/rect/image")
         self.assertEqual(missing, [])
 
 

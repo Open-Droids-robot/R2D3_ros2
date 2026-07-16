@@ -34,12 +34,18 @@ plus its full native set — IMU, pose, disparity, etc. — for free):
 
 | Topic | Sim | Notes |
 |---|---|---|
-| `/zed/zed_node/left/image_rect_color` + `left/camera_info` | ● | Left eye = RGB reference eye |
-| `/zed/zed_node/right/image_rect_color` + `right/camera_info` | ● | True stereo pair |
-| `/zed/zed_node/rgb/image_rect_color` + `rgb/camera_info` | ● | Alias of left |
-| `/zed/zed_node/stereo/image_rect_color` | ● | Side-by-side rectified L+R, double-width image. Sim: `stereo_concat` node. Real: published natively by zed_node |
+| `/zed/zed_node/left/color/rect/image` + `left/color/rect/camera_info` | ● | Left eye = RGB reference eye |
+| `/zed/zed_node/right/color/rect/image` + `right/color/rect/camera_info` | ● | True stereo pair |
+| `/zed/zed_node/rgb/color/rect/image` + `rgb/color/rect/camera_info` | ● | Alias of left |
+| `/zed/zed_node/stereo/color/rect/image` | ● | Side-by-side rectified L+R, double-width image. Sim: `stereo_concat` node. Real: published natively by zed_node |
 | `/zed/zed_node/depth/depth_registered` | ● | Depth registered to the **left** eye (matches real ZED behavior) |
 | `/zed/zed_node/point_cloud/cloud_registered` | ● | Point cloud |
+
+Note: these are the vendored wrapper's v5.1 topic names (`zed-ros2-wrapper`
+CHANGELOG renamed the v4 `left/image_rect_color` family to
+`left/color/rect/image` etc. between the time this design was drafted and
+implementation landing); the contract above reflects the v5.x source under
+`ros2_zed/zed-ros2-wrapper`, not the older names this doc originally used.
 
 Frames (from `zed_macro.urdf.xacro`, wrapper ≥ v5 naming — the CHANGELOG
 renamed `*_camera_optical_frame` to `*_camera_frame_optical`):
@@ -97,9 +103,9 @@ it, and the bore tests account for it.
   §1 topic set, remapped from Gz sensor topics to `/zed/zed_node/...` names.
 - **`stereo_concat`** (new node in `dual_rm_simulation`): `message_filters`
   exact-time sync on left + right (sim stamps are identical), `hconcat`,
-  publish `/zed/zed_node/stereo/image_rect_color` with the left header. It
-  also republishes the left stream as the `rgb/image_rect_color` +
-  `rgb/camera_info` alias (it already subscribes to left; no extra relay
+  publish `/zed/zed_node/stereo/color/rect/image` with the left header. It
+  also republishes the left stream as the `rgb/color/rect/image` +
+  `rgb/color/rect/camera_info` alias (it already subscribes to left; no extra relay
   node). Launched only in sim (the real wrapper publishes all of these
   natively).
 
@@ -135,8 +141,8 @@ it, and the bore tests account for it.
   receive the double-width `stereo/*` image):
 
   ```python
-  ('rgb/image',       '/zed/zed_node/left/image_rect_color'),
-  ('rgb/camera_info', '/zed/zed_node/left/camera_info'),
+  ('rgb/image',       '/zed/zed_node/left/color/rect/image'),
+  ('rgb/camera_info', '/zed/zed_node/left/color/rect/camera_info'),
   ('depth/image',     '/zed/zed_node/depth/depth_registered'),
   ```
 
