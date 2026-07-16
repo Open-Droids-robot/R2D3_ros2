@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<!--
+  ZED 2 stereo camera model for the R2D3 head.
+
+  Trimmed zed2-only copy of Stereolabs' zed_macro.urdf.xacro
+  (zed-ros2-wrapper master, Apache-2.0, (c) 2025 Stereolabs), kept here so
+  the robot description never $(find)s the SDK-gated vendored wrapper
+  (ros2_zed/zed-ros2-wrapper is COLCON_IGNOREd on dev machines).
+
+  Identical to upstream: link/joint names, 0.12 m baseline, -0.01 optical
+  offset, 0.05 rad bottom_slope (the wedge-shaped case pitches the sensor
+  block ~2.9 deg about Y at zed_camera_center), and the optical frame
+  rotations. The real zed_node stamps zed_left_camera_frame_optical /
+  zed_right_camera_frame_optical (wrapper >= v5 naming) on its output, so
+  these frames are the sim/real contract.
+
+  Changed from upstream: mesh path points into this package; added an
+  inertial on zed_camera_center (ZED 2 weighs 166 g; upstream ships no
+  inertial and the head dynamics want the mass); mag/baro/temp/GNSS links
+  dropped (nothing consumes them).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="zed2_camera" params="name:=zed parent *origin">
+    <xacro:property name="baseline" value="0.12"/>
+    <xacro:property name="height" value="0.03"/>
+    <xacro:property name="bottom_slope" value="0.05"/>
+    <xacro:property name="screw_offset_x" value="0.0"/>
+    <xacro:property name="screw_offset_z" value="0.0"/>
+    <xacro:property name="optical_offset_x" value="-0.01"/>
+
+    <!-- Mounting point (the threaded screw hole in the bottom) -->
+    <link name="${name}_camera_link"/>
+    <joint name="${name}_mount_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${name}_camera_link"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+    <!-- Camera center (the only link with geometry/mass) -->
+    <link name="${name}_camera_center">
+      <visual>
+        <origin xyz="${screw_offset_x} 0 ${screw_offset_z}" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find dual_rm_description)/meshes/common/zed2.stl"/>
+        </geometry>
+        <material name="zed2_mat">
+          <color rgba="0.25 0.25 0.25 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="${screw_offset_x} 0 ${screw_offset_z}" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find dual_rm_description)/meshes/common/zed2.stl"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <!-- ZED 2: 166 g, box approx 0.033 x 0.175 x 0.030 m (X depth,
+             Y baseline length, Z height) -->
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.166"/>
+        <inertia ixx="4.36e-04" ixy="0" ixz="0"
+                 iyy="2.75e-05" iyz="0"
+                 izz="4.39e-04"/>
+      </inertial>
+    </link>
+    <joint name="${name}_camera_center_joint" type="fixed">
+      <parent link="${name}_camera_link"/>
+      <child link="${name}_camera_center"/>
+      <origin xyz="0 0 ${height/2}" rpy="0 ${bottom_slope} 0"/>
+    </joint>
+
+    <!-- Left camera (RGB/depth reference eye) -->
+    <link name="${name}_left_camera_frame"/>
+    <joint name="${name}_left_camera_joint" type="fixed">
+      <parent link="${name}_camera_center"/>
+      <child link="${name}_left_camera_frame"/>
+      <origin xyz="${optical_offset_x} ${baseline/2} 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${name}_left_camera_frame_optical"/>
+    <joint name="${name}_left_camera_joint_optical" type="fixed">
+      <origin xyz="0 0 0" rpy="${-pi/2} 0.0 ${-pi/2}"/>
+      <parent link="${name}_left_camera_frame"/>
+      <child link="${name}_left_camera_frame_optical"/>
+    </joint>
+
+    <!-- Right camera -->
+    <link name="${name}_right_camera_frame"/>
+    <joint name="${name}_right_camera_joint" type="fixed">
+      <parent link="${name}_camera_center"/>
+      <child link="${name}_right_camera_frame"/>
+      <origin xyz="${optical_offset_x} -${baseline/2} 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${name}_right_camera_frame_optical"/>
+    <joint name="${name}_right_camera_joint_optical" type="fixed">
+      <origin xyz="0 0 0" rpy="${-pi/2} 0.0 ${-pi/2}"/>
+      <parent link="${name}_right_camera_frame"/>
+      <child link="${name}_right_camera_frame_optical"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>
