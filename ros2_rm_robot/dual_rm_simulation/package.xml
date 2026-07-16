@@ -29,6 +29,12 @@
   <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>
 
+  <!-- stereo_concat ZED topic shim node -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>message_filters</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>
