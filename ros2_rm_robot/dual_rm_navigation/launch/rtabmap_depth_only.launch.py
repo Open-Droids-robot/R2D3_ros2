@@ -21,11 +21,14 @@ def _launch_rtabmap(context):
     # IncrementalMemory: true = SLAM (build map), false = localization (replay)
     incremental_memory = 'false' if localization == 'true' else 'true'
 
-    # Topic remappings: Gz rgbd_camera → RTAB-Map expected names
+    # Topic remappings: ZED (sim or real wrapper) → RTAB-Map expected names.
+    # Pinned to the LEFT eye: depth is registered to the left eye, so image,
+    # camera_info and depth all share zed_left_camera_frame_optical. Never
+    # feed RTAB-Map the rgb/ alias or the double-width stereo/ image.
     remappings = [
-        ('rgb/image', '/camera/image'),
-        ('rgb/camera_info', '/camera/camera_info'),
-        ('depth/image', '/camera/depth_image'),
+        ('rgb/image', '/zed/zed_node/left/image_rect_color'),
+        ('rgb/camera_info', '/zed/zed_node/left/camera_info'),
+        ('depth/image', '/zed/zed_node/depth/depth_registered'),
         ('odom', '/diff_drive_controller/odom'),
     ]
 
