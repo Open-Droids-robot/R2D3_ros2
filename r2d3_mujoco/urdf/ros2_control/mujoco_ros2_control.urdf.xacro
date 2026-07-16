@@ -126,12 +126,20 @@
                 <state_interface name="linear_acceleration.z"/>
             </sensor>
 
-            <!-- RGB-D camera: sensor name must equal the MJCF camera name -->
-            <sensor name="camera">
-                <param name="frame_name">camera_optical_frame</param>
-                <param name="info_topic">/camera/camera_info</param>
-                <param name="image_topic">/camera/image</param>
-                <param name="depth_topic">/camera/depth_image</param>
+            <!-- ZED 2 stereo pair: sensor names must equal the MJCF camera
+                 names (mujoco_inputs.urdf.xacro). Depth comes from the left
+                 eye (the real ZED registers depth to the left eye). -->
+            <sensor name="zed_left">
+                <param name="frame_name">zed_left_camera_frame_optical</param>
+                <param name="info_topic">/zed/zed_node/left/camera_info</param>
+                <param name="image_topic">/zed/zed_node/left/image_rect_color</param>
+                <param name="depth_topic">/zed/zed_node/depth/depth_registered</param>
+            </sensor>
+            <sensor name="zed_right">
+                <param name="frame_name">zed_right_camera_frame_optical</param>
+                <param name="info_topic">/zed/zed_node/right/camera_info</param>
+                <param name="image_topic">/zed/zed_node/right/image_rect_color</param>
+                <param name="depth_topic">/zed/zed_node/right/depth_unused</param>
             </sensor>
 
             <!-- Lidar: combines the generated rangefinders into one LaserScan -->

@@ -115,9 +115,18 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{"use_sim_time": True}],
     )
 
-    # -- /camera/points from depth + camera_info (composable: works on Humble too) --
+    # -- Sim-only ZED shim: side-by-side stereo + rgb alias --
+    stereo_concat = Node(
+        package="dual_rm_simulation",
+        executable="stereo_concat.py",
+        name="stereo_concat",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+    )
+
+    # -- /zed/zed_node/point_cloud/cloud_registered from left depth + info --
     pointcloud_container = ComposableNodeContainer(
-        name="camera_points_container",
+        name="zed_points_container",
         namespace="",
         package="rclcpp_components",
         executable="component_container",
@@ -128,10 +137,10 @@ def launch_setup(context, *args, **kwargs):
                 name="point_cloud_xyzrgb",
                 parameters=[{"use_sim_time": True}],
                 remappings=[
-                    ("rgb/camera_info", "/camera/camera_info"),
-                    ("rgb/image_rect_color", "/camera/image"),
-                    ("depth_registered/image_rect", "/camera/depth_image"),
-                    ("points", "/camera/points"),
+                    ("rgb/camera_info", "/zed/zed_node/left/camera_info"),
+                    ("rgb/image_rect_color", "/zed/zed_node/left/image_rect_color"),
+                    ("depth_registered/image_rect", "/zed/zed_node/depth/depth_registered"),
+                    ("points", "/zed/zed_node/point_cloud/cloud_registered"),
                 ],
             ),
         ],
@@ -145,6 +154,7 @@ def launch_setup(context, *args, **kwargs):
         jsb_spawner,
         evt_jsb_done,
         neck_servo_bridge,
+        stereo_concat,
         pointcloud_container,
     ]
 

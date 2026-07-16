@@ -14,10 +14,10 @@
 
     <!-- Sensor frame macros reused from the Gazebo sim package.
          Their <gazebo> sensor tags are ignored by the MuJoCo converter;
-         only the links/joints (laser_link, imu_link, camera_optical_frame) matter. -->
+         only the links/joints (laser_link, imu_link, zed_*_camera_frame_optical) matter. -->
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/lidar.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/imu.urdf.xacro"/>
-    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/depth_camera.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/zed2_sim.urdf.xacro"/>
     <xacro:include filename="$(find r2d3_mujoco)/urdf/mujoco_inputs.urdf.xacro"/>
     <xacro:include filename="$(find r2d3_mujoco)/urdf/ros2_control/mujoco_ros2_control.urdf.xacro"/>
 
@@ -40,7 +40,9 @@
                         xyz="0.325 0 0.210" rpy="0 0 0"/>
     <xacro:imu_sensor parent_link="base_footprint"
                       xyz="0 0 0.233" rpy="0 0 0"/>
-    <xacro:depth_camera_sensor/>
+    <!-- ZED 2 Gz sensor tags are ignored by the MuJoCo converter; the ZED
+         links/frames themselves come from the core description (zed2 macro
+         in body_head_platform). Nothing to instantiate here. -->
 
     <!-- MuJoCo conversion inputs (actuators, sensors, camera, lidar, scene tweaks) -->
     <xacro:mujoco_inputs arm_dof="${arm_dof}"/>
