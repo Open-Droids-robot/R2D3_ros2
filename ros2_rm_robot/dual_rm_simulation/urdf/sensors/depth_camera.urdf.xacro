@@ -25,13 +25,31 @@
             <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi}"/>
         </joint>
 
+        <!-- ── Sim-only Gz mount frame ─────────────────────────────── -->
+        <!-- A Gz camera renders along the +X of the frame its <sensor>
+             is mounted on (gz_frame_id below only LABELS the output).
+             camera_link rides the sim overlay's base_footprint_to_base
+             +pi/2 mesh->nav yaw, so camera_link +X = base_footprint +Y
+             and an uncompensated Gz camera images 90 deg to the robot's
+             left. This massless frame de-yaws the mount so the render
+             bores nav +X, matching the camera_optical_frame label above.
+             Frame-level only: no mesh, no mechanical angles, and per the
+             issue #11 postmortem do NOT do this with a <pose> inside the
+             <sensor>. Guarded by test/test_gz_camera_bore.py. -->
+        <link name="camera_gz_frame"/>
+        <joint name="camera_gz_joint" type="fixed">
+            <parent link="camera_link"/>
+            <child link="camera_gz_frame"/>
+            <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
+        </joint>
+
         <!-- ── Gazebo physics ──────────────────────────────────────── -->
         <gazebo reference="camera_link">
             <self_collide>false</self_collide>
         </gazebo>
 
         <!-- ── Gz Sim RGBD Camera sensor ───────────────────────────── -->
-        <gazebo reference="camera_link">
+        <gazebo reference="camera_gz_frame">
             <sensor name="depth_camera" type="rgbd_camera">
                 <always_on>true</always_on>
                 <update_rate>15</update_rate>
