@@ -102,7 +102,12 @@ it, and the bore tests account for it.
 - `gz_sim.launch.py` bridge: the four `/camera/*` entries are replaced by the
   §1 topic set, remapped from Gz sensor topics to `/zed/zed_node/...` names.
 - **`stereo_concat`** (new node in `dual_rm_simulation`): `message_filters`
-  exact-time sync on left + right (sim stamps are identical), `hconcat`,
+  **approximate**-time sync on left + right (slop 34 ms — the original
+  exact-sync design assumed both eyes stamp identical sim time, which the
+  2026-07-16 debug round disproved: mujoco_ros2_control stamps each camera
+  with its own `now()`, giving a measured 2 ms skew ~2/3 of the time), all
+  topics RELIABLE QoS (best-effort subscribers measurably lose the tail of
+  each ~13 MB render burst — the right eye), `hconcat`,
   publish `/zed/zed_node/stereo/color/rect/image` with the left header. It
   also republishes the left stream as the `rgb/color/rect/image` +
   `rgb/color/rect/camera_info` alias (it already subscribes to left; no extra relay

@@ -158,8 +158,11 @@
        camera_gz_frame mechanism). Origin inherited from the old camera_joint;
        real mount offset to be calibrated on hardware. Guarded by
        dual_rm_simulation/test/test_gz_camera_bore.py and
-       r2d3_mujoco/test/test_camera_optical_frame.py. -->
+       r2d3_mujoco/test/test_camera_optical_frame.py.
+       Origin calibrated 2026-07-16 against the head mesh in sim: 30 mm
+       forward (head-forward is -Y in the mesh frame) and 10 mm down from
+       the old camera_joint origin. -->
   <xacro:zed2_camera name="zed" parent="head_link2">
-    <origin xyz="-0.0032391 -0.051866 0.061606" rpy="0 0 ${-pi/2}"/>
+    <origin xyz="-0.0032391 -0.081866 0.051606" rpy="0 0 ${-pi/2}"/>
   </xacro:zed2_camera>
 </robot>

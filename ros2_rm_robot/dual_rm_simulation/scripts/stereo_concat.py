@@ -8,15 +8,32 @@ Neither Gz Sim nor MuJoCo has a side-by-side stereo sensor, so this node
 synthesizes both from the simulated left/right streams. It must NOT run on
 the real robot -- zed_node already publishes these topics there.
 
-Exact-time sync is deliberate: both sim eyes stamp identical sim time. If
-either eye stalls, nothing is published (no stale pairs).
+Sync + QoS (2026-07-16 debug round — do not "simplify" either):
+- ApproximateTimeSynchronizer, NOT exact: the sims do NOT stamp both eyes
+  identically. mujoco_ros2_control stamps each camera with its own now()
+  call, so a sim-clock tick lands between the eyes ~2/3 of the time
+  (measured 2 ms skew; exact sync starved to ~1/3 rate, and to ~0 under
+  transport loss). Slop is well under one frame period (66 ms at 15 Hz),
+  so pairing across frames is impossible. Stall-safety is preserved: if
+  one eye stops, no pairs form and nothing is published.
+- RELIABLE subscriptions, NOT best-effort: the sim publishes ~13 MB of
+  images per render cycle; with best-effort the tail of the burst (the
+  right eye) is dropped almost entirely (measured 10/137 msgs vs 148/149
+  reliable). Publishers are reliable too — compatible with both reliable
+  and best-effort consumers.
 """
 import numpy as np
 import rclpy
-from message_filters import Subscriber, TimeSynchronizer
+from message_filters import ApproximateTimeSynchronizer, Subscriber
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import CameraInfo, Image
+
+# Absorbs the measured 2 ms inter-eye stamp skew with margin while staying
+# far below the 66 ms frame period. Guarded by test_stereo_concat.py.
+SYNC_SLOP_S = 0.034
+_QOS = QoSProfile(depth=5, reliability=ReliabilityPolicy.RELIABLE,
+                  history=HistoryPolicy.KEEP_LAST)
 
 _BYTES_PER_PIXEL = {
     "rgb8": 3, "bgr8": 3, "rgba8": 4, "bgra8": 4, "mono8": 1,
@@ -56,27 +73,25 @@ class StereoConcat(Node):
     def __init__(self):
         super().__init__("stereo_concat")
         self._stereo_pub = self.create_publisher(
-            Image, "/zed/zed_node/stereo/color/rect/image",
-            qos_profile_sensor_data)
+            Image, "/zed/zed_node/stereo/color/rect/image", _QOS)
         self._rgb_pub = self.create_publisher(
-            Image, "/zed/zed_node/rgb/color/rect/image",
-            qos_profile_sensor_data)
+            Image, "/zed/zed_node/rgb/color/rect/image", _QOS)
         self._rgb_info_pub = self.create_publisher(
-            CameraInfo, "/zed/zed_node/rgb/color/rect/camera_info",
-            qos_profile_sensor_data)
+            CameraInfo, "/zed/zed_node/rgb/color/rect/camera_info", _QOS)
 
         left_sub = Subscriber(
             self, Image, "/zed/zed_node/left/color/rect/image",
-            qos_profile=qos_profile_sensor_data)
+            qos_profile=_QOS)
         right_sub = Subscriber(
             self, Image, "/zed/zed_node/right/color/rect/image",
-            qos_profile=qos_profile_sensor_data)
-        self._sync = TimeSynchronizer([left_sub, right_sub], 5)
+            qos_profile=_QOS)
+        self._sync = ApproximateTimeSynchronizer(
+            [left_sub, right_sub], 5, SYNC_SLOP_S)
         self._sync.registerCallback(self._on_pair)
 
         self._info_sub = self.create_subscription(
             CameraInfo, "/zed/zed_node/left/color/rect/camera_info",
-            self._on_left_info, qos_profile_sensor_data)
+            self._on_left_info, _QOS)
 
     def _on_pair(self, left: Image, right: Image):
         try:
