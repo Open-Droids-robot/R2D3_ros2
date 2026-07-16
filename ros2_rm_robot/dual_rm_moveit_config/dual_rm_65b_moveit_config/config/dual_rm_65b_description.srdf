@@ -37,7 +37,7 @@
     <virtual_joint name="virtual_joint" type="fixed" parent_frame="world" child_link="base_link_underpan"/>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="base_link_underpan" link2="body_base_link" reason="Adjacent"/>
-    <disable_collisions link1="base_link_underpan" link2="camera_link" reason="Never"/>
+    <disable_collisions link1="base_link_underpan" link2="zed_camera_center" reason="Never"/>
     <disable_collisions link1="base_link_underpan" link2="head_link1" reason="Never"/>
     <disable_collisions link1="base_link_underpan" link2="head_link2" reason="Never"/>
     <disable_collisions link1="base_link_underpan" link2="l_base_link1" reason="Never"/>
@@ -64,7 +64,7 @@
     <disable_collisions link1="base_link_underpan" link2="r_link3" reason="Never"/>
     <disable_collisions link1="base_link_underpan" link2="r_link4" reason="Never"/>
     <disable_collisions link1="base_link_underpan" link2="r_link5" reason="Never"/>
-    <disable_collisions link1="body_base_link" link2="camera_link" reason="Never"/>
+    <disable_collisions link1="body_base_link" link2="zed_camera_center" reason="Never"/>
     <disable_collisions link1="body_base_link" link2="head_link1" reason="Never"/>
     <disable_collisions link1="body_base_link" link2="head_link2" reason="Never"/>
     <disable_collisions link1="body_base_link" link2="l_base_link1" reason="Never"/>
@@ -82,23 +82,23 @@
     <disable_collisions link1="body_base_link" link2="platform_base_link" reason="Adjacent"/>
     <disable_collisions link1="body_base_link" link2="r_base_link1" reason="Never"/>
     <disable_collisions link1="body_base_link" link2="r_link1" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="head_link1" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="head_link2" reason="Adjacent"/>
-    <disable_collisions link1="camera_link" link2="l_base_link1" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="l_link1" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_left_wheel" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_right_wheel" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_swivel_wheel_1_1" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_swivel_wheel_1_2" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_swivel_wheel_2_1" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_swivel_wheel_2_2" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_swivel_wheel_3_1" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_swivel_wheel_3_2" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_swivel_wheel_4_1" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="link_swivel_wheel_4_2" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="platform_base_link" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="r_base_link1" reason="Never"/>
-    <disable_collisions link1="camera_link" link2="r_link1" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="head_link1" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="head_link2" reason="Adjacent"/>
+    <disable_collisions link1="zed_camera_center" link2="l_base_link1" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="l_link1" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_left_wheel" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_right_wheel" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_swivel_wheel_1_1" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_swivel_wheel_1_2" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_swivel_wheel_2_1" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_swivel_wheel_2_2" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_swivel_wheel_3_1" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_swivel_wheel_3_2" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_swivel_wheel_4_1" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="link_swivel_wheel_4_2" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="platform_base_link" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="r_base_link1" reason="Never"/>
+    <disable_collisions link1="zed_camera_center" link2="r_link1" reason="Never"/>
     <disable_collisions link1="head_link1" link2="head_link2" reason="Adjacent"/>
     <disable_collisions link1="head_link1" link2="l_base_link1" reason="Never"/>
     <disable_collisions link1="head_link1" link2="l_link1" reason="Never"/>

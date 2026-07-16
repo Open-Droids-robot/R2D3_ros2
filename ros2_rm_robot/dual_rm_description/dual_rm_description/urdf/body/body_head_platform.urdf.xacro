@@ -91,25 +91,6 @@
     </inertial>
     <xacro:visual_collision mesh="head_link2.STL" />
   </link>
-  <link
-    name="camera_link">
-    <inertial>
-      <origin
-        xyz="0.0016556 -0.01252 1.2156E-05"
-        rpy="0 0 0" />
-      <mass
-        value="0.049778" />
-      <inertia
-        ixx="4.8577E-06"
-        ixy="4.3442E-07"
-        ixz="-6.2436E-10"
-        iyy="3.075E-05"
-        iyz="6.4645E-10"
-        izz="3.0901E-05" />
-    </inertial>
-    <xacro:visual_collision mesh="camera_link.STL" />
-  </link>
-
   <joint
     name="platform_joint"
     type="prismatic">
@@ -168,20 +149,6 @@
       effort="2"
       velocity="1.57" />
   </joint>
-  <joint
-    name="camera_joint"
-    type="fixed">
-    <origin
-      xyz="-0.0032391 -0.051866 0.061606"
-      rpy="0 0 0" />
-    <parent
-      link="head_link2" />
-    <child
-      link="camera_link" />
-    <axis
-      xyz="0 0 0" />
-  </joint>
-
   <!-- ZED 2 head camera. The -pi/2 yaw is the physical mount: the ZED body
        is X-forward while the head meshes are modeled -Y-forward (the sim
        overlay's +pi/2 mesh->nav yaw at base_footprint_to_base makes -Y face

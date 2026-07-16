@@ -42,7 +42,7 @@ ros2 launch dual_rm_simulation gz_sim.launch.py robot_model:=75b gz_verbosity:=2
 |-----------------------------|-------------------------------------------|
 | `gazebo` (Gz Sim)           | Physics simulation (headless rendering)   |
 | `robot_state_publisher`     | Publishes `/robot_description` and `/tf`  |
-| `ros_gz_bridge`             | Bridges `/clock`, `/scan`, `/imu`, `/camera/*` |
+| `ros_gz_bridge`             | Bridges `/clock`, `/scan`, `/imu`, `/zed/zed_node/*` |
 | `joint_state_broadcaster`   | Publishes `/joint_states`                 |
 | `diff_drive_controller`     | AGV base velocity control                 |
 | `left_arm_controller`       | Left arm joint trajectory control         |

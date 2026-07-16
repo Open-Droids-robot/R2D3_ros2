@@ -104,14 +104,15 @@ ros2 launch r2d3_mujoco mujoco_sim.launch.py robot_model:=75b headless:=true
 |--------------------------------|---------------------------------------------------|
 | `ensure_mjcf.py`                | Cached URDF→MJCF conversion; publishes `/mujoco_robot_description` |
 | `robot_state_publisher`         | Publishes `/robot_description` and `/tf`          |
-| `mujoco_ros2_control_node`       | Physics simulation + `controller_manager`; publishes `/scan`, `/imu`, `/camera/*`, `/ground_truth_odom` |
+| `mujoco_ros2_control_node`       | Physics simulation + `controller_manager`; publishes `/scan`, `/imu`, `/zed/zed_node/*`, `/ground_truth_odom` |
 | `joint_state_broadcaster`        | Publishes `/joint_states`                          |
 | `diff_drive_controller`          | AGV base velocity control                          |
 | `left_arm_controller`            | Left arm joint trajectory control                  |
 | `right_arm_controller`           | Right arm joint trajectory control                 |
 | `platform_controller`            | Torso lift (gripper-style) control                 |
 | `imu_sensor_broadcaster`         | Publishes `/imu`                                   |
-| `camera_points_container`        | Composable container converting depth + RGB into `/camera/points` |
+| `stereo_concat`                  | Sim-only ZED shim: side-by-side stereo + rgb alias |
+| `zed_points_container`           | Composable container converting depth + RGB into `/zed/zed_node/point_cloud/cloud_registered` |
 
 ### Teleop (manual driving)
 
@@ -252,7 +253,7 @@ r2d3_test_nodes          Simple test executables for AGV and arm motion
 | venv bootstrap slow, hangs, or fails | Corrupted/incomplete `mujoco_ros2_control` converter venv | Delete `~/.ros/ros2_control/.venv` and relaunch — it rebuilds from scratch |
 | Launch fails at conversion with a `patch count` ERROR | The converter's generated MJCF no longer matches `ensure_mjcf.py`'s lidar-visibility patterns (upstream `mujoco_ros2_control` version change, renamed chassis meshes, resized lidar housing, etc.) — this is a **hard failure by design**: publishing an unpatched model would silently resurrect the all-`-1.0` `/scan` bug | Inspect the cached `mujoco_description_formatted.xml` and update the matching patterns in `patch_lidar_housing_visibility()` (`r2d3_mujoco/scripts/ensure_mjcf.py`) |
 | Stale / wrong-looking simulation after editing xacros | Cache hit is reusing an old MJCF because the checksum still matches (e.g. you edited a file the checksum doesn't cover) | Delete `~/.ros/r2d3_mujoco/` or relaunch with `force_recompile:=true` |
-| `/camera/points` never publishes, but everything else works | `depth_image_proc` isn't installed — `camera_points_container` fails to load the `PointCloudXyzrgbNode` component (`Could not find requested resource in ament index` in the log), but this failure doesn't affect any other node | `sudo apt install ros-$ROS_DISTRO-depth-image-proc`, then relaunch |
+| `/zed/zed_node/point_cloud/cloud_registered` never publishes, but everything else works | `depth_image_proc` isn't installed — `zed_points_container` fails to load the `PointCloudXyzrgbNode` component (`Could not find requested resource in ament index` in the log), but this failure doesn't affect any other node | `sudo apt install ros-$ROS_DISTRO-depth-image-proc`, then relaunch |
 | `/joint_states` / `/imu` publish slower than expected (e.g. ~55 Hz instead of the configured 100 Hz) | The machine can't keep the MuJoCo physics step running at real-time; sensor publish rates drop proportionally to the achieved sim rate | Not a config error — expected on slower/loaded machines. Reduce other load, or treat published rates as approximate |
 | EGL / GLFW errors when the camera renders (e.g. `libEGL warning`, `Failed to create OpenGL context`) | Headless GPU / software-rendering driver quirks | Usually harmless — camera rendering still works via software fallback; if it doesn't, try `headless:=true` to skip the interactive Simulate window (camera rendering is independent of it) |
 | `~/robot_description` service errors on Humble | Humble's `controller_manager` expects a `~/robot_description` topic remap that Jazzy doesn't need | Already handled automatically — `mujoco_sim.launch.py` adds the `~/robot_description -> /robot_description` remap only when `ROS_DISTRO=humble` |
