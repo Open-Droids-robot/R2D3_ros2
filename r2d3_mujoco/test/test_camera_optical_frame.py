@@ -168,5 +168,130 @@ class TestWristCameraOpticalFrames(unittest.TestCase):
                         f"(+Z fwd, +X right, +Y down)")
 
 
+class TestWristCameraMujocoWiring(unittest.TestCase):
+    """Regression guard for the MuJoCo-only wiring added alongside the wrist
+    D435s: the MJCF <camera> entries in mujoco_inputs.urdf.xacro and the
+    ros2_control <sensor> entries in mujoco_ros2_control.urdf.xacro.
+
+    Unlike TestWristCameraOpticalFrames above (which only checks link/frame
+    geometry inherited from dual_rm_description), these tests fail if the
+    MJCF <camera> / ros2_control <sensor> pairing, site references, topic
+    strings, or optics constants added by this task are missing, wrong, or
+    name-mismatched. A silent name mismatch between the MJCF camera name and
+    the ros2_control sensor name is the most likely way this feature breaks
+    (mujoco_ros2_control drops the camera with no error).
+    """
+
+    EXPECTED_SIDES = ("left_wrist", "right_wrist")
+    EXPECTED_TOPICS = {
+        "left_wrist": {
+            "info_topic": "/left_wrist/color/camera_info",
+            "image_topic": "/left_wrist/color/image_raw",
+            "depth_topic": "/left_wrist/depth/image_rect_raw",
+        },
+        "right_wrist": {
+            "info_topic": "/right_wrist/color/camera_info",
+            "image_topic": "/right_wrist/color/image_raw",
+            "depth_topic": "/right_wrist/depth/image_rect_raw",
+        },
+    }
+
+    @classmethod
+    def setUpClass(cls):
+        cls.urdf = _flatten_urdf()
+        cls.dom = minidom.parseString(cls.urdf)
+
+    def _mjcf_cameras(self):
+        """<camera> elements inside <mujoco_inputs>, keyed by name."""
+        cams = {}
+        for mi in self.dom.getElementsByTagName("mujoco_inputs"):
+            for cam in mi.getElementsByTagName("camera"):
+                name = cam.getAttribute("name")
+                if name in ("left_wrist", "right_wrist"):
+                    cams[name] = cam
+        return cams
+
+    def _ros2_control_sensors(self):
+        """<sensor> elements inside <ros2_control>, keyed by name."""
+        sensors = {}
+        for rc in self.dom.getElementsByTagName("ros2_control"):
+            for sen in rc.getElementsByTagName("sensor"):
+                name = sen.getAttribute("name")
+                if name in ("left_wrist", "right_wrist"):
+                    sensors[name] = sen
+        return sensors
+
+    @staticmethod
+    def _sensor_params(sensor_el):
+        params = {}
+        for p in sensor_el.getElementsByTagName("param"):
+            params[p.getAttribute("name")] = "".join(
+                n.data for n in p.childNodes if n.nodeType == n.TEXT_NODE
+            ).strip()
+        return params
+
+    def test_mjcf_and_ros2_control_names_match(self):
+        """The MJCF camera names and ros2_control sensor names must be the
+        exact same set. If they diverge, mujoco_ros2_control silently
+        produces no images for the mismatched camera."""
+        mjcf_names = set(self._mjcf_cameras().keys())
+        sensor_names = set(self._ros2_control_sensors().keys())
+        self.assertEqual(
+            mjcf_names, {"left_wrist", "right_wrist"},
+            f"expected MJCF wrist camera names {{left_wrist, right_wrist}}, "
+            f"got {mjcf_names}")
+        self.assertEqual(
+            sensor_names, {"left_wrist", "right_wrist"},
+            f"expected ros2_control wrist sensor names "
+            f"{{left_wrist, right_wrist}}, got {sensor_names}")
+        self.assertEqual(
+            mjcf_names, sensor_names,
+            f"MJCF camera names {mjcf_names} and ros2_control sensor names "
+            f"{sensor_names} must match exactly")
+
+    def test_camera_site_references_resolve(self):
+        """Each MJCF wrist camera's site= must exist as a link in the
+        flattened URDF, or the converter silently drops that camera."""
+        links = {ln.getAttribute("name")
+                 for ln in self.dom.getElementsByTagName("link")}
+        cams = self._mjcf_cameras()
+        self.assertEqual(set(cams.keys()), {"left_wrist", "right_wrist"})
+        for name, cam in cams.items():
+            site = cam.getAttribute("site")
+            self.assertTrue(site, f"{name}: MJCF camera has no site=")
+            self.assertIn(
+                site, links,
+                f"{name}: MJCF camera site={site!r} does not exist as a "
+                f"link (converter would silently drop this camera)")
+
+    def test_sensor_topics_match_contract(self):
+        """ros2_control sensor topic params must match the exact contract
+        the Gz sim publishes, so consumers stay sim-agnostic."""
+        sensors = self._ros2_control_sensors()
+        self.assertEqual(set(sensors.keys()), {"left_wrist", "right_wrist"})
+        for name, sensor_el in sensors.items():
+            params = self._sensor_params(sensor_el)
+            expected = self.EXPECTED_TOPICS[name]
+            for key, expected_value in expected.items():
+                self.assertEqual(
+                    params.get(key), expected_value,
+                    f"{name}: param {key} = {params.get(key)!r}, "
+                    f"expected {expected_value!r}")
+
+    def test_camera_optics_constants(self):
+        """fovy and resolution must match the D435 848x480 contract on both
+        wrist cameras."""
+        cams = self._mjcf_cameras()
+        self.assertEqual(set(cams.keys()), {"left_wrist", "right_wrist"})
+        for name, cam in cams.items():
+            self.assertEqual(
+                cam.getAttribute("fovy"), "56.4",
+                f"{name}: fovy = {cam.getAttribute('fovy')!r}, expected '56.4'")
+            self.assertEqual(
+                cam.getAttribute("resolution"), "848 480",
+                f"{name}: resolution = {cam.getAttribute('resolution')!r}, "
+                f"expected '848 480'")
+
+
 if __name__ == "__main__":
     unittest.main()
