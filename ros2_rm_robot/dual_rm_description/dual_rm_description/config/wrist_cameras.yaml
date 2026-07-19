@@ -1,0 +1,48 @@
+# Wrist-mounted RealSense D435 mount + aim, per arm variant and side.
+#
+# The camera sits INSIDE the rectangular housing that is already part of each
+# wrist link's mesh (no extra geometry is added by the URDF). `xyz` is that
+# housing's centroid, so pan/tilt pivot the camera in place rather than
+# swinging it out through a housing wall.
+#
+#   xyz  - housing centroid in the parent wrist link's frame (m). Measured
+#          from the meshes: outer face at |x|=0.0783, bar ~22mm thick.
+#   rpy  - nominal outward bore. NOTE the X offset sign is NOT a left/right
+#          rule (65b-left is +X; the other three are -X), so the yaw that
+#          turns the bore outward is stored explicitly per entry, never
+#          derived from the side.
+#   pan  - rotation about the mount Z, radians. Left/right sweep.
+#   tilt - rotation about the mount Y, radians. NEGATIVE = downward, toward
+#          the gripper. This is the knob you normally want.
+#
+# pan: 0, tilt: 0 == camera perpendicular to the wrist, boring straight out
+# along the housing normal. Both sims read this one file, so editing here
+# re-aims the camera in Gazebo and MuJoCo identically.
+
+65b:
+  left:
+    parent: l_link6
+    xyz: [0.0671, 0.0, 0.0275]
+    rpy: [0.0, 0.0, 0.0]
+    pan: 0.0
+    tilt: 0.0
+  right:
+    parent: r_link6
+    xyz: [-0.0671, 0.0, 0.0301]
+    rpy: [0.0, 0.0, 3.14159265]
+    pan: 0.0
+    tilt: 0.0
+
+75b:
+  left:
+    parent: l_link7
+    xyz: [-0.0671, 0.0, 0.0275]
+    rpy: [0.0, 0.0, 3.14159265]
+    pan: 0.0
+    tilt: 0.0
+  right:
+    parent: r_link7
+    xyz: [-0.0671, 0.0, 0.0256]
+    rpy: [0.0, 0.0, 3.14159265]
+    pan: 0.0
+    tilt: 0.0

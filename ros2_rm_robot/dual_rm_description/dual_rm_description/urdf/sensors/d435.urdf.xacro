@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!--
+  Intel RealSense D435 frame set for the R2D3 wrists.
+
+  FRAMES ONLY - no visual, no collision, no inertial. The camera housing is
+  already modelled as part of each wrist link's mesh (l_link6/r_link6 on 65b,
+  l_link7/r_link7 on 75b), and the wrist link already carries its mass. Adding
+  geometry here would double-count both.
+
+  The chain is deliberately split into two fixed joints:
+
+    <wrist link>
+      |- mount joint   hardware: the housing centroid + nominal outward bore.
+      |                Never edited by a user.
+      {name}_camera_mount
+        |- aim joint   the tunable: rpy = (0, tilt, pan) from
+        |              config/wrist_cameras.yaml. Pure rotation, so the
+        |              camera pivots INSIDE the housing instead of
+        |              translating out through a wall.
+        {name}_camera_link
+          |- {name}_camera_color_frame -> ..._color_optical_frame
+          |- {name}_camera_depth_frame -> ..._depth_optical_frame
+
+  Colour and depth frames are COINCIDENT on purpose. Gz's rgbd_camera renders
+  both from a single viewpoint, and the real D435 publishes depth aligned to
+  colour, so a modelled baseline would be a fiction neither sim nor hardware
+  reproduces.
+
+  Optical frames use the standard rpy="-pi/2 0 -pi/2" (REP 103: optical +Z
+  forward, +X right, +Y down), matching zed2.urdf.xacro.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="d435_camera" params="name parent pan tilt *origin">
+
+    <!-- Housing centroid + nominal outward bore (hardware geometry) -->
+    <link name="${name}_camera_mount"/>
+    <joint name="${name}_camera_mount_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${name}_camera_mount"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+    <!-- Aim: the only user-tunable transform. Pure rotation. -->
+    <link name="${name}_camera_link"/>
+    <joint name="${name}_camera_aim_joint" type="fixed">
+      <parent link="${name}_camera_mount"/>
+      <child link="${name}_camera_link"/>
+      <origin xyz="0 0 0" rpy="0 ${tilt} ${pan}"/>
+    </joint>
+
+    <!-- Colour -->
+    <link name="${name}_camera_color_frame"/>
+    <joint name="${name}_camera_color_joint" type="fixed">
+      <parent link="${name}_camera_link"/>
+      <child link="${name}_camera_color_frame"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${name}_camera_color_optical_frame"/>
+    <joint name="${name}_camera_color_optical_joint" type="fixed">
+      <parent link="${name}_camera_color_frame"/>
+      <child link="${name}_camera_color_optical_frame"/>
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+
+    <!-- Depth (coincident with colour - see header) -->
+    <link name="${name}_camera_depth_frame"/>
+    <joint name="${name}_camera_depth_joint" type="fixed">
+      <parent link="${name}_camera_link"/>
+      <child link="${name}_camera_depth_frame"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${name}_camera_depth_optical_frame"/>
+    <joint name="${name}_camera_depth_optical_joint" type="fixed">
+      <parent link="${name}_camera_depth_frame"/>
+      <child link="${name}_camera_depth_optical_frame"/>
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

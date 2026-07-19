@@ -11,6 +11,7 @@
     <xacro:include filename="$(find dual_rm_description)/urdf/materials/colors.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_description)/urdf/agv/woosh_agv.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_description)/urdf/body/body_head_platform.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_description)/urdf/sensors/d435.urdf.xacro"/>
 
     <!-- ═══════════════════════════════════════════════════════════
          Arm-variant components (selected by arm_model argument)
@@ -27,5 +28,29 @@
     <xacro:include filename="$(find dual_rm_description)/urdf/transmissions/body_head_platform_transmission.xacro"/>
     <xacro:include filename="$(find dual_rm_description)/urdf/arms/$(arg arm_model)/left_arm_transmission.xacro"/>
     <xacro:include filename="$(find dual_rm_description)/urdf/arms/$(arg arm_model)/right_arm_transmission.xacro"/>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Wrist RealSense D435 cameras
+
+         Mount pose and aim (pan/tilt) come from config/wrist_cameras.yaml,
+         which both sims read - edit there to re-aim, not here. Frames only;
+         the housing is already part of the wrist link meshes.
+         ═══════════════════════════════════════════════════════════ -->
+    <xacro:property name="wrist_cam_cfg"
+                    value="${xacro.load_yaml('$(find dual_rm_description)/config/wrist_cameras.yaml')[arm_model]}"/>
+
+    <xacro:macro name="_wrist_camera" params="side">
+      <!-- NOTE: do not name this property 'e' - xacro reserves e (Euler's
+           number) and silently redefines it. -->
+      <xacro:property name="entry" value="${wrist_cam_cfg[side]}"/>
+      <xacro:d435_camera name="${side}_wrist" parent="${entry['parent']}"
+                         pan="${entry['pan']}" tilt="${entry['tilt']}">
+        <origin xyz="${entry['xyz'][0]} ${entry['xyz'][1]} ${entry['xyz'][2]}"
+                rpy="${entry['rpy'][0]} ${entry['rpy'][1]} ${entry['rpy'][2]}"/>
+      </xacro:d435_camera>
+    </xacro:macro>
+
+    <xacro:_wrist_camera side="left"/>
+    <xacro:_wrist_camera side="right"/>
 
 </robot>
