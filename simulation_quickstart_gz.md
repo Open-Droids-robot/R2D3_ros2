@@ -230,6 +230,38 @@ r2d3_test_nodes         Simple test executables for AGV and arm motion
 
 ---
 
+## Aiming the wrist cameras
+
+Each wrist carries a RealSense D435 publishing under `/left_wrist/**` and
+`/right_wrist/**` (`color/image_raw`, `color/camera_info`,
+`depth/image_rect_raw`, `depth/color/points`).
+
+Aim is set in one place, read by both sims:
+
+```
+ros2_rm_robot/dual_rm_description/dual_rm_description/config/wrist_cameras.yaml
+```
+
+Per arm variant (`65b` / `75b`) and side:
+
+- `tilt` — radians about the mount Y. **Negative tilts the camera down**
+  toward the gripper. This is usually the only value you need.
+- `pan` — radians about the mount Z (left/right sweep).
+- `xyz` / `rpy` — the physical housing pose. These describe the bracket in the
+  wrist mesh; leave them alone unless the hardware changes.
+
+`pan: 0, tilt: 0` is the camera perpendicular to the wrist, boring straight
+out along the housing normal.
+
+Rebuild after editing — this workspace does not use `--symlink-install`, so
+xacro reads the installed copy:
+
+```bash
+colcon build --packages-select dual_rm_description && source install/setup.bash
+```
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
@@ -242,3 +274,4 @@ r2d3_test_nodes         Simple test executables for AGV and arm motion
 | Nav2 lifecycle manager fails to bring up nodes | Race condition at startup | Relaunch; transient issue with sim clock settling |
 | RTAB-Map: `Waiting for data on topic ...` | Camera topics not bridged or not publishing | Verify `ros2 topic hz /zed/zed_node/left/color/rect/image` and `/zed/zed_node/depth/depth_registered` |
 | RTAB-Map: no map generated | Textureless environment (depth_only mode) | Use `slam_type:=rtabmap` (adds LiDAR) or add visual features to the world |
+| `ros2 topic hz` on a camera topic reports an implausibly high or noisy rate | Stale simulator/bridge processes from an earlier session survived a naive `pkill` and are duplicate-publishing onto the same topic name; `ros2 topic hz` silently aggregates across all publishers | Check publisher count first with `ros2 topic info -v <topic>`; if more than one, find and kill the stragglers with `pgrep -af 'mujoco\|gz sim\|ros_gz_bridge\|ruby\|component_container'` |

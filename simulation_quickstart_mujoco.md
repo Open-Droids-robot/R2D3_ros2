@@ -246,6 +246,47 @@ r2d3_test_nodes          Simple test executables for AGV and arm motion
 
 ---
 
+## Aiming the wrist cameras
+
+Each wrist carries a RealSense D435 publishing under `/left_wrist/**` and
+`/right_wrist/**` (`color/image_raw`, `color/camera_info`,
+`depth/image_rect_raw`, `depth/color/points`).
+
+Aim is set in one place, read by both sims:
+
+```
+ros2_rm_robot/dual_rm_description/dual_rm_description/config/wrist_cameras.yaml
+```
+
+Per arm variant (`65b` / `75b`) and side:
+
+- `tilt` — radians about the mount Y. **Negative tilts the camera down**
+  toward the gripper. This is usually the only value you need.
+- `pan` — radians about the mount Z (left/right sweep).
+- `xyz` / `rpy` — the physical housing pose. These describe the bracket in the
+  wrist mesh; leave them alone unless the hardware changes.
+
+`pan: 0, tilt: 0` is the camera perpendicular to the wrist, boring straight
+out along the housing normal.
+
+Rebuild after editing — this workspace does not use `--symlink-install`, so
+xacro reads the installed copy:
+
+```bash
+colcon build --packages-select dual_rm_description && source install/setup.bash
+```
+
+> **MuJoCo-specific:** the wrist `depth/color/points` clouds run through
+> `depth_image_proc` with `approximate_sync` enabled. MuJoCo does not stamp
+> colour and depth frames bit-identically, so the default exact-time
+> synchronizer starves — it dropped roughly 85–90% of frames before
+> `approximate_sync` was turned on. The trade-off: colour and depth can be
+> paired from slightly different instants, so a fast-moving arm may show
+> some edge misalignment ("smearing") in the cloud. That is an accepted
+> trade-off of the sync policy, not a bug.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
@@ -257,6 +298,7 @@ r2d3_test_nodes          Simple test executables for AGV and arm motion
 | `/joint_states` / `/imu` publish slower than expected (e.g. ~55 Hz instead of the configured 100 Hz) | The machine can't keep the MuJoCo physics step running at real-time; sensor publish rates drop proportionally to the achieved sim rate | Not a config error — expected on slower/loaded machines. Reduce other load, or treat published rates as approximate |
 | EGL / GLFW errors when the camera renders (e.g. `libEGL warning`, `Failed to create OpenGL context`) | Headless GPU / software-rendering driver quirks | Usually harmless — camera rendering still works via software fallback; if it doesn't, try `headless:=true` to skip the interactive Simulate window (camera rendering is independent of it) |
 | `~/robot_description` service errors on Humble | Humble's `controller_manager` expects a `~/robot_description` topic remap that Jazzy doesn't need | Already handled automatically — `mujoco_sim.launch.py` adds the `~/robot_description -> /robot_description` remap only when `ROS_DISTRO=humble` |
+| `ros2 topic hz` on a camera topic reports an implausibly high or noisy rate | Stale simulator/bridge processes from an earlier session survived a naive `pkill` and are duplicate-publishing onto the same topic name; `ros2 topic hz` silently aggregates across all publishers | Check publisher count first with `ros2 topic info -v <topic>`; if more than one, find and kill the stragglers with `pgrep -af 'mujoco\|gz sim\|ros_gz_bridge\|ruby\|component_container'` |
 | Wheels slip / robot drifts off a straight line | Contact friction / solver tuning | Tunable in `r2d3_mujoco/urdf/mujoco_inputs.urdf.xacro`: the shared `collision` default class's `friction`/`condim`, and `<option noslip_iterations="...">` |
 | Underpan / chassis pan looks invisible in RViz's camera image or in the Simulate window | **Intentional.** The lidar mounts flush against the chassis pan (`base_link_underpan`, `body_base_link`); `ensure_mjcf.py` zeroes their rgba alpha so the lidar's own rays don't self-occlude. Alpha is a rendering property too, so this also hides them from the RGB/depth camera. The camera looks outward/forward and doesn't normally frame the underpan, so this is accepted as a cosmetic trade-off, not a bug | None needed; if camera-visible chassis geometry is ever required, it needs per-consumer geom duplication upstream (out of scope for this package) |
 | `right_arm_controller` / `left_arm_controller` stay `inactive` on the **75b** (7-DOF) variant, with `Unable to activate controller ... command interface 'l_joint7/position'/'r_joint7/position' is not available` | `l_joint7`/`r_joint7` are present in the generated URDF's `<ros2_control>` block and in the converted MJCF's actuator list, but `mujoco_ros2_control` 0.0.3's URDF parsing does not export a `command_interface` for either — reproduced consistently on both cache-miss and cache-hit launches. `joint_state_broadcaster`, `diff_drive_controller`, `platform_controller`, and `imu_sensor_broadcaster` are unaffected | Known upstream limitation of `mujoco_ros2_control` 0.0.3 with a 7-joint-per-arm `<ros2_control>` block; not fixable from `r2d3_mujoco/` files. The 65b (6-DOF) variant is unaffected — use it if full arm control is required today |
