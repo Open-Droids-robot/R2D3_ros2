@@ -123,6 +123,27 @@ def _gz_camera_sensors(urdf_str):
     return found
 
 
+def _gz_camera_frame_ids(urdf_str):
+    """Return {reference_link: gz_frame_id_text} for all camera-type Gz
+    sensors. This is the literal LABEL text (``<gz_frame_id>``), independent
+    of ``_gz_camera_sensors``'s geometry -- it must be checked separately
+    because two optical frames can be geometrically coincident (color/depth)
+    while the label text differs."""
+    dom = minidom.parseString(urdf_str)
+    found = {}
+    for gz in dom.getElementsByTagName("gazebo"):
+        for s in gz.getElementsByTagName("sensor"):
+            if "camera" not in s.getAttribute("type"):
+                continue
+            frame_id = None
+            for fid in s.getElementsByTagName("gz_frame_id"):
+                if fid.parentNode is s:
+                    frame_id = fid.firstChild.data.strip() if fid.firstChild else ""
+                    break
+            found[gz.getAttribute("reference")] = frame_id
+    return found
+
+
 # Gz builds the published optical frame from the sensor body frame by the fixed
 # SDF-camera mapping: optical +Z = sensor +X (forward), optical +X = -sensor +Y
 # (right), optical +Y = -sensor +Z (down). Columns are (optX, optY, optZ) in
@@ -136,6 +157,16 @@ _SENSOR_TO_OPTICAL = np.array([[0.0, 0.0, 1.0],
 # pitch. bore = +X pitched down by SLOPE; up = +Z pitched forward by SLOPE.
 _EXPECTED_BORE = np.array([math.cos(SLOPE), 0.0, -math.sin(SLOPE)])
 _EXPECTED_UP = np.array([math.sin(SLOPE), 0.0, math.cos(SLOPE)])
+
+# The complete set of Gz camera sensor reference frames expected anywhere in
+# the sim URDF. Exhaustive on purpose: a stray, duplicate, or mis-mounted
+# extra camera sensor must fail this, not silently pass a subset check.
+_EXPECTED_CAMERA_SENSOR_FRAMES = {
+    "zed_left_camera_frame",
+    "zed_right_camera_frame",
+    "left_wrist_camera_color_frame",
+    "right_wrist_camera_color_frame",
+}
 
 
 class TestGzZedCameraBore(unittest.TestCase):
@@ -202,6 +233,28 @@ class TestGzZedCameraBore(unittest.TestCase):
             err_msg=f"stereo baseline wrong: {offset_in_left}")
 
 
+class TestGzCameraSensorInventory(unittest.TestCase):
+    """Exhaustive-set guard across ALL Gz camera sensors (ZED + wrists).
+
+    The per-camera test classes only assert their own sensors are present
+    and correctly oriented; none of them notices a stray, duplicate, or
+    mis-mounted extra camera sensor elsewhere in the URDF. This is the one
+    test that fails if a fifth sensor appears or one of the expected four
+    disappears.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.urdf = _flatten_urdf()
+        cls.sensors = _gz_camera_sensors(cls.urdf)
+
+    def test_exactly_the_expected_camera_sensors_exist(self):
+        self.assertEqual(
+            _EXPECTED_CAMERA_SENSOR_FRAMES, set(self.sensors.keys()),
+            "unexpected Gz camera sensor set -- a sensor was added, "
+            "removed, duplicated, or mis-mounted")
+
+
 class TestGzWristCameraBore(unittest.TestCase):
     """The wrist cameras must render along the direction their mount frame
     bores, and label their output with an optical frame that agrees.
@@ -218,6 +271,7 @@ class TestGzWristCameraBore(unittest.TestCase):
     def setUpClass(cls):
         cls.urdf = _flatten_urdf()
         cls.sensors = _gz_camera_sensors(cls.urdf)
+        cls.frame_ids = _gz_camera_frame_ids(cls.urdf)
 
     def test_wrist_sensors_mounted_on_colour_frames(self):
         for side in ("left", "right"):
@@ -247,6 +301,17 @@ class TestGzWristCameraBore(unittest.TestCase):
                 R_optical_render, R_optical_label, atol=1e-6,
                 err_msg=f"{side} wrist: rendered optical axes disagree with "
                         f"the {side}_wrist_camera_color_optical_frame label")
+
+    def test_wrist_gz_frame_id_labels_the_colour_optical_frame(self):
+        """The colour and depth optical frames are geometrically COINCIDENT
+        by design, so the geometric check above can't catch a gz_frame_id
+        typo'd to the depth frame -- assert the literal label text too."""
+        for side in ("left", "right"):
+            ref = f"{side}_wrist_camera_color_frame"
+            self.assertEqual(
+                self.frame_ids.get(ref), f"{side}_wrist_camera_color_optical_frame",
+                f"{side} wrist: gz_frame_id must literally be "
+                f"{side}_wrist_camera_color_optical_frame")
 
 
 if __name__ == "__main__":
