@@ -161,7 +161,15 @@ def launch_setup(context, *args, **kwargs):
                     package="depth_image_proc",
                     plugin="depth_image_proc::PointCloudXyzrgbNode",
                     name="point_cloud_xyzrgb",
-                    parameters=[{"use_sim_time": True}],
+                    # MuJoCo does not stamp colour and depth bit-identically (60-134ms
+                    # offsets observed), which starves depth_image_proc's default
+                    # exact-time synchroniser to ~85-90% frame loss. Use approximate
+                    # sync with a deep enough queue (~3s at ~10Hz) to absorb the jitter.
+                    parameters=[{
+                        "use_sim_time": True,
+                        "approximate_sync": True,
+                        "queue_size": 30,
+                    }],
                     remappings=[
                         ("rgb/camera_info", f"/{side}_wrist/color/camera_info"),
                         ("rgb/image_rect_color", f"/{side}_wrist/color/image_raw"),
