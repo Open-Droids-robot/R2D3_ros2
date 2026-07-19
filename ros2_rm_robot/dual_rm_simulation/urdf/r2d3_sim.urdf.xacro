@@ -15,6 +15,7 @@
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/lidar.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/imu.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/zed2_sim.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/wrist_cams_sim.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/gazebo/sim_gazebo.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/ros2_control/sim_ros2_control.urdf.xacro"/>
 
@@ -40,6 +41,9 @@
 
     <!-- ZED 2 head camera (Gz stereo sensor pair) -->
     <xacro:zed2_sim_sensors/>
+
+    <!-- Wrist D435 cameras (Gz rgbd_camera per wrist) -->
+    <xacro:wrist_cams_sim_sensors/>
 
     <!-- ── 4. Gazebo physics properties ──────────────────────── -->
     <xacro:sim_gazebo_properties arm_dof="${arm_dof}"/>

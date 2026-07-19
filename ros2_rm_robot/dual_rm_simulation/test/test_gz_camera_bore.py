@@ -147,9 +147,14 @@ class TestGzZedCameraBore(unittest.TestCase):
     def test_sensors_mounted_on_zed_camera_frames(self):
         """Issue #11 postmortem: orientation lives in mount frames, never a
         sensor <pose>. Both eyes mount directly on the ZED camera frames."""
-        self.assertEqual(
-            set(self.sensors.keys()),
-            {"zed_left_camera_frame", "zed_right_camera_frame"})
+        self.assertLessEqual(
+            {"zed_left_camera_frame", "zed_right_camera_frame"},
+            set(self.sensors.keys()))
+        for ref in ("zed_left_camera_frame", "zed_right_camera_frame"):
+            _, R_pose = self.sensors[ref]
+            np.testing.assert_allclose(
+                R_pose, np.eye(3), atol=1e-12,
+                err_msg=f"{ref}: sensor <pose> must not rotate the render")
 
     def _sensor_R(self, ref):
         _, R_pose = self.sensors[ref]
@@ -195,6 +200,53 @@ class TestGzZedCameraBore(unittest.TestCase):
         np.testing.assert_allclose(
             offset_in_left, [0.0, -BASELINE, 0.0], atol=1e-9,
             err_msg=f"stereo baseline wrong: {offset_in_left}")
+
+
+class TestGzWristCameraBore(unittest.TestCase):
+    """The wrist cameras must render along the direction their mount frame
+    bores, and label their output with an optical frame that agrees.
+
+    Unlike the ZED, the wrists hang off moving arm joints, so there is no
+    fixed nav-frame expectation to assert. Instead we assert the two
+    invariants that survive any arm pose: the sensor must be mounted on the
+    camera colour frame (never oriented by a <pose>, per the issue #11
+    postmortem), and the rendered optical axes must equal the optical frame
+    named in gz_frame_id.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.urdf = _flatten_urdf()
+        cls.sensors = _gz_camera_sensors(cls.urdf)
+
+    def test_wrist_sensors_mounted_on_colour_frames(self):
+        for side in ("left", "right"):
+            ref = f"{side}_wrist_camera_color_frame"
+            self.assertIn(ref, self.sensors,
+                          f"no Gz camera sensor mounted on {ref}")
+
+    def test_wrist_sensor_pose_is_identity(self):
+        """Issue #11 postmortem: orientation lives in mount frames, never a
+        sensor <pose>. A <pose> here would desync Gz from MuJoCo, which has
+        no equivalent override."""
+        for side in ("left", "right"):
+            _, R_pose = self.sensors[f"{side}_wrist_camera_color_frame"]
+            np.testing.assert_allclose(
+                R_pose, np.eye(3), atol=1e-12,
+                err_msg=f"{side} wrist: sensor <pose> must not rotate the render")
+
+    def test_wrist_render_matches_optical_frame_label(self):
+        for side in ("left", "right"):
+            ref = f"{side}_wrist_camera_color_frame"
+            _, R_pose = self.sensors[ref]
+            R_chain, _ = _joint_chain(self.urdf, ref)
+            R_optical_render = (R_chain @ R_pose) @ _SENSOR_TO_OPTICAL
+            R_optical_label, _ = _joint_chain(
+                self.urdf, f"{side}_wrist_camera_color_optical_frame")
+            np.testing.assert_allclose(
+                R_optical_render, R_optical_label, atol=1e-6,
+                err_msg=f"{side} wrist: rendered optical axes disagree with "
+                        f"the {side}_wrist_camera_color_optical_frame label")
 
 
 if __name__ == "__main__":

@@ -132,6 +132,16 @@ def generate_launch_description():
             '/zed/left/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
             '/zed/right/image@sensor_msgs/msg/Image[gz.msgs.Image',
             '/zed/right/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            # Wrist D435s: one rgbd_camera per wrist (topics left_wrist,
+            # right_wrist).
+            '/left_wrist/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/left_wrist/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/left_wrist/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/left_wrist/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            '/right_wrist/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/right_wrist/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/right_wrist/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/right_wrist/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
         ],
         remappings=[
             # Gz topic names -> the real zed-ros2-wrapper (v5.x) topic contract.
@@ -141,6 +151,17 @@ def generate_launch_description():
             ('/zed/left/points', '/zed/zed_node/point_cloud/cloud_registered'),
             ('/zed/right/image', '/zed/zed_node/right/color/rect/image'),
             ('/zed/right/camera_info', '/zed/zed_node/right/color/rect/camera_info'),
+            # Gz topic names -> the real realsense2_camera topic contract, so
+            # swapping in real D435s is a launch-file change with no consumer
+            # edits.
+            ('/left_wrist/image', '/left_wrist/color/image_raw'),
+            ('/left_wrist/camera_info', '/left_wrist/color/camera_info'),
+            ('/left_wrist/depth_image', '/left_wrist/depth/image_rect_raw'),
+            ('/left_wrist/points', '/left_wrist/depth/color/points'),
+            ('/right_wrist/image', '/right_wrist/color/image_raw'),
+            ('/right_wrist/camera_info', '/right_wrist/color/camera_info'),
+            ('/right_wrist/depth_image', '/right_wrist/depth/image_rect_raw'),
+            ('/right_wrist/points', '/right_wrist/depth/color/points'),
         ],
         parameters=[{'use_sim_time': False}],
         output='screen',
