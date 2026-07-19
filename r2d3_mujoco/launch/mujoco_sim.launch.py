@@ -147,6 +147,35 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
     )
 
+    # -- /{side}_wrist/depth/color/points from each wrist D435 --
+    # Gz publishes `points` natively from its rgbd_camera; MuJoCo does not, so
+    # depth_image_proc completes the same topic contract on this sim.
+    def _wrist_points(side):
+        return ComposableNodeContainer(
+            name=f"{side}_wrist_points_container",
+            namespace="",
+            package="rclcpp_components",
+            executable="component_container",
+            composable_node_descriptions=[
+                ComposableNode(
+                    package="depth_image_proc",
+                    plugin="depth_image_proc::PointCloudXyzrgbNode",
+                    name="point_cloud_xyzrgb",
+                    parameters=[{"use_sim_time": True}],
+                    remappings=[
+                        ("rgb/camera_info", f"/{side}_wrist/color/camera_info"),
+                        ("rgb/image_rect_color", f"/{side}_wrist/color/image_raw"),
+                        ("depth_registered/image_rect", f"/{side}_wrist/depth/image_rect_raw"),
+                        ("points", f"/{side}_wrist/depth/color/points"),
+                    ],
+                ),
+            ],
+            output="screen",
+        )
+
+    left_wrist_points = _wrist_points("left")
+    right_wrist_points = _wrist_points("right")
+
     return [
         ensure_mjcf,
         robot_state_publisher,
@@ -156,6 +185,8 @@ def launch_setup(context, *args, **kwargs):
         neck_servo_bridge,
         stereo_concat,
         pointcloud_container,
+        left_wrist_points,
+        right_wrist_points,
     ]
 
 
