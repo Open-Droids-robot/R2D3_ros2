@@ -47,16 +47,18 @@ def _rpy_to_R(r, p, y):
     return Rz @ Ry @ Rx  # URDF/SDF fixed-axis: Rz*Ry*Rx
 
 
-def _flatten_urdf():
+def _flatten_urdf(arm_model="65b"):
     xacro_bin = shutil.which("xacro")
     if xacro_bin is None:
         raise unittest.SkipTest("xacro not on PATH (source the ROS workspace)")
     out = subprocess.run(
-        [xacro_bin, str(XACRO), "arm_model:=65b"],
+        [xacro_bin, str(XACRO), f"arm_model:={arm_model}"],
         capture_output=True, text=True,
     )
     if out.returncode != 0:
-        raise unittest.SkipTest(f"xacro failed (workspace not built?): {out.stderr[-400:]}")
+        raise AssertionError(
+            f"xacro failed for arm_model={arm_model!r} (exit {out.returncode}): "
+            f"{out.stderr}")
     return out.stdout
 
 
@@ -267,51 +269,79 @@ class TestGzWristCameraBore(unittest.TestCase):
     named in gz_frame_id.
     """
 
+    MODELS = ("65b", "75b")
+
     @classmethod
     def setUpClass(cls):
-        cls.urdf = _flatten_urdf()
-        cls.sensors = _gz_camera_sensors(cls.urdf)
-        cls.frame_ids = _gz_camera_frame_ids(cls.urdf)
+        cls.urdf = {m: _flatten_urdf(m) for m in cls.MODELS}
+        cls.sensors = {m: _gz_camera_sensors(cls.urdf[m]) for m in cls.MODELS}
+        cls.frame_ids = {m: _gz_camera_frame_ids(cls.urdf[m]) for m in cls.MODELS}
 
-    def test_wrist_sensors_mounted_on_colour_frames(self):
+    def _check_wrist_sensors_mounted_on_colour_frames(self, model):
         for side in ("left", "right"):
             ref = f"{side}_wrist_camera_color_frame"
-            self.assertIn(ref, self.sensors,
-                          f"no Gz camera sensor mounted on {ref}")
+            self.assertIn(ref, self.sensors[model],
+                          f"{model}: no Gz camera sensor mounted on {ref}")
 
-    def test_wrist_sensor_pose_is_identity(self):
+    def _check_wrist_sensor_pose_is_identity(self, model):
         """Issue #11 postmortem: orientation lives in mount frames, never a
         sensor <pose>. A <pose> here would desync Gz from MuJoCo, which has
         no equivalent override."""
         for side in ("left", "right"):
-            _, R_pose = self.sensors[f"{side}_wrist_camera_color_frame"]
+            _, R_pose = self.sensors[model][f"{side}_wrist_camera_color_frame"]
             np.testing.assert_allclose(
                 R_pose, np.eye(3), atol=1e-12,
-                err_msg=f"{side} wrist: sensor <pose> must not rotate the render")
+                err_msg=f"{model}/{side} wrist: sensor <pose> must not "
+                        f"rotate the render")
 
-    def test_wrist_render_matches_optical_frame_label(self):
+    def _check_wrist_render_matches_optical_frame_label(self, model):
+        urdf = self.urdf[model]
         for side in ("left", "right"):
             ref = f"{side}_wrist_camera_color_frame"
-            _, R_pose = self.sensors[ref]
-            R_chain, _ = _joint_chain(self.urdf, ref)
+            _, R_pose = self.sensors[model][ref]
+            R_chain, _ = _joint_chain(urdf, ref)
             R_optical_render = (R_chain @ R_pose) @ _SENSOR_TO_OPTICAL
             R_optical_label, _ = _joint_chain(
-                self.urdf, f"{side}_wrist_camera_color_optical_frame")
+                urdf, f"{side}_wrist_camera_color_optical_frame")
             np.testing.assert_allclose(
                 R_optical_render, R_optical_label, atol=1e-6,
-                err_msg=f"{side} wrist: rendered optical axes disagree with "
-                        f"the {side}_wrist_camera_color_optical_frame label")
+                err_msg=f"{model}/{side} wrist: rendered optical axes "
+                        f"disagree with the "
+                        f"{side}_wrist_camera_color_optical_frame label")
 
-    def test_wrist_gz_frame_id_labels_the_colour_optical_frame(self):
+    def _check_wrist_gz_frame_id_labels_the_colour_optical_frame(self, model):
         """The colour and depth optical frames are geometrically COINCIDENT
         by design, so the geometric check above can't catch a gz_frame_id
         typo'd to the depth frame -- assert the literal label text too."""
         for side in ("left", "right"):
             ref = f"{side}_wrist_camera_color_frame"
             self.assertEqual(
-                self.frame_ids.get(ref), f"{side}_wrist_camera_color_optical_frame",
-                f"{side} wrist: gz_frame_id must literally be "
+                self.frame_ids[model].get(ref),
+                f"{side}_wrist_camera_color_optical_frame",
+                f"{model}/{side} wrist: gz_frame_id must literally be "
                 f"{side}_wrist_camera_color_optical_frame")
+
+
+def _parameterize_by_model(cls, check_names):
+    """Generate test_<check>_<model>() for every (check, model) pair, so
+    each arm-model variant is its own pytest item -- a 75b regression must
+    surface as its own failing test, not be absorbed into a 65b-only pass."""
+    for name in check_names:
+        check = getattr(cls, f"_check_{name}")
+        for model in cls.MODELS:
+            def test(self, _check=check, _model=model):
+                _check(self, _model)
+            test.__name__ = f"test_{name}_{model}"
+            test.__doc__ = check.__doc__
+            setattr(cls, test.__name__, test)
+
+
+_parameterize_by_model(TestGzWristCameraBore, [
+    "wrist_sensors_mounted_on_colour_frames",
+    "wrist_sensor_pose_is_identity",
+    "wrist_render_matches_optical_frame_label",
+    "wrist_gz_frame_id_labels_the_colour_optical_frame",
+])
 
 
 if __name__ == "__main__":

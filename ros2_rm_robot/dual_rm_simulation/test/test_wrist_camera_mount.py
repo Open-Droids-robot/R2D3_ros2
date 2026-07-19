@@ -33,12 +33,18 @@ XACRO = Path(__file__).resolve().parent.parent / "urdf" / "r2d3_sim.urdf.xacro"
 
 
 def _config_path():
+    ros2_bin = shutil.which("ros2")
+    if ros2_bin is None:
+        raise unittest.SkipTest("ros2 not on PATH (source the ROS workspace)")
     out = subprocess.run(
-        ["ros2", "pkg", "prefix", "--share", "dual_rm_description"],
+        [ros2_bin, "pkg", "prefix", "--share", "dual_rm_description"],
         capture_output=True, text=True,
     )
     if out.returncode != 0:
-        raise unittest.SkipTest("dual_rm_description not found (workspace not built?)")
+        # "package not found" is a legitimately unbuilt workspace, not a
+        # regression -- skip rather than fail.
+        raise unittest.SkipTest(
+            f"dual_rm_description not found (workspace not built?): {out.stderr[-400:]}")
     return Path(out.stdout.strip()) / "config" / "wrist_cameras.yaml"
 
 
@@ -61,7 +67,9 @@ def _flatten_urdf(arm_model):
         capture_output=True, text=True,
     )
     if out.returncode != 0:
-        raise unittest.SkipTest(f"xacro failed (workspace not built?): {out.stderr[-400:]}")
+        raise AssertionError(
+            f"xacro failed for arm_model={arm_model!r} (exit {out.returncode}): "
+            f"{out.stderr}")
     return out.stdout
 
 
@@ -142,9 +150,12 @@ class TestWristCameraMount(unittest.TestCase):
                     err_msg=f"{model}/{side}: aim joint rpy should be (0, tilt, pan)")
 
     def test_bore_points_away_from_the_wrist_axis(self):
-        """At the nominal aim, the camera must look OUTWARD. This is the
-        end-to-end statement of the mirrored-sign guard: the bore direction
-        and the mount offset must share a sign."""
+        """At the nominal aim, the camera must look OUTWARD. This is a
+        consistency check WITHIN the YAML only: it reads entry["xyz"] from
+        the config on both sides of the dot product, so it verifies that
+        each entry's nominal yaw and its X offset agree in sign -- it cannot
+        fail from a URDF error. test_mount_matches_config_exactly is what
+        actually ties the config to the URDF."""
         for model in ("65b", "75b"):
             joints = _joints(self.urdf[model])
             for side in ("left", "right"):

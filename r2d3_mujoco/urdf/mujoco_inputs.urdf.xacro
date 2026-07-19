@@ -187,13 +187,13 @@
 
                 <!-- Wrist D435s at the colour optical-frame sites. fovy(deg)
                      derived from the Gazebo horizontal_fov of 1.5184 rad at
-                     848x480: fovy = 2*atan(tan(1.5184/2)*480/848) = 56.4 deg.
+                     848x480: fovy = 2*atan(tan(1.5184/2)*480/848) = 56.48 deg.
                      Camera names must equal the ros2_control <sensor> names in
                      mujoco_ros2_control.urdf.xacro. -->
                 <camera site="left_wrist_camera_color_optical_frame" name="left_wrist"
-                        fovy="56.4" mode="fixed" resolution="848 480"/>
+                        fovy="56.48" mode="fixed" resolution="848 480"/>
                 <camera site="right_wrist_camera_color_optical_frame" name="right_wrist"
-                        fovy="56.4" mode="fixed" resolution="848 480"/>
+                        fovy="56.48" mode="fixed" resolution="848 480"/>
 
                 <!-- 240-ray lidar matching the Gazebo gpu_lidar:
                      +/-120 deg, angle_increment = 4.1887902/239 -->

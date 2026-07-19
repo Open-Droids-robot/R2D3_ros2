@@ -160,11 +160,14 @@ def launch_setup(context, *args, **kwargs):
                 ComposableNode(
                     package="depth_image_proc",
                     plugin="depth_image_proc::PointCloudXyzrgbNode",
-                    name="point_cloud_xyzrgb",
+                    name=f"{side}_wrist_point_cloud_xyzrgb",
                     # MuJoCo does not stamp colour and depth bit-identically (60-134ms
                     # offsets observed), which starves depth_image_proc's default
                     # exact-time synchroniser to ~85-90% frame loss. Use approximate
                     # sync with a deep enough queue (~3s at ~10Hz) to absorb the jitter.
+                    # Trade-off: colour and depth may pair from slightly different
+                    # instants, so fast arm motion can smear cloud edges -- an
+                    # accepted trade-off, not a bug.
                     parameters=[{
                         "use_sim_time": True,
                         "approximate_sync": True,
