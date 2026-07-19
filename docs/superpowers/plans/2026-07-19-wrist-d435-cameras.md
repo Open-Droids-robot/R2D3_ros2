@@ -471,9 +471,23 @@ python3 -m pytest src/R2D3_ros2/ros2_rm_robot/dual_rm_simulation/test/test_wrist
 
 Expected: 5 passed.
 
-- [ ] **Step 8: Verify the aim knob actually moves the camera**
+- [ ] **Step 8: Commit**
 
-This proves the YAML is a live knob, not decoration. Temporarily set `tilt: -0.4` for `65b/left` in the installed config, and confirm the URDF picks it up:
+```bash
+cd /home/samzpc/code/r2d3/src/R2D3_ros2
+git add ros2_rm_robot/dual_rm_description/dual_rm_description/config/wrist_cameras.yaml \
+        ros2_rm_robot/dual_rm_description/dual_rm_description/urdf/sensors/d435.urdf.xacro \
+        ros2_rm_robot/dual_rm_description/dual_rm_description/urdf/r2d3_description.urdf.xacro \
+        ros2_rm_robot/dual_rm_description/dual_rm_description/CMakeLists.txt \
+        ros2_rm_robot/dual_rm_simulation/test/test_wrist_camera_mount.py
+git commit -m "feat(description): wrist D435 camera frames, aimed from wrist_cameras.yaml"
+```
+
+- [ ] **Step 9: Verify the aim knob actually moves the camera**
+
+This proves the YAML is a live knob, not decoration. It runs *after* the commit so the temporary edit can be reverted with `git checkout` (before the commit the file is untracked and `git checkout` would fail).
+
+Temporarily set `tilt: -0.4` for `65b/left` and confirm the URDF picks it up:
 
 ```bash
 cd /home/samzpc/code/r2d3 && source install/setup.bash
@@ -491,17 +505,7 @@ git -C src/R2D3_ros2 checkout ros2_rm_robot/dual_rm_description/dual_rm_descript
 colcon build --packages-select dual_rm_description >/dev/null
 ```
 
-- [ ] **Step 9: Commit**
-
-```bash
-cd /home/samzpc/code/r2d3/src/R2D3_ros2
-git add ros2_rm_robot/dual_rm_description/dual_rm_description/config/wrist_cameras.yaml \
-        ros2_rm_robot/dual_rm_description/dual_rm_description/urdf/sensors/d435.urdf.xacro \
-        ros2_rm_robot/dual_rm_description/dual_rm_description/urdf/r2d3_description.urdf.xacro \
-        ros2_rm_robot/dual_rm_description/dual_rm_description/CMakeLists.txt \
-        ros2_rm_robot/dual_rm_simulation/test/test_wrist_camera_mount.py
-git commit -m "feat(description): wrist D435 camera frames, aimed from wrist_cameras.yaml"
-```
+Expected: the `<origin>` under `left_wrist_camera_aim_joint` showed `rpy="0 -0.4 0"`, and `git status` is clean afterwards.
 
 ---
 
@@ -989,7 +993,10 @@ The whole point of the YAML is that a user can find and turn it. Undocumented, i
 
 Append to both `simulation_quickstart_gz.md` and `simulation_quickstart_mujoco.md`:
 
-```markdown
+Note the outer fence below is FOUR backticks because the content itself contains
+fenced blocks — copy only what is inside it, not the outer fence.
+
+````markdown
 ## Aiming the wrist cameras
 
 Each wrist carries a RealSense D435 publishing under `/left_wrist/**` and
@@ -1019,7 +1026,7 @@ xacro reads the installed copy:
 ```bash
 colcon build --packages-select dual_rm_description && source install/setup.bash
 ```
-```
+````
 
 - [ ] **Step 2: Commit**
 
