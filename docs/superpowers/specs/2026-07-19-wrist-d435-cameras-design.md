@@ -64,11 +64,11 @@ diff then shows only the aim change, and the pivot stays at the housing centroid
 
 ```yaml
 65b:
-  left:  {parent: l_link6, xyz: [ 0.0664, 0, 0.0304], rpy: [0, 0, 0],      pan: 0.0, tilt: 0.0}
-  right: {parent: r_link6, xyz: [-0.0664, 0, 0.0334], rpy: [0, 0, 3.1416], pan: 0.0, tilt: 0.0}
+  left:  {parent: l_link6, xyz: [ 0.0671, 0, 0.0275], rpy: [0, 0, 0],      pan: 0.0, tilt: 0.0}
+  right: {parent: r_link6, xyz: [-0.0671, 0, 0.0301], rpy: [0, 0, 3.1416], pan: 0.0, tilt: 0.0}
 75b:
-  left:  {parent: l_link7, xyz: [-0.0664, 0, 0.0304], rpy: [0, 0, 3.1416], pan: 0.0, tilt: 0.0}
-  right: {parent: r_link7, xyz: [-0.0664, 0, 0.0388], rpy: [0, 0, 3.1416], pan: 0.0, tilt: 0.0}
+  left:  {parent: l_link7, xyz: [-0.0671, 0, 0.0275], rpy: [0, 0, 3.1416], pan: 0.0, tilt: 0.0}
+  right: {parent: r_link7, xyz: [-0.0671, 0, 0.0256], rpy: [0, 0, 3.1416], pan: 0.0, tilt: 0.0}
 ```
 
 - `xyz` / `rpy` — the bracket: housing centroid and nominal outward bore.
@@ -146,16 +146,25 @@ Extend the existing bore-test pattern in
 Test 1 is what catches a mirrored-sign mistake that would bury a camera inside
 the wrist link — the most likely failure given the irregular X signs.
 
-## Risks to verify during implementation
+## Risks — resolved during planning
 
-1. **`xacro.load_yaml` path resolution.** Confirm this xacro version resolves
-   `$(find ...)` inside `load_yaml`. If it does not, fall back to passing the
-   config path as a xacro arg from the launch file.
-2. **75b `r_link7` Z discrepancy.** Its lobe measured 0.058 m tall centered at
-   Z 0.0388, versus 0.037 / 0.0304 for the other three. This may be a genuine
-   bracket revision or an artifact of the 24 mm sampling window used to isolate
-   the lobe. Re-measure before committing that number; if it is an artifact, the
-   value becomes 0.0304.
-3. **Install-space staleness.** This repo does not use `--symlink-install`;
-   rebuild before trusting any launch or test result, or xacro will pull stale
-   installed files.
+1. **`xacro.load_yaml` path resolution — RESOLVED, works.** Verified that
+   `$(find ...)` resolves inside `xacro.load_yaml` in this xacro version. No
+   fallback needed. Note that xacro properties are lazy, so a `load_yaml` of a
+   nonexistent file does *not* error until the value is used — a test that only
+   defines the property proves nothing.
+2. **75b `r_link7` Z discrepancy — RESOLVED, was a sampling artifact.**
+   Re-measuring with the outer 4 mm face excluded shows `r_link7` is
+   essentially identical to `l_link7`; the extra height came from a separate
+   feature on the outermost face that the 24 mm window had swallowed. Corrected
+   housing centroids (used in the config above): outer face at `|x| = 0.0783`
+   on all four wrists, centroid `|x| = 0.0671`, Z = 0.0275 / 0.0301 / 0.0275 /
+   0.0256 for 65b-left, 65b-right, 75b-left, 75b-right.
+3. **Install-space staleness — stands.** This repo does not use
+   `--symlink-install`; rebuild before trusting any launch or test result, or
+   xacro will pull stale installed files.
+
+## Implementation note discovered during planning
+
+Never name a xacro property `e` — `e` is Euler's number in xacro's expression
+namespace and gets silently redefined with a warning.
