@@ -129,5 +129,44 @@ class TestZedOpticalFrames(unittest.TestCase):
             err_msg=f"stereo baseline wrong: {offset_in_left}")
 
 
+class TestWristCameraOpticalFrames(unittest.TestCase):
+    """MuJoCo hangs its cameras on these frames' sites, so the frames must
+    exist in the MuJoCo URDF too - the ZED equivalent of this guard is what
+    caught the issue #11 yaw error.
+
+    The wrists hang off moving arm joints, so there is no fixed nav-frame
+    bore to assert. What must hold in any pose is that the optical frame is a
+    proper REP-103 optical frame relative to its camera frame: +Z forward,
+    +X right, +Y down.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.urdf = _flatten_urdf()
+
+    def test_optical_frames_exist(self):
+        links = {ln.getAttribute("name")
+                 for ln in minidom.parseString(self.urdf).getElementsByTagName("link")}
+        for side in ("left", "right"):
+            for suffix in ("camera_color_frame", "camera_color_optical_frame"):
+                name = f"{side}_wrist_{suffix}"
+                self.assertIn(name, links, f"missing link {name}")
+
+    def test_optical_rotation_is_rep103(self):
+        for side in ("left", "right"):
+            R_cam, _ = _joint_chain(self.urdf, f"{side}_wrist_camera_color_frame")
+            R_opt, _ = _joint_chain(self.urdf,
+                                    f"{side}_wrist_camera_color_optical_frame")
+            # optical axes expressed in the camera frame
+            R_rel = R_cam.T @ R_opt
+            expected = np.array([[0.0, 0.0, 1.0],
+                                 [-1.0, 0.0, 0.0],
+                                 [0.0, -1.0, 0.0]])
+            np.testing.assert_allclose(
+                R_rel, expected, atol=1e-6,
+                err_msg=f"{side} wrist: optical frame is not REP-103 "
+                        f"(+Z fwd, +X right, +Y down)")
+
+
 if __name__ == "__main__":
     unittest.main()

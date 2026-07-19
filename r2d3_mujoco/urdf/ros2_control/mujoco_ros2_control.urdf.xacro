@@ -145,6 +145,22 @@
                 <param name="depth_topic">/zed/zed_node/right/depth_unused</param>
             </sensor>
 
+            <!-- Wrist D435s: sensor names must equal the MJCF camera names
+                 (mujoco_inputs.urdf.xacro). Topic names match the real
+                 realsense2_camera contract, same as the Gz bridge. -->
+            <sensor name="left_wrist">
+                <param name="frame_name">left_wrist_camera_color_optical_frame</param>
+                <param name="info_topic">/left_wrist/color/camera_info</param>
+                <param name="image_topic">/left_wrist/color/image_raw</param>
+                <param name="depth_topic">/left_wrist/depth/image_rect_raw</param>
+            </sensor>
+            <sensor name="right_wrist">
+                <param name="frame_name">right_wrist_camera_color_optical_frame</param>
+                <param name="info_topic">/right_wrist/color/camera_info</param>
+                <param name="image_topic">/right_wrist/color/image_raw</param>
+                <param name="depth_topic">/right_wrist/depth/image_rect_raw</param>
+            </sensor>
+
             <!-- Lidar: combines the generated rangefinders into one LaserScan -->
             <sensor name="lidar">
                 <param name="frame_name">laser_link</param>
