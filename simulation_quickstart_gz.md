@@ -4,12 +4,36 @@
 
 ```bash
 # Build the workspace
-cd ~/Ros2_Workspaces/R2D3_ros2
-colcon build --symlink-install
+cd <your-workspace-root>          # e.g. ~/code/r2d3
+colcon build
 source install/setup.bash
 ```
 
 > **Tip:** Always source `install/setup.bash` in every new terminal.
+
+### Rebuild after editing — yes, every time
+
+This workspace is built **without** `--symlink-install`, so `install/` holds
+plain *copies*, not links. At runtime everything resolves through the install
+space: `$(find pkg)` in a xacro, `xacro.load_yaml()` on a config, launch files,
+world files, params. **Editing a file in `src/` has no effect until you
+rebuild** — the sim keeps reading the previous copy.
+
+```bash
+colcon build --packages-select <pkg> && source install/setup.bash
+```
+
+This applies to plain data files too, which is the surprising part: change a
+YAML, relaunch without rebuilding, and the old value is still in force with no
+warning. It looks exactly like "the setting does nothing", so it tends to send
+you debugging code that was never wrong. For description/config-only packages
+the rebuild is ~1 s — it is only copying files.
+
+If you would rather have live edits, `colcon build --symlink-install` links
+non-compiled assets instead of copying them and removes this entirely. It is a
+whole-workspace choice: mixing the two produces a confusing hybrid install
+space, so switch with a clean `rm -rf build install` first, and expect every
+contributor and doc to assume the same mode.
 
 ---
 
