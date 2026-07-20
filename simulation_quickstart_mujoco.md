@@ -266,8 +266,10 @@ Per arm variant (`65b` / `75b`) and side:
 - `xyz` / `rpy` — the physical housing pose. These describe the bracket in the
   wrist mesh; leave them alone unless the hardware changes.
 
-`pan: 0, tilt: 0` is the camera perpendicular to the wrist, boring straight
-out along the housing normal.
+`pan: 0, tilt: 0` is the camera looking straight down the tool axis (the
+wrist's +Z, the direction the gripper reaches along) — so it sees whatever the
+gripper is pointed at, and an arm pointing down sees the floor. Roughly
+`tilt: -0.28` centres the gripper tip in frame.
 
 Rebuild after editing — this workspace does not use `--symlink-install`, so
 xacro reads the installed copy:

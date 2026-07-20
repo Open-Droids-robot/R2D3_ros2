@@ -149,23 +149,61 @@ class TestWristCameraMount(unittest.TestCase):
                     rpy, [0.0, entry["tilt"], entry["pan"]], atol=1e-9,
                     err_msg=f"{model}/{side}: aim joint rpy should be (0, tilt, pan)")
 
-    def test_bore_points_away_from_the_wrist_axis(self):
-        """At the nominal aim, the camera must look OUTWARD. This is a
-        consistency check WITHIN the YAML only: it reads entry["xyz"] from
-        the config on both sides of the dot product, so it verifies that
-        each entry's nominal yaw and its X offset agree in sign -- it cannot
-        fail from a URDF error. test_mount_matches_config_exactly is what
-        actually ties the config to the URDF."""
+    def test_nominal_bore_follows_the_tool_axis(self):
+        """At the nominal aim the camera must look the way the GRIPPER points.
+
+        The gripper extends along the wrist link's +Z (the hand bolts onto the
+        wrist flange at +Z and reaches ~0.26 m out along it). So a wrist camera
+        that is to see what the gripper is working on must bore along +Z too.
+
+        This replaces an earlier test that asserted the bore points AWAY from
+        the wrist axis, i.e. along the housing plate's +/-X face normal. That
+        assertion was wrong and it certified a real bug: the cameras bored
+        sideways, ~90 deg off the arm's reach direction, so with the arm
+        pointing down they rendered the robot instead of the floor. The old
+        test could never catch it because it compared the config against
+        itself. This one compares against the ARM's geometry, which the camera
+        config cannot influence -- so it fails if the mount orientation is
+        wrong, whatever the YAML says.
+        """
         for model in ("65b", "75b"):
             joints = _joints(self.urdf[model])
             for side in ("left", "right"):
-                entry = self.cfg[model][side]
-                _, rpy, xyz = joints[f"{side}_wrist_camera_mount"]
+                _, rpy, _ = joints[f"{side}_wrist_camera_mount"]
                 bore = _rpy_to_R(*rpy)[:, 0]
+                # +Z of the wrist link == the tool axis the gripper reaches along
                 self.assertGreater(
-                    float(np.dot(bore, np.array(entry["xyz"]))), 0.0,
-                    f"{model}/{side}: bore points back into the wrist link "
-                    f"(bore={bore}, offset={entry['xyz']})")
+                    float(bore[2]), 0.9,
+                    f"{model}/{side}: nominal bore must follow the tool axis "
+                    f"(wrist +Z); got {np.round(bore, 3)}. A bore along the "
+                    f"housing face normal (+/-X) looks sideways and renders "
+                    f"the robot when the arm points down.")
+
+    def test_negative_tilt_aims_toward_the_gripper(self):
+        """`tilt` is documented as: negative tilts the camera DOWN toward the
+        gripper. That must hold on BOTH arms, even though the cameras sit on
+        opposite sides of their wrists (the mount X offset sign is not a
+        left/right rule). The per-entry mount yaw is what keeps the sign
+        convention consistent; get it wrong on one arm and that arm's tilt
+        knob silently works backwards."""
+        tip_local = np.array([0.0, 0.0, 0.2639])  # gripper tip, wrist frame
+        for model in ("65b", "75b"):
+            joints = _joints(self.urdf[model])
+            for side in ("left", "right"):
+                _, rpy, xyz = joints[f"{side}_wrist_camera_mount"]
+                R_mount = _rpy_to_R(*rpy)
+                want = tip_local - np.array(xyz)
+                want = want / np.linalg.norm(want)
+                aim = {}
+                for t in (-0.3, 0.3):
+                    bore = (R_mount @ _rpy_to_R(0.0, t, 0.0))[:, 0]
+                    aim[t] = float(np.dot(bore, want))
+                self.assertGreater(
+                    aim[-0.3], aim[0.3],
+                    f"{model}/{side}: negative tilt must aim TOWARD the "
+                    f"gripper, but +0.3 aims better ({aim[0.3]:+.3f}) than "
+                    f"-0.3 ({aim[-0.3]:+.3f}) -- the mount yaw for this entry "
+                    f"inverts the documented tilt convention.")
 
     def test_color_and_depth_optical_frames_are_coincident(self):
         """Gz rgbd_camera renders colour and depth from ONE viewpoint, and the

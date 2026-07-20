@@ -64,19 +64,29 @@ diff then shows only the aim change, and the pivot stays at the housing centroid
 
 ```yaml
 65b:
-  left:  {parent: l_link6, xyz: [ 0.0671, 0, 0.0275], rpy: [0, 0, 0],      pan: 0.0, tilt: 0.0}
-  right: {parent: r_link6, xyz: [-0.0671, 0, 0.0301], rpy: [0, 0, 3.1416], pan: 0.0, tilt: 0.0}
+  left:  {parent: l_link6, xyz: [ 0.0671, 0, 0.0275], rpy: [0, -1.5708, 0],      pan: 0.0, tilt: 0.0}
+  right: {parent: r_link6, xyz: [-0.0671, 0, 0.0301], rpy: [0, -1.5708, 3.1416], pan: 0.0, tilt: 0.0}
 75b:
-  left:  {parent: l_link7, xyz: [-0.0671, 0, 0.0275], rpy: [0, 0, 3.1416], pan: 0.0, tilt: 0.0}
-  right: {parent: r_link7, xyz: [-0.0671, 0, 0.0256], rpy: [0, 0, 3.1416], pan: 0.0, tilt: 0.0}
+  left:  {parent: l_link7, xyz: [-0.0671, 0, 0.0275], rpy: [0, -1.5708, 3.1416], pan: 0.0, tilt: 0.0}
+  right: {parent: r_link7, xyz: [-0.0671, 0, 0.0256], rpy: [0, -1.5708, 3.1416], pan: 0.0, tilt: 0.0}
 ```
 
-- `xyz` / `rpy` — the bracket: housing centroid and nominal outward bore.
+- `xyz` / `rpy` — the bracket: housing centroid, and the nominal bore along the
+  **tool axis** (the wrist link's +Z, the direction the gripper reaches along).
 - `pan` — rotation about the mount Z (left/right sweep), radians.
 - `tilt` — rotation about the mount Y, radians. **Negative = downward**, toward
-  the gripper.
-- Nominal `pan: 0, tilt: 0` = camera perpendicular to the wrist, boring along
-  the housing's outward normal.
+  the gripper, on both arms.
+- Nominal `pan: 0, tilt: 0` = camera looking straight down the tool axis, so it
+  sees whatever the gripper is pointed at (arm down → floor).
+
+> **Corrected 2026-07-20.** This section originally specified the nominal bore
+> as the housing plate's outward face normal (±X), with `rpy: [0, 0, yaw]`.
+> That was wrong and shipped as a bug: ±X is ~90° off the arm's reach
+> direction, so the cameras looked sideways and rendered the robot when an arm
+> pointed down. The fix adds the `-pi/2` pitch that swings the bore onto +Z.
+> The regression test now checks the bore against the **arm's** geometry, not
+> against this config — the original test compared the config with itself and
+> so certified the bug. See "Lesson" at the end of this document.
 
 Loaded in xacro via `${xacro.load_yaml(...)}`, keyed by the `arm_model` arg.
 
@@ -168,3 +178,34 @@ the wrist link — the most likely failure given the irregular X signs.
 
 Never name a xacro property `e` — `e` is Euler's number in xacro's expression
 namespace and gets silently redefined with a warning.
+
+
+## Lesson: a test that compares a config against itself proves nothing
+
+The nominal-bore error above survived 84 passing tests, two per-task reviews,
+and a whole-branch review. It was caught only when a human pointed an arm at
+the floor and saw the robot.
+
+The reason is worth recording. The guard test was
+`test_bore_points_away_from_the_wrist_axis`, and it asserted:
+
+    dot(bore_from_config, offset_from_config) > 0
+
+Both sides of that comparison came from `wrist_cameras.yaml`. The test could
+only ever confirm that the file was internally consistent — and it was,
+perfectly, while pointing every camera the wrong way. Worse, it *read* like
+coverage, so each review in turn saw "bore direction: tested" and moved on. A
+reviewer did flag that its docstring overclaimed, and the docstring was
+softened; nobody asked the harder question of whether the assertion had any
+external referent at all.
+
+The replacement, `test_nominal_bore_follows_the_tool_axis`, asserts the bore
+against the **arm's** geometry (the gripper reaches along the wrist's +Z). That
+is a fact the camera config cannot influence, so the test can actually fail.
+
+The general rule: a test whose expected value is derived from the same source
+as its actual value is a tautology wearing a test's clothes. Anchor assertions
+to something the code under test does not control — the arm's kinematics, a
+physical measurement, a rendered frame. When a whole test suite is green and a
+defect is still visible to the naked eye in one glance, suspect that the suite
+is checking self-consistency rather than truth.
