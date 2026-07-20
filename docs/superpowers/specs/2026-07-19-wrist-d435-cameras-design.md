@@ -63,19 +63,24 @@ diff then shows only the aim change, and the pivot stays at the housing centroid
 `dual_rm_description/config/wrist_cameras.yaml`:
 
 ```yaml
+# ALL ANGLES IN DEGREES (xacro converts with radians() when it reads this).
 65b:
-  left:  {parent: l_link6, xyz: [ 0.0671, 0, 0.0275], rpy: [0, -1.5708, 0],      pan: 0.0, tilt: 0.0}
-  right: {parent: r_link6, xyz: [-0.0671, 0, 0.0301], rpy: [0, -1.5708, 3.1416], pan: 0.0, tilt: 0.0}
+  left:  {parent: l_link6, xyz: [ 0.0671, 0, 0.0275], rpy: [0, -90, 0],   pan: 0, tilt: -45}
+  right: {parent: r_link6, xyz: [-0.0671, 0, 0.0301], rpy: [0, -90, 180], pan: 0, tilt: -45}
 75b:
-  left:  {parent: l_link7, xyz: [-0.0671, 0, 0.0275], rpy: [0, -1.5708, 3.1416], pan: 0.0, tilt: 0.0}
-  right: {parent: r_link7, xyz: [-0.0671, 0, 0.0256], rpy: [0, -1.5708, 3.1416], pan: 0.0, tilt: 0.0}
+  left:  {parent: l_link7, xyz: [-0.0671, 0, 0.0275], rpy: [0, -90, 180], pan: 0, tilt: 0}
+  right: {parent: r_link7, xyz: [-0.0671, 0, 0.0256], rpy: [0, -90, 180], pan: 0, tilt: 0}
 ```
 
 - `xyz` / `rpy` — the bracket: housing centroid, and the nominal bore along the
   **tool axis** (the wrist link's +Z, the direction the gripper reaches along).
-- `pan` — rotation about the mount Z (left/right sweep), radians.
-- `tilt` — rotation about the mount Y, radians. **Negative = downward**, toward
-  the gripper, on both arms.
+- `pan` — rotation about the mount Z (left/right sweep), **degrees**.
+- `tilt` — rotation about the mount Y, **degrees**. **Negative = downward**,
+  toward the gripper, on both arms. Roughly `-16` centres the gripper tip.
+
+Angles are stored in degrees because this is a knob humans turn; the xacro
+converts with `radians()` at the single point where it reads the file. `xyz`
+stays in metres.
 - Nominal `pan: 0, tilt: 0` = camera looking straight down the tool axis, so it
   sees whatever the gripper is pointed at (arm down → floor).
 

@@ -5,11 +5,14 @@
 # housing's centroid, so pan/tilt pivot the camera in place rather than
 # swinging it out through a housing wall.
 #
+# ALL ANGLES IN THIS FILE ARE DEGREES. `xyz` is metres. The xacro converts
+# with radians() at the single point where it reads this file.
+#
 #   xyz  - housing centroid in the parent wrist link's frame (m). Measured
 #          from the meshes: outer face at |x|=0.0783, bar ~22mm thick.
 #   rpy  - nominal bore, which follows the TOOL AXIS: the wrist link's +Z,
 #          the direction the gripper reaches along (the hand bolts to the
-#          wrist flange at +Z and extends ~0.26 m out). The pitch of -pi/2
+#          wrist flange at +Z and extends ~0.26 m out). The pitch of -90 deg
 #          is what swings the mount's +X (the bore) onto that +Z.
 #
 #          Do NOT "correct" this back to the housing plate's +/-X face
@@ -19,43 +22,50 @@
 #
 #          The yaw term is per-entry because the X offset sign is NOT a
 #          left/right rule (65b-left is +X; the other three are -X). Yaw is
-#          0 when the offset is +X and pi when it is -X; that is what keeps
+#          0 when the offset is +X and 180 when it is -X; that is what keeps
 #          the tilt sign below meaning the same thing on both arms.
-#   pan  - rotation about the mount Z, radians. Left/right sweep.
-#   tilt - rotation about the mount Y, radians. NEGATIVE = downward, toward
+#   pan  - rotation about the mount Z, DEGREES. Left/right sweep.
+#   tilt - rotation about the mount Y, DEGREES. NEGATIVE = downward, toward
 #          the gripper, on BOTH arms. This is the knob you normally want.
-#          Roughly -0.28 centres the gripper tip in frame.
+#          Roughly -16 centres the gripper tip in frame.
 #
 # pan: 0, tilt: 0 == camera looking straight down the tool axis, i.e. seeing
 # whatever the gripper is pointed at (arm down -> floor). Both sims read this
 # one file, so editing here re-aims the camera in Gazebo and MuJoCo
-# identically. Guarded by test_wrist_camera_mount.py, which checks the bore
-# against the ARM's geometry rather than against this file.
+# identically.
+#
+# !! REBUILD AFTER EDITING !!  This workspace does NOT use --symlink-install,
+# so $(find ...) resolves to the INSTALL space and xacro keeps reading the old
+# copy of this file. An edit here has NO effect on either sim until you run:
+#     colcon build --packages-select dual_rm_description && source install/setup.bash
+#
+# Guarded by test_wrist_camera_mount.py, which checks the bore against the
+# ARM's geometry rather than against this file.
 
 65b:
   left:
     parent: l_link6
     xyz: [0.0671, 0.0, 0.0275]
-    rpy: [0.0, -1.57079633, 0.0]
+    rpy: [0.0, -90.0, 0.0]
     pan: 0.0
-    tilt: 0.0
+    tilt: -45.0
   right:
     parent: r_link6
     xyz: [-0.0671, 0.0, 0.0301]
-    rpy: [0.0, -1.57079633, 3.14159265]
+    rpy: [0.0, -90.0, 180.0]
     pan: 0.0
-    tilt: 0.0
+    tilt: -45.0
 
 75b:
   left:
     parent: l_link7
     xyz: [-0.0671, 0.0, 0.0275]
-    rpy: [0.0, -1.57079633, 3.14159265]
+    rpy: [0.0, -90.0, 180.0]
     pan: 0.0
     tilt: 0.0
   right:
     parent: r_link7
     xyz: [-0.0671, 0.0, 0.0256]
-    rpy: [0.0, -1.57079633, 3.14159265]
+    rpy: [0.0, -90.0, 180.0]
     pan: 0.0
     tilt: 0.0

@@ -260,16 +260,25 @@ ros2_rm_robot/dual_rm_description/dual_rm_description/config/wrist_cameras.yaml
 
 Per arm variant (`65b` / `75b`) and side:
 
-- `tilt` — radians about the mount Y. **Negative tilts the camera down**
+- `tilt` — **degrees** about the mount Y. **Negative tilts the camera down**
   toward the gripper. This is usually the only value you need.
-- `pan` — radians about the mount Z (left/right sweep).
+- `pan` — **degrees** about the mount Z (left/right sweep).
+
+All angles in that file are degrees; the xacro converts to radians at the one
+point where it reads the file.
 - `xyz` / `rpy` — the physical housing pose. These describe the bracket in the
   wrist mesh; leave them alone unless the hardware changes.
 
 `pan: 0, tilt: 0` is the camera looking straight down the tool axis (the
 wrist's +Z, the direction the gripper reaches along) — so it sees whatever the
 gripper is pointed at, and an arm pointing down sees the floor. Roughly
-`tilt: -0.28` centres the gripper tip in frame.
+`tilt: -16` centres the gripper tip in frame; `-45` angles it well across the
+gripper.
+
+> **An edit here does nothing until you rebuild.** This workspace does not use
+> `--symlink-install`, so `$(find ...)` resolves to the *install* space and
+> xacro keeps reading the previous copy of the file. If a tilt change appears
+> to have no effect, this is almost certainly why — rebuild and relaunch.
 
 Rebuild after editing — this workspace does not use `--symlink-install`, so
 xacro reads the installed copy:

@@ -129,8 +129,9 @@ class TestWristCameraMount(unittest.TestCase):
                     xyz, entry["xyz"], atol=1e-9,
                     err_msg=f"{model}/{side}: mount xyz does not match config")
                 np.testing.assert_allclose(
-                    rpy, entry["rpy"], atol=1e-9,
-                    err_msg=f"{model}/{side}: mount rpy does not match config")
+                    rpy, np.radians(entry["rpy"]), atol=1e-9,
+                    err_msg=f"{model}/{side}: mount rpy does not match config "
+                            f"(config is in DEGREES, URDF in radians)")
 
     def test_aim_is_a_separate_joint_carrying_only_pan_tilt(self):
         """pan/tilt must live in their own joint so they pivot about the
@@ -146,8 +147,11 @@ class TestWristCameraMount(unittest.TestCase):
                     xyz, [0.0, 0.0, 0.0], atol=1e-12,
                     err_msg=f"{model}/{side}: aim joint must not translate")
                 np.testing.assert_allclose(
-                    rpy, [0.0, entry["tilt"], entry["pan"]], atol=1e-9,
-                    err_msg=f"{model}/{side}: aim joint rpy should be (0, tilt, pan)")
+                    rpy,
+                    [0.0, math.radians(entry["tilt"]), math.radians(entry["pan"])],
+                    atol=1e-9,
+                    err_msg=f"{model}/{side}: aim joint rpy should be "
+                            f"(0, tilt, pan) converted from DEGREES to radians")
 
     def test_nominal_bore_follows_the_tool_axis(self):
         """At the nominal aim the camera must look the way the GRIPPER points.

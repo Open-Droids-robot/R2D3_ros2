@@ -43,10 +43,14 @@
       <!-- NOTE: do not name this property 'e' - xacro reserves e (Euler's
            number) and silently redefines it. -->
       <xacro:property name="entry" value="${wrist_cam_cfg[side]}"/>
+      <!-- Every ANGLE in wrist_cameras.yaml is in DEGREES (it is a knob humans
+           turn); URDF wants radians, so convert here at the one boundary.
+           `xyz` is metres and passes through untouched. -->
       <xacro:d435_camera name="${side}_wrist" parent="${entry['parent']}"
-                         pan="${entry['pan']}" tilt="${entry['tilt']}">
+                         pan="${radians(entry['pan'])}"
+                         tilt="${radians(entry['tilt'])}">
         <origin xyz="${entry['xyz'][0]} ${entry['xyz'][1]} ${entry['xyz'][2]}"
-                rpy="${entry['rpy'][0]} ${entry['rpy'][1]} ${entry['rpy'][2]}"/>
+                rpy="${radians(entry['rpy'][0])} ${radians(entry['rpy'][1])} ${radians(entry['rpy'][2])}"/>
       </xacro:d435_camera>
     </xacro:macro>
 
