@@ -49,12 +49,28 @@
       <origin xyz="0 0 0" rpy="0 ${tilt} ${pan}"/>
     </joint>
 
+    <!-- Body roll: the D435 sits INVERTED in its housing, so the sensor's
+         image-up is opposite the aim frame's +Z. Without this the rendered
+         image comes out upside down (observed in both sims).
+
+         This roll MUST stay downstream of the aim joint. Rotating 180 deg
+         about the bore necessarily reverses the frame's Y axis, and Y is the
+         axis `tilt` turns about. Put this in the mount joint instead and
+         the tilt knob silently works backwards on every arm. Applied here it
+         leaves the bore and the tilt axis untouched and only flips which way
+         is up in the image. Guarded by
+         test_wrist_camera_mount.py::test_body_roll_preserves_bore_and_tilt_axis.
+
+         Same value on every wrist today; promote it to wrist_cameras.yaml if a
+         future mount ever carries the camera right-way-up. -->
+    <xacro:property name="body_roll" value="${pi}"/>
+
     <!-- Colour -->
     <link name="${name}_camera_color_frame"/>
     <joint name="${name}_camera_color_joint" type="fixed">
       <parent link="${name}_camera_link"/>
       <child link="${name}_camera_color_frame"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="${body_roll} 0 0"/>
     </joint>
 
     <link name="${name}_camera_color_optical_frame"/>
@@ -69,7 +85,7 @@
     <joint name="${name}_camera_depth_joint" type="fixed">
       <parent link="${name}_camera_link"/>
       <child link="${name}_camera_depth_frame"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="${body_roll} 0 0"/>
     </joint>
 
     <link name="${name}_camera_depth_optical_frame"/>

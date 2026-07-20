@@ -205,6 +205,43 @@ class TestWristCameraMount(unittest.TestCase):
                     f"-0.3 ({aim[-0.3]:+.3f}) -- the mount yaw for this entry "
                     f"inverts the documented tilt convention.")
 
+    def test_body_roll_preserves_bore_and_tilt_axis(self):
+        """The D435 is inverted in its housing, so a 180 deg body roll flips
+        image-up. That roll lives BELOW the aim joint, and must stay there.
+
+        Rotating 180 deg about the bore also reverses the frame's Y axis, and
+        Y is what `tilt` turns about. Move this roll up into the mount joint
+        and the bore still looks right, the image still looks right, and the
+        tilt knob silently works backwards on every arm -- a failure that only
+        shows up when someone tries to aim a camera and it goes the wrong way.
+
+        So: the sensor frame must be rolled exactly pi relative to the aim
+        frame (image flipped), while sharing its X axis (bore untouched).
+        """
+        for model in ("65b", "75b"):
+            joints = _joints(self.urdf[model])
+            for side in ("left", "right"):
+                for stream in ("color", "depth"):
+                    parent, rpy, xyz = joints[f"{side}_wrist_camera_{stream}_frame"]
+                    self.assertEqual(
+                        parent, f"{side}_wrist_camera_link",
+                        f"{model}/{side}/{stream}: body roll must hang off the "
+                        f"aim output, not be folded into the mount")
+                    R = _rpy_to_R(*rpy)
+                    np.testing.assert_allclose(
+                        R[:, 0], [1.0, 0.0, 0.0], atol=1e-9,
+                        err_msg=f"{model}/{side}/{stream}: body roll must not "
+                                f"move the bore (its X axis)")
+                    np.testing.assert_allclose(
+                        R[:, 2], [0.0, 0.0, -1.0], atol=1e-9,
+                        err_msg=f"{model}/{side}/{stream}: image-up must be "
+                                f"inverted (roll of pi about the bore); "
+                                f"got up={np.round(R[:, 2], 3)}")
+                    np.testing.assert_allclose(
+                        xyz, [0.0, 0.0, 0.0], atol=1e-12,
+                        err_msg=f"{model}/{side}/{stream}: body roll must not "
+                                f"translate the camera")
+
     def test_color_and_depth_optical_frames_are_coincident(self):
         """Gz rgbd_camera renders colour and depth from ONE viewpoint, and the
         real D435 publishes depth aligned to colour. Modelling a baseline here
