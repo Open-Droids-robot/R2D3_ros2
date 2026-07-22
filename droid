@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# R2D3 containerised simulation workspace.
+#
+# Constrained to bash 3.2 (macOS ships 3.2): no associative arrays, no ${var^^},
+# no mapfile, no globstar. Nothing beyond bash and Docker is required on the host.
+set -eu
+
+IMAGE_REF="ghcr.io/open-droids-robot/r2d3-sim:jazzy"
+NOVNC_PORT="6080"
+REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+
+die() { printf '%s\n' "$*" >&2; exit 2; }
+
+usage() {
+  cat <<'EOF'
+R2D3 containerised simulation workspace.
+
+Usage: ./droid <command> [options]
+
+Commands:
+  up [--mujoco] [--gpu <tier>] [--recreate]
+                Ensure the image, start the container, rebuild the simulation
+                subset, launch the simulation, and print the noVNC URL.
+  shell         Open a shell in the running container.
+  doctor        Re-run the platform probe and print raw + resolved values.
+  resolve       Print the resolved configuration as key=value lines. No side effects.
+  down          Stop the container, preserving anything installed inside it.
+  nuke          Destroy the container AND its volumes. Container-local installs are lost.
+
+Options for `up`:
+  --mujoco      Use the MuJoCo backend instead of Gazebo (the default).
+  --gpu <tier>  Override platform detection. <tier> is `cpu` or `nvidia`.
+  --recreate    Consent to recreating the container when its configuration has
+                drifted. This destroys container-local installations.
+
+The GUI is served over noVNC at http://localhost:6080 on every platform.
+See docs/container.md.
+EOF
+}
+
+# --- resolve ----------------------------------------------------------------
+#
+# A pure decision step: consumes probe results from the environment, prints the
+# resolved configuration, performs no side effects. Every branching decision in
+# this tool flows through here, which is what makes the decision table testable
+# offline with fabricated environments -- and what makes "why did it pick this?"
+# answerable by a human running `./droid resolve`.
+cmd_resolve() {
+  os="${DROID_OS:-}"
+  arch="${DROID_ARCH:-}"
+  gpu_vendor="${DROID_GPU_VENDOR:-}"
+  dri="${DROID_DRI:-}"
+  jetson="${DROID_JETSON:-}"
+  docker_gpu="${DROID_DOCKER_GPU:-}"
+  override="${DROID_GPU_OVERRIDE:-}"
+
+  [ -n "$os" ] || os="linux"
+  [ -n "$gpu_vendor" ] || gpu_vendor="none"
+  [ -n "$dri" ] || dri="no"
+  [ -n "$jetson" ] || jetson="no"
+  [ -n "$docker_gpu" ] || docker_gpu="unknown"
+
+  case "$arch" in
+    x86_64|amd64) arch="amd64" ;;
+    aarch64|arm64) arch="arm64" ;;
+    "") die "droid resolve: DROID_ARCH is not set" ;;
+    *) die "droid resolve: unsupported architecture '$arch' (expected x86_64 or aarch64)" ;;
+  esac
+
+  if [ -n "$override" ]; then
+    case "$override" in
+      cpu|nvidia) tier="$override" ;;
+      *) die "droid resolve: unsupported --gpu tier '$override' (expected cpu or nvidia)" ;;
+    esac
+  elif [ "$os" = "darwin" ]; then
+    # Docker Desktop has no GPU passthrough to Linux containers, so a Mac's own
+    # hardware is irrelevant here and must never produce a GPU error.
+    tier="cpu"
+  elif [ "$gpu_vendor" = "nvidia" ] && [ "$docker_gpu" = "ok" ]; then
+    tier="nvidia"
+  elif [ "$gpu_vendor" = "nvidia" ] && [ "$docker_gpu" = "fail" ]; then
+    gpu_unreachable_error
+  else
+    tier="cpu"
+  fi
+
+  printf 'os=%s\n' "$os"
+  printf 'arch=%s\n' "$arch"
+  printf 'platform=linux/%s\n' "$arch"
+  printf 'gpu_vendor=%s\n' "$gpu_vendor"
+  printf 'dri=%s\n' "$dri"
+  printf 'jetson=%s\n' "$jetson"
+  printf 'tier=%s\n' "$tier"
+  printf 'novnc_port=%s\n' "$NOVNC_PORT"
+}
+
+# Hard failure, deliberately. An NVIDIA GPU is present but Docker cannot acquire
+# it. Falling back silently means the developer runs software rendering for weeks
+# while blaming the container for being slow.
+gpu_unreachable_error() {
+  cat >&2 <<EOF
+droid: an NVIDIA GPU is present, but Docker cannot acquire it.
+
+  nvidia-smi works on this host, but 'docker run --gpus all' fails. That usually
+  means the NVIDIA Container Toolkit is missing or has generated no CDI spec.
+
+  To fix it:
+    sudo apt-get install -y nvidia-container-toolkit
+    sudo nvidia-ctk runtime configure --runtime=docker
+    sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+    sudo systemctl restart docker
+  Then re-run:  ./droid doctor
+
+  To proceed on software rendering instead, without fixing this:
+    ./droid up --gpu cpu
+EOF
+  exit 3
+}
+
+# --- dispatch ---------------------------------------------------------------
+[ $# -gt 0 ] || { usage; exit 2; }
+case "$1" in
+  resolve) shift; cmd_resolve "$@" ;;
+  -h|--help|help) usage ;;
+  *) die "droid: unknown command '$1' (try ./droid --help)" ;;
+esac
