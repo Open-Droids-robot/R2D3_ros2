@@ -3,6 +3,7 @@ a script, a compose file, a colcon defaults file, ignore markers and a CI workfl
 and the failure mode when they drift is silent. These tests are the drift alarm.
 They require no Docker and reach no network."""
 
+import json
 import re
 import subprocess
 import unittest
@@ -220,7 +221,14 @@ class TestImageReferenceParity(unittest.TestCase):
         droid = (REPO_ROOT / "droid").read_text()
         compose = (CONTAINER_DIR / "docker-compose.yml").read_text()
         ref = re.search(r'IMAGE_REF="([^"]+)"', droid).group(1)
-        self.assertIn(ref, compose)
+        # EQUALITY, not substring containment: `assertIn(ref, compose)` would also
+        # pass if the compose file's image tag were e.g. "...:jazzy2" -- a tag typo
+        # is exactly the drift this class exists to catch, and substring containment
+        # lets it through silently.
+        compose_match = re.search(r'^\s*image:\s*(\S+)\s*$', compose, re.MULTILINE)
+        self.assertIsNotNone(
+            compose_match, "no 'image:' line found in container/docker-compose.yml")
+        self.assertEqual(ref, compose_match.group(1))
         self.assertEqual(ref, "ghcr.io/open-droids-robot/r2d3-sim:jazzy")
 
 
@@ -252,6 +260,22 @@ class TestDevContainer(unittest.TestCase):
         text = (REPO_ROOT / ".devcontainer" / "devcontainer.json").read_text()
         self.assertIn("../container/docker-compose.yml", text)
         self.assertIn('"service": "sim"', text)
+
+    def test_remote_user_is_droid_not_root(self):
+        # The image's final USER is root, and `docker exec` does not run the
+        # entrypoint's uid-remapping -- so an editor attaching as root would create
+        # root-owned files in the developer's bind-mounted source tree. That's a
+        # binding safety constraint, so it needs a guard, not just the service/path
+        # checks above.
+        #
+        # `.devcontainer/devcontainer.json` has no comments today, so plain
+        # `json.load` parses it (verified: see task-5-report.md). Using it instead
+        # of substring matching means a reformatted or reordered file can't produce
+        # a false pass (e.g. `"remoteUser": "root"  // droid` would satisfy
+        # assertIn) or a false failure from whitespace/quoting changes.
+        text = (REPO_ROOT / ".devcontainer" / "devcontainer.json").read_text()
+        config = json.loads(text)
+        self.assertEqual(config.get("remoteUser"), "droid")
 
 
 if __name__ == "__main__":
