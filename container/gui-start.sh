@@ -22,7 +22,13 @@ xdpyinfo -display "$DISPLAY" >/dev/null 2>&1 || {
 }
 
 fluxbox >/tmp/fluxbox.log 2>&1 &
-x11vnc -display "$DISPLAY" -forever -shared -nopw -quiet -rfbport 5900 \
+# -localhost is not optional. `-nopw` makes this an UNAUTHENTICATED VNC endpoint
+# with full keyboard and mouse control, and without -localhost x11vnc binds
+# 0.0.0.0:5900 -- reachable from any sibling container on the compose bridge
+# network, and LAN-reachable the moment someone publishes port 5900. Bound to the
+# loopback interface it is reachable only by websockify, which is the only thing
+# that should ever dial it: it already connects to localhost:5900.
+x11vnc -display "$DISPLAY" -forever -shared -nopw -localhost -quiet -rfbport 5900 \
   >/tmp/x11vnc.log 2>&1 &
 websockify --web /usr/share/novnc 6080 localhost:5900 \
   >/tmp/websockify.log 2>&1 &

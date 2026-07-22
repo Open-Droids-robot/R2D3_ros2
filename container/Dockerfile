@@ -77,65 +77,21 @@ RUN source /opt/ros/jazzy/setup.bash && colcon build && chown -R droid:droid /ws
 # an unmodified checkout at this revision. A developer on a feature branch pays the
 # full reconversion, correctly.
 #
-# Three things this step does NOT do, each for a reason:
-#
-#  * It does not run `mujoco_sim.launch.py`. The launch brings up
-#    mujoco_ros2_control, which opens a MuJoCo window unless headless -- and
-#    `headless` is an argument to the xacro, so passing headless:=true to dodge
-#    that changes the generated description and therefore the content hash. The
-#    cache would be warmed under a key the default launch never asks for: a
-#    pre-warm that is always a miss, and silently so. Driving ensure_mjcf.py
-#    directly with the launch file's own defaults (arm_model 65b, headless false,
-#    nav_empty.xml) warms the key the default launch will actually look up.
-#
-#  * It does not `sleep` for a fixed interval. A guessed duration is either wasted
-#    build time or a truncated conversion; polling for the cache to appear takes
-#    exactly as long as the conversion takes, and the timeout is a backstop rather
-#    than the mechanism.
-#
-#  * It does not use `kill %1`, and it does not go through `ros2 run`. Job control
-#    is off in a non-interactive shell, so `%1` never resolves; and `ros2 run`
-#    Popen()s the script as a child, so $! would name the launcher rather than the
-#    converter driver and SIGTERM would stop the wrong process. Invoking the
-#    installed script directly makes $! the process that must actually be signalled.
-#    ensure_mjcf.py restores default signal handling before it latches the model
-#    and spins, so SIGTERM ends it cleanly.
-#
-# Note the statement separators below: the steps are joined with `;` and not `&&`,
-# because `a && b &` backgrounds the whole list -- $! would be a subshell and the
-# kill would never reach the converter.
-#
-# The trailing assertions are load-bearing. Without them a converter that failed
-# after printing an error would still produce a "successful" image whose first
-# launch silently reconverts.
+# The whole step is `container/prewarm-mjcf.py` (already in the image via the COPY
+# above) and NOT a few lines of shell, for one decisive reason: bash command
+# substitution strips trailing newlines, and `launch.substitutions.Command` does
+# not. `description="$(xacro ...)"` therefore produces a description one byte
+# shorter than the one the launch produces, which is a different sha256, which is a
+# different cache key -- a pre-warm that always misses, with every build-time
+# assertion still passing because a cache does exist. The driver uses the real
+# `Command` substitution and reads the launch file's own DeclareLaunchArgument
+# defaults, then ASSERTS that the checksum it computes equals the checksum file the
+# converter wrote. That assertion is the guard; see the script's docstring.
 USER droid
 RUN source /opt/ros/jazzy/setup.bash; \
     source /ws/install/setup.bash; \
-    set -e; \
     export HOME=/home/droid; \
-    prefix="$(ros2 pkg prefix r2d3_mujoco)"; \
-    share="$prefix/share/r2d3_mujoco"; \
-    cache="$HOME/.ros/r2d3_mujoco/65b"; \
-    description="$(xacro "$share/urdf/r2d3_mujoco.urdf.xacro" arm_model:=65b headless:=false)"; \
-    "$prefix/lib/r2d3_mujoco/ensure_mjcf.py" \
-      --robot-description "$description" \
-      --world "$share/worlds/nav_empty.xml" \
-      --model 65b & \
-    prewarm_pid=$!; \
-    deadline=$((SECONDS + 1200)); \
-    while [ "$SECONDS" -lt "$deadline" ]; do \
-      if [ -f "$cache/checksum" ] && [ -f "$cache/mujoco_description_formatted.xml" ]; then break; fi; \
-      kill -0 "$prewarm_pid" 2>/dev/null || break; \
-      sleep 5; \
-    done; \
-    kill "$prewarm_pid" 2>/dev/null || true; \
-    wait "$prewarm_pid" 2>/dev/null || true; \
-    test -f "$cache/checksum" \
-      || { echo "prewarm: no checksum -- the MuJoCo conversion did not complete" >&2; exit 1; }; \
-    test -f "$cache/mujoco_description_formatted.xml" \
-      || { echo "prewarm: no MJCF -- the MuJoCo conversion did not complete" >&2; exit 1; }; \
-    test -x "$HOME/.ros/ros2_control/.venv/bin/python3" \
-      || { echo "prewarm: converter venv missing -- first launch would rebuild it" >&2; exit 1; }
+    python3 /ws/src/R2D3_ros2/container/prewarm-mjcf.py
 USER root
 
 COPY container/entrypoint.sh container/gui-start.sh container/launch-sim.sh /opt/droid/

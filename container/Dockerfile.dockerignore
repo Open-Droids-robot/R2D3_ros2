@@ -5,6 +5,14 @@
 # the tree, and the legacy Docker/ setup has its own. This one only governs the
 # image built from container/Dockerfile.
 #
+# REQUIRES BUILDKIT. The `<dockerfile>.dockerignore` form is a BuildKit feature;
+# the legacy builder only ever reads `.dockerignore` at the context root. BuildKit
+# is the default in Docker 23+ and in `docker buildx`, so this is honoured in
+# practice -- but a build forced through the old path with DOCKER_BUILDKIT=0 would
+# silently ignore this file and copy a host `install/` (and 117 MB of `.git`) into
+# the image, with the runtime failure landing far from its cause. Build with
+# BuildKit, which is also what the CI job uses.
+#
 # Two of these entries are correctness, not just speed:
 #
 #   .git      117 MB, and it changes on every commit, checkout and fetch -- so

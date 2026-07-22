@@ -3,6 +3,7 @@ a script, a compose file, a colcon defaults file, ignore markers and a CI workfl
 and the failure mode when they drift is silent. These tests are the drift alarm.
 They require no Docker and reach no network."""
 
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -92,7 +93,14 @@ class TestPackageSelection(unittest.TestCase):
     runtime-created markers would pollute the developer's version control status,
     and committed markers would change the HOST's build too."""
 
-    def test_defaults_file_yields_exactly_the_simulation_subset(self):
+    def test_defaults_file_yields_the_simulation_subset_without_dirtying_the_tree(self):
+        # The two assertions are deliberately in ONE test. Split across two,
+        # unittest's alphabetical ordering ran the git-status one first -- before
+        # the only action that could have dirtied anything -- so it asserted about a
+        # tree nothing had touched yet. Here the git status is observed strictly
+        # after the colcon invocation, which is the only arrangement that tests the
+        # claim: package discovery must not write COLCON_IGNORE markers or any other
+        # state into the bind-mounted checkout.
         proc = subprocess.run(
             ["colcon", "list", "--names-only"],
             cwd=REPO_ROOT,
@@ -105,12 +113,43 @@ class TestPackageSelection(unittest.TestCase):
         found = sorted(proc.stdout.split())
         self.assertEqual(found, sorted(SIMULATION_PACKAGES))
 
-    def test_applying_the_defaults_file_writes_nothing_into_the_tree(self):
-        proc = subprocess.run(
+        status = subprocess.run(
             ["git", "status", "--porcelain"],
             cwd=REPO_ROOT, capture_output=True, text=True)
-        self.assertEqual(proc.stdout.strip(), "",
+        self.assertEqual(status.stdout.strip(), "",
                          "package discovery dirtied the working tree")
+
+
+class TestDockerfileConsumesTheDefaultsFile(unittest.TestCase):
+    """Ties the validated YAML to the image that consumes it.
+
+    Everything above validates `container/colcon-defaults.yaml` in isolation. That
+    leaves a hole: change the COPY destination, or drop the ENV, and the whole
+    suite stays green while the container happily builds all 29 packages and pulls
+    the ZED and RealSense SDKs back in. This test closes it by reading the
+    Dockerfile and checking the two ends actually meet.
+    """
+
+    def setUp(self):
+        self.dockerfile = (CONTAINER_DIR / "Dockerfile").read_text()
+
+    def _copy_destination(self):
+        match = re.search(
+            r"^COPY\s+container/colcon-defaults\.yaml\s+(\S+)\s*$",
+            self.dockerfile, re.MULTILINE)
+        self.assertIsNotNone(
+            match, "the Dockerfile no longer COPYs container/colcon-defaults.yaml")
+        return match.group(1)
+
+    def _defaults_file_env(self):
+        match = re.search(
+            r"^ENV\s+COLCON_DEFAULTS_FILE=(\S+)\s*$", self.dockerfile, re.MULTILINE)
+        self.assertIsNotNone(
+            match, "the Dockerfile no longer sets ENV COLCON_DEFAULTS_FILE")
+        return match.group(1)
+
+    def test_the_copied_defaults_file_is_the_one_colcon_is_told_to_read(self):
+        self.assertEqual(self._copy_destination(), self._defaults_file_env())
 
 
 if __name__ == "__main__":

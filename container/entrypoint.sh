@@ -29,7 +29,15 @@ fi
 # rewrite the ctime of every file in the developer's checkout on every start.
 # That is why /ws itself is chowned shallowly and only the build artefact
 # directories below it are chowned recursively.
-chown "$HOST_UID:$HOST_GID" "$USER_HOME" /ws /ws/src 2>/dev/null || true
+#
+# $USER_HOME is chowned RECURSIVELY, though. `groupmod -g` chowns nothing and
+# `usermod -u` only rewrites uids, so a shallow chown left /home/droid/.bashrc and
+# the rest of the skeleton owned by the old ids -- an unwritable shell profile for
+# the very user who is about to get a shell. The directory is small (dotfiles plus
+# .ros and .cache, which the loop below already recurses), so the added cost is
+# negligible.
+chown -R "$HOST_UID:$HOST_GID" "$USER_HOME" 2>/dev/null || true
+chown "$HOST_UID:$HOST_GID" /ws /ws/src 2>/dev/null || true
 for d in "$USER_HOME/.ros" "$USER_HOME/.cache" /ws/build /ws/install /ws/log; do
   [ -d "$d" ] || mkdir -p "$d"
   chown -R "$HOST_UID:$HOST_GID" "$d" 2>/dev/null || true

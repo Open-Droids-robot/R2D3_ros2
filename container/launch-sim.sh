@@ -33,11 +33,21 @@ launch_with_rviz() {
   "$@" &
   sim_pid=$!
   rviz_config="$(ros2 pkg prefix dual_rm_description)/share/dual_rm_description/rviz/view.rviz"
-  rviz2 -d "$rviz_config" &
+  # use_sim_time is not optional here. Both backends publish /clock and stamp TF in
+  # simulation time, which starts near zero; rviz2 defaults to false and would read
+  # every transform as hours out of date, so the display comes up empty with "no
+  # transform" errors -- which reads as "the container is broken" rather than as a
+  # misconfigured clock.
+  rviz2 -d "$rviz_config" --ros-args -p use_sim_time:=true &
   rviz_pid=$!
   # Tear the viewer down with the simulator rather than leaving it orphaned on a
-  # dead graph. Stale simulator-side processes surviving a naive cleanup have
-  # produced false verdicts in this repo before, so the teardown is by PID.
+  # dead graph. Be precise about what this delivers: SIGTERM to the two launcher
+  # PIDs and nothing else. `ros2 launch` and `rviz2` shut down their own managed
+  # processes on that signal, but gz's detached helpers (gz sim server/gui and the
+  # ruby wrapper) have survived naive cleanup in this repo before and may outlive
+  # it. The real backstop is the container boundary -- stopping the container reaps
+  # everything in its PID namespace -- so a wedged simulator is a `droid down`, not
+  # something this trap can promise to fix.
   trap 'kill "$sim_pid" "$rviz_pid" 2>/dev/null || true' EXIT INT TERM
   wait "$sim_pid"
 }
