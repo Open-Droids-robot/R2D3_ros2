@@ -179,10 +179,21 @@ class TestRealProbe(unittest.TestCase):
     def test_probe_output_feeds_resolve_without_translation(self):
         # The probe's vocabulary and resolve's input vocabulary are the same
         # vocabulary. If they drift, `up` silently resolves from defaults.
+        #
+        # Asserting only membership in resolve's own default-derived value set
+        # (e.g. tier in ("cpu", "nvidia")) would not catch drift: those are
+        # exactly the values cmd_resolve falls back to when an input variable
+        # isn't read at all. So this also checks that the fields cmd_resolve
+        # echoes verbatim (os, gpu_vendor, dri, jetson -- not arch, which is
+        # deliberately transformed x86_64 -> amd64) match what was fed in.
         code, out, err = resolve(**self.probe)
         self.assertIn(code, (0, 3), err)
         if code == 0:
             self.assertIn(out["tier"], ("cpu", "nvidia"))
+            self.assertEqual(out["os"], self.probe["os"])
+            self.assertEqual(out["gpu_vendor"], self.probe["gpu_vendor"])
+            self.assertEqual(out["dri"], self.probe["dri"])
+            self.assertEqual(out["jetson"], self.probe["jetson"])
 
 
 if __name__ == "__main__":

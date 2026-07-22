@@ -79,6 +79,11 @@ cmd_resolve() {
   elif [ "$gpu_vendor" = "nvidia" ] && [ "$docker_gpu" = "ok" ]; then
     tier="nvidia"
   elif [ "$gpu_vendor" = "nvidia" ] && [ "$docker_gpu" = "fail" ]; then
+    # This discrimination is heuristic, not exact: probe_docker_gpu() reports
+    # "fail" for ANY docker-run failure, not only a GPU-acquisition refusal. A
+    # transient or unrelated Docker error (permissions, daemon restarting mid-
+    # call, disk pressure) will be misreported here as a GPU problem and sent
+    # through NVIDIA Container Toolkit remediation text that may not apply.
     gpu_unreachable_error
   else
     tier="cpu"
@@ -150,6 +155,7 @@ probe_platform() {
 
   DROID_DOCKER_GPU="unknown"
   if [ "${DROID_SKIP_DOCKER_PROBE:-}" = "1" ]; then
+    printf 'droid: DROID_SKIP_DOCKER_PROBE=1 -- skipping the GPU acquisition probe; reporting docker_gpu=unknown\n' >&2
     DROID_DOCKER_GPU="unknown"
   elif [ "$DROID_GPU_VENDOR" = "nvidia" ]; then
     DROID_DOCKER_GPU="$(probe_docker_gpu)"
