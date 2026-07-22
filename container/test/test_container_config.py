@@ -294,8 +294,18 @@ class TestCiArchitectureParity(unittest.TestCase):
     def test_uses_a_native_runner_per_architecture(self):
         # Emulated arm64 package installation is prohibitively slow, so each
         # architecture must build on its own native runner.
-        self.assertIn("ubuntu-24.04-arm", self.workflow)
-        self.assertIn("ubuntu-24.04", self.workflow)
+        #
+        # Asserted against the PARSED matrix rather than by substring search.
+        # A substring check cannot express this: "ubuntu-24.04" is a substring of
+        # "ubuntu-24.04-arm" and also appears on other jobs' runs-on, so pointing
+        # BOTH matrix entries at the arm runner -- which silently emulates amd64,
+        # the exact thing this matrix exists to avoid -- would still satisfy it.
+        matrix = yaml.safe_load(self.workflow)["jobs"]["build"]["strategy"]["matrix"]
+        pairing = {entry["platform"]: entry["runner"] for entry in matrix["include"]}
+        self.assertEqual(
+            pairing,
+            {"linux/amd64": "ubuntu-24.04", "linux/arm64": "ubuntu-24.04-arm"},
+        )
 
     def test_publishing_is_gated_on_the_default_branch(self):
         self.assertIn("refs/heads/main", self.workflow)
