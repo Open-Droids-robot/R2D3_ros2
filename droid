@@ -202,11 +202,171 @@ cmd_doctor() {
   cmd_resolve
 }
 
+# --- lifecycle ----------------------------------------------------------------
+
+COMPOSE_DIR="$REPO_ROOT/container"
+
+require_docker() {
+  command -v docker >/dev/null 2>&1 ||
+    die "droid: docker is not installed or not on PATH. See docs/container.md."
+  docker info >/dev/null 2>&1 ||
+    die "droid: the Docker daemon is not reachable. Is Docker running?"
+}
+
+# Loads `droid resolve`'s output as shell variables prefixed with r_.
+load_resolved() {
+  probe_platform
+  resolved="$(cmd_resolve)" || exit $?
+  r_arch="$(printf '%s\n' "$resolved" | sed -n 's/^arch=//p')"
+  r_tier="$(printf '%s\n' "$resolved" | sed -n 's/^tier=//p')"
+  r_port="$(printf '%s\n' "$resolved" | sed -n 's/^novnc_port=//p')"
+  # The fingerprint is the whole resolved configuration. Any change to any
+  # decision changes it, which is exactly the drift the consent gate must catch.
+  r_fingerprint="$(printf '%s' "$resolved" | cksum | tr -d ' ')"
+
+  # Deliberately a DIFFERENT variable from DROID_ARCH, which is the probe's raw
+  # `uname -m` reading and an INPUT to resolve. Reusing the name here would feed
+  # resolve's own output back in as its input on any second call.
+  export DROID_COMPOSE_ARCH="$r_arch"
+  export DROID_NOVNC_PORT="$r_port"
+  export DROID_CONFIG_FINGERPRINT="$r_fingerprint"
+  export DROID_HOST_UID="$(id -u)"
+  export DROID_HOST_GID="$(id -g)"
+  if [ "$r_tier" = "nvidia" ]; then
+    export DROID_SOFTWARE_GL="0"
+  else
+    export DROID_SOFTWARE_GL="1"
+  fi
+}
+
+compose() {
+  if [ "$r_tier" = "nvidia" ]; then
+    docker compose -f "$COMPOSE_DIR/docker-compose.yml" \
+                   -f "$COMPOSE_DIR/docker-compose.nvidia.yml" "$@"
+  else
+    docker compose -f "$COMPOSE_DIR/docker-compose.yml" "$@"
+  fi
+}
+
+container_fingerprint() {
+  docker inspect -f '{{index .Config.Labels "com.r2d3.droid.config"}}' \
+    r2d3-sim 2>/dev/null || true
+}
+
+# The container orchestrator recreates a container whenever its resolved
+# configuration changes -- which would silently destroy the packages a developer
+# installed with sudo inside it. Re-running the platform probe and landing on a
+# different tier is exactly such a change, so the documented recovery path would
+# otherwise be the thing that wipes their tools. Refuse, and require consent.
+check_drift() {
+  existing="$(container_fingerprint)"
+  [ -n "$existing" ] || return 0
+  [ "$existing" = "unset" ] && return 0
+  [ "$existing" = "$r_fingerprint" ] && return 0
+  cat >&2 <<EOF
+droid: the resolved configuration has changed since this container was created.
+
+  Applying it requires recreating the container, which DESTROYS anything you
+  installed inside it with sudo, along with your shell history and scratch files.
+  Your source tree, build artifacts and caches are on volumes and are unaffected.
+
+  Resolved now:
+$(printf '%s\n' "$resolved" | sed 's/^/    /')
+
+  To keep the existing container, run it unchanged:
+    ./droid shell
+
+  To accept the new configuration and recreate:
+    ./droid up --recreate
+
+  Anything you want to keep permanently belongs in container/Dockerfile, so your
+  teammates get it too.
+EOF
+  exit 4
+}
+
+cmd_up() {
+  backend="gz"
+  recreate="no"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --mujoco) backend="mujoco"; shift ;;
+      --gpu) [ $# -ge 2 ] || die "droid up: --gpu needs a tier"
+             DROID_GPU_OVERRIDE="$2"; export DROID_GPU_OVERRIDE; shift 2 ;;
+      --recreate) recreate="yes"; shift ;;
+      *) die "droid up: unknown option '$1' (try ./droid --help)" ;;
+    esac
+  done
+
+  require_docker
+  load_resolved
+  [ "$recreate" = "yes" ] || check_drift
+
+  if [ "$r_tier" = "cpu" ]; then
+    cat <<'EOF'
+droid: running on the software-rendering tier.
+
+  The goal of this tier is to be ALIVE, not fast. The simulation carries four
+  RGBD cameras and a GPU lidar, so software rendering will be slow -- that is
+  expected, not a defect. The GPU tier is the recommended path for real work.
+EOF
+  fi
+
+  if [ "$recreate" = "yes" ]; then
+    compose up -d --force-recreate
+  else
+    compose up -d
+  fi
+
+  cat <<EOF
+
+droid: open the simulation at
+  http://localhost:$r_port/vnc.html?autoconnect=1&resize=scale
+
+EOF
+  compose exec sim /opt/droid/launch-sim.sh "$backend"
+}
+
+cmd_shell() {
+  require_docker
+  load_resolved
+  compose exec sim bash
+}
+
+cmd_down() {
+  require_docker
+  load_resolved
+  compose stop
+  echo "droid: container stopped. Anything you installed inside it is preserved."
+  echo "       Start again with ./droid up"
+}
+
+cmd_nuke() {
+  require_docker
+  load_resolved
+  cat >&2 <<'EOF'
+droid: this DESTROYS the container and all of its volumes.
+
+  You will lose: packages you installed inside the container, the build and
+  install spaces, the MuJoCo cache, and any downloaded model weights.
+  You will NOT lose: anything in your source tree, which lives on your host.
+EOF
+  printf 'Type "nuke" to confirm: '
+  read -r confirm
+  [ "$confirm" = "nuke" ] || die "droid: aborted; nothing was destroyed."
+  compose down --volumes --remove-orphans
+  echo "droid: destroyed. ./droid up will start clean."
+}
+
 # --- dispatch ---------------------------------------------------------------
 [ $# -gt 0 ] || { usage; exit 2; }
 case "$1" in
   resolve) shift; cmd_resolve "$@" ;;
   doctor) shift; cmd_doctor "$@" ;;
+  up) shift; cmd_up "$@" ;;
+  shell) shift; cmd_shell "$@" ;;
+  down) shift; cmd_down "$@" ;;
+  nuke) shift; cmd_nuke "$@" ;;
   -h|--help|help) usage ;;
   *) die "droid: unknown command '$1' (try ./droid --help)" ;;
 esac

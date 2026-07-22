@@ -1,0 +1,54 @@
+# One service. Bridge networking with a published port -- never host networking,
+# which is Linux-only and would break macOS. The image is named first and a build
+# definition carried alongside it, so a pull is attempted and a local build is the
+# fallback: the tool works with no registry access and works offline.
+name: r2d3
+
+services:
+  sim:
+    image: ghcr.io/open-droids-robot/r2d3-sim:jazzy
+    build:
+      context: ..
+      dockerfile: container/Dockerfile
+    container_name: r2d3-sim
+    platform: linux/${DROID_COMPOSE_ARCH:-amd64}
+    # The default shared-memory allocation is small enough to cause cryptic
+    # transport failures on a many-node launch. The repository already carries an
+    # unreferenced FastDDS profile written for that failure; sizing it properly
+    # here is the better fix.
+    shm_size: "2gb"
+    ports:
+      - "${DROID_NOVNC_PORT:-6080}:6080"
+    environment:
+      HOST_UID: "${DROID_HOST_UID:-1000}"
+      HOST_GID: "${DROID_HOST_GID:-1000}"
+      LIBGL_ALWAYS_SOFTWARE: "${DROID_SOFTWARE_GL:-1}"
+    env_file:
+      - path: .env
+        required: false
+    labels:
+      com.r2d3.droid.config: "${DROID_CONFIG_FINGERPRINT:-unset}"
+    volumes:
+      # The developer's actual working tree, so edits in their own editor take
+      # effect with no image rebuild.
+      - ..:/ws/src/R2D3_ros2
+      # Build artifacts as named volumes: strictly separate from any native build
+      # on the host, and heavy build I/O kept off the bind mount, which matters
+      # on macOS.
+      - r2d3_build:/ws/build
+      - r2d3_install:/ws/install
+      - r2d3_log:/ws/log
+      # Seeded from the image, which is what makes the MuJoCo cache warm on a
+      # first launch of an unmodified tree.
+      - r2d3_ros_home:/home/droid/.ros
+      # Downloaded model weights survive restarts.
+      - r2d3_cache:/home/droid/.cache
+    stdin_open: true
+    tty: true
+
+volumes:
+  r2d3_build:
+  r2d3_install:
+  r2d3_log:
+  r2d3_ros_home:
+  r2d3_cache:
