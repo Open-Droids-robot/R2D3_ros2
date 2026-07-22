@@ -170,9 +170,10 @@ class TestPrewarmXacroArgsMatchLaunchFile(unittest.TestCase):
     LAUNCH_PATH = REPO_ROOT / "r2d3_mujoco" / "launch" / "mujoco_sim.launch.py"
     PREWARM_PATH = CONTAINER_DIR / "prewarm-mjcf.py"
 
-    # Matches the `Command([ ... ])` construction (non-greedy, DOTALL) common to
-    # both files.
-    COMMAND_BLOCK_RE = re.compile(r"Command\(\[(.*?)\]\)", re.DOTALL)
+    # Matches the actual `Command([FindExecutable(...), ...])` construction
+    # (non-greedy, DOTALL), anchored on `FindExecutable` so a mention of
+    # `Command([...])` in prose (e.g. a docstring) is not mistaken for it.
+    COMMAND_BLOCK_RE = re.compile(r"Command\(\[\s*FindExecutable\(.*?\)(.*?)\]\)", re.DOTALL)
     # Matches a quoted xacro-argument token like `" arm_model:="` -> "arm_model".
     ARG_TOKEN_RE = re.compile(r'"\s+([A-Za-z0-9_]+):="')
     # Matches the xacro file basename wherever it appears as a string literal.
