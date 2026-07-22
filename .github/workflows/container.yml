@@ -1,0 +1,129 @@
+# CI scope is deliberately minimal: it proves the image BUILDS and the workspace
+# COMPILES inside it, on both architectures. It does not boot the simulation.
+#
+# That is a conscious trade. The simulation carries four RGBD cameras and a GPU
+# lidar, hosted runners are small and have no GPU, and a software-rendered boot
+# test on that payload would be slow and chronically flaky -- on the only job
+# giving arm64 any coverage at all. The honest consequence, which the docs state:
+# the arm64 image is proven to build, not proven to boot.
+name: container
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  IMAGE: ghcr.io/open-droids-robot/r2d3-sim
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image natively
+        run: |
+          docker build \
+            --platform ${{ matrix.platform }} \
+            -f container/Dockerfile \
+            -t "$IMAGE:ci-${{ matrix.arch }}" \
+            .
+
+      - name: Verify the workspace compiles inside the image
+        run: |
+          docker run --rm --entrypoint bash "$IMAGE:ci-${{ matrix.arch }}" -c '
+            set -e
+            source /opt/ros/jazzy/setup.bash
+            cd /ws
+            colcon build
+            source /ws/install/setup.bash
+            ros2 pkg prefix dual_rm_simulation
+            ros2 pkg prefix r2d3_mujoco
+          '
+
+      - name: Verify the build scope stayed inside the simulation subset
+        run: |
+          docker run --rm --entrypoint bash "$IMAGE:ci-${{ matrix.arch }}" -c '
+            cd /ws && colcon list --names-only | sort
+          ' > found.txt
+
+          cat > expected.txt <<'PKGLIST'
+          dual_rm_65b_moveit_config
+          dual_rm_75b_moveit_config
+          dual_rm_control
+          dual_rm_description
+          dual_rm_gazebo
+          dual_rm_install
+          dual_rm_moveit_demo
+          dual_rm_navigation
+          dual_rm_simulation
+          r2d3_bringup
+          r2d3_mujoco
+          r2d3_test_nodes
+          rm_ros_interfaces
+          servo_interfaces
+          servo_sim_bridge
+          PKGLIST
+
+          diff -u <(sort expected.txt) <(sort found.txt)
+
+      - name: Log in to the registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push the per-architecture image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker tag "$IMAGE:ci-${{ matrix.arch }}" "$IMAGE:jazzy-${{ matrix.arch }}"
+          docker push "$IMAGE:jazzy-${{ matrix.arch }}"
+
+  manifest:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish the multi-architecture manifest
+        run: |
+          docker buildx imagetools create \
+            -t "$IMAGE:jazzy" \
+            "$IMAGE:jazzy-amd64" \
+            "$IMAGE:jazzy-arm64"
+
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest pyyaml
+      - name: Run the static guards
+        # These require no Docker and reach no network, which is the point.
+        run: python -m pytest container/test/test_droid_resolve.py -v

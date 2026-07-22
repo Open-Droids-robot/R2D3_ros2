@@ -278,5 +278,31 @@ class TestDevContainer(unittest.TestCase):
         self.assertEqual(config.get("remoteUser"), "droid")
 
 
+class TestCiArchitectureParity(unittest.TestCase):
+    """CI is the only thing giving arm64 any coverage at all. If the architectures
+    it builds drift from the ones the compose file and the docs promise, arm64
+    becomes assumed rather than proven."""
+
+    def setUp(self):
+        self.workflow = (
+            REPO_ROOT / ".github" / "workflows" / "container.yml").read_text()
+
+    def test_builds_exactly_the_promised_architectures(self):
+        for platform in ("linux/amd64", "linux/arm64"):
+            self.assertIn(platform, self.workflow)
+
+    def test_uses_a_native_runner_per_architecture(self):
+        # Emulated arm64 package installation is prohibitively slow, so each
+        # architecture must build on its own native runner.
+        self.assertIn("ubuntu-24.04-arm", self.workflow)
+        self.assertIn("ubuntu-24.04", self.workflow)
+
+    def test_publishing_is_gated_on_the_default_branch(self):
+        self.assertIn("refs/heads/main", self.workflow)
+
+    def test_compiles_the_workspace_inside_the_image(self):
+        self.assertIn("colcon build", self.workflow)
+
+
 if __name__ == "__main__":
     unittest.main()
