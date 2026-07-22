@@ -117,10 +117,90 @@ EOF
   exit 3
 }
 
+# --- probe ------------------------------------------------------------------
+#
+# Detection is a probe, not an inspection. Host inspection alone is insufficient:
+# on the reference machine nvidia-smi reports an RTX 4060 and `docker info` lists
+# an nvidia runtime, yet `docker run --gpus all` fails with a CDI discovery error.
+# An inspection-based implementation would generate a broken configuration on the
+# very machine this was developed on. So the GPU question is answered by ATTEMPTING
+# it.
+probe_platform() {
+  case "$(uname -s)" in
+    Darwin) DROID_OS="darwin" ;;
+    *) DROID_OS="linux" ;;
+  esac
+  DROID_ARCH="$(uname -m)"
+
+  if [ -d /dev/dri ]; then DROID_DRI="yes"; else DROID_DRI="no"; fi
+
+  DROID_JETSON="no"
+  if [ -f /etc/nv_tegra_release ]; then
+    DROID_JETSON="yes"
+  elif [ -r /proc/device-tree/compatible ] &&
+       tr -d '\0' < /proc/device-tree/compatible 2>/dev/null | grep -qi tegra; then
+    DROID_JETSON="yes"
+  fi
+
+  DROID_GPU_VENDOR="none"
+  if [ "$DROID_OS" != "darwin" ] && command -v nvidia-smi >/dev/null 2>&1 &&
+     nvidia-smi -L >/dev/null 2>&1; then
+    DROID_GPU_VENDOR="nvidia"
+  fi
+
+  DROID_DOCKER_GPU="unknown"
+  if [ "${DROID_SKIP_DOCKER_PROBE:-}" = "1" ]; then
+    DROID_DOCKER_GPU="unknown"
+  elif [ "$DROID_GPU_VENDOR" = "nvidia" ]; then
+    DROID_DOCKER_GPU="$(probe_docker_gpu)"
+  fi
+
+  export DROID_OS DROID_ARCH DROID_DRI DROID_JETSON DROID_GPU_VENDOR DROID_DOCKER_GPU
+}
+
+# Answers "can Docker actually acquire a GPU?" by trying. Distinguishes a real
+# refusal (`fail`) from an inability to run the probe at all (`unknown`, e.g. no
+# network to fetch the probe image) -- because only the former justifies walling
+# the developer off.
+probe_docker_gpu() {
+  command -v docker >/dev/null 2>&1 || { echo "unknown"; return; }
+  if ! docker image inspect hello-world >/dev/null 2>&1; then
+    docker pull -q hello-world >/dev/null 2>&1 || { echo "unknown"; return; }
+  fi
+  if docker run --rm --gpus all hello-world >/dev/null 2>&1; then
+    echo "ok"
+  else
+    echo "fail"
+  fi
+}
+
+cmd_doctor() {
+  probe_only="no"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --probe-only) probe_only="yes"; shift ;;
+      *) die "droid doctor: unknown option '$1'" ;;
+    esac
+  done
+
+  probe_platform
+  printf 'os=%s\n' "$DROID_OS"
+  printf 'arch=%s\n' "$DROID_ARCH"
+  printf 'gpu_vendor=%s\n' "$DROID_GPU_VENDOR"
+  printf 'dri=%s\n' "$DROID_DRI"
+  printf 'jetson=%s\n' "$DROID_JETSON"
+  printf 'docker_gpu=%s\n' "$DROID_DOCKER_GPU"
+  [ "$probe_only" = "yes" ] && return 0
+
+  printf '\n--- resolved ---\n'
+  cmd_resolve
+}
+
 # --- dispatch ---------------------------------------------------------------
 [ $# -gt 0 ] || { usage; exit 2; }
 case "$1" in
   resolve) shift; cmd_resolve "$@" ;;
+  doctor) shift; cmd_doctor "$@" ;;
   -h|--help|help) usage ;;
   *) die "droid: unknown command '$1' (try ./droid --help)" ;;
 esac

@@ -8,6 +8,7 @@ correct table and every case here would still pass. TestRealProbe below closes t
 as far as it usefully can, and `./droid doctor` prints raw probe values so a human
 can inspect what was actually observed."""
 
+import os
 import subprocess
 import unittest
 from pathlib import Path
@@ -142,6 +143,46 @@ class TestOutputShape(unittest.TestCase):
     def test_novnc_port_is_6080(self):
         _, out, _ = resolve(os="linux", arch="x86_64", gpu_vendor="none")
         self.assertEqual(out["novnc_port"], "6080")
+
+
+class TestRealProbe(unittest.TestCase):
+    """Closes Seam 1's blind spot as far as it usefully can. This runs the REAL
+    probe on whatever machine hosts the suite and asserts only that it emits a
+    well-formed result -- never a specific value, which would make the test
+    machine-dependent. Whether a probe's reading is *right* on a platform the
+    suite has never run on remains an accepted, documented gap."""
+
+    def setUp(self):
+        env = os.environ.copy()
+        env["DROID_SKIP_DOCKER_PROBE"] = "1"
+        proc = subprocess.run(
+            [str(DROID), "doctor", "--probe-only"],
+            env=env, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.probe = dict(
+            line.split("=", 1)
+            for line in proc.stdout.splitlines() if "=" in line)
+
+    def test_emits_every_probe_key(self):
+        self.assertEqual(
+            sorted(self.probe),
+            ["arch", "docker_gpu", "dri", "gpu_vendor", "jetson", "os"])
+
+    def test_every_value_is_in_its_documented_domain(self):
+        self.assertIn(self.probe["os"], ("linux", "darwin"))
+        self.assertIn(self.probe["arch"], ("x86_64", "amd64", "aarch64", "arm64"))
+        self.assertIn(self.probe["gpu_vendor"], ("nvidia", "none"))
+        self.assertIn(self.probe["dri"], ("yes", "no"))
+        self.assertIn(self.probe["jetson"], ("yes", "no"))
+        self.assertIn(self.probe["docker_gpu"], ("ok", "fail", "unknown"))
+
+    def test_probe_output_feeds_resolve_without_translation(self):
+        # The probe's vocabulary and resolve's input vocabulary are the same
+        # vocabulary. If they drift, `up` silently resolves from defaults.
+        code, out, err = resolve(**self.probe)
+        self.assertIn(code, (0, 3), err)
+        if code == 0:
+            self.assertIn(out["tier"], ("cpu", "nvidia"))
 
 
 if __name__ == "__main__":
