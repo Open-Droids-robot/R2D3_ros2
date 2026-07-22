@@ -220,9 +220,21 @@ load_resolved() {
   r_arch="$(printf '%s\n' "$resolved" | sed -n 's/^arch=//p')"
   r_tier="$(printf '%s\n' "$resolved" | sed -n 's/^tier=//p')"
   r_port="$(printf '%s\n' "$resolved" | sed -n 's/^novnc_port=//p')"
-  # The fingerprint is the whole resolved configuration. Any change to any
-  # decision changes it, which is exactly the drift the consent gate must catch.
-  r_fingerprint="$(printf '%s' "$resolved" | cksum | tr -d ' ')"
+  # The fingerprint covers the resolved configuration AND the compose files that
+  # actually govern this invocation. `docker compose up -d` recreates the
+  # container whenever the composed service definition changes, independently of
+  # any label this tool sets -- a `git pull` that only touches
+  # docker-compose.yml (or, on the nvidia tier, docker-compose.nvidia.yml) must
+  # therefore trip the same consent gate as a probe/tier change. The nvidia
+  # overlay is folded in only when it is actually part of this invocation, so a
+  # cpu-tier user is never asked to consent to changes in a file that does not
+  # affect them.
+  compose_files_content="$(cat "$COMPOSE_DIR/docker-compose.yml")"
+  if [ "$r_tier" = "nvidia" ]; then
+    compose_files_content="$compose_files_content
+$(cat "$COMPOSE_DIR/docker-compose.nvidia.yml")"
+  fi
+  r_fingerprint="$(printf '%s\n%s' "$resolved" "$compose_files_content" | cksum | tr -d ' ')"
 
   # Deliberately a DIFFERENT variable from DROID_ARCH, which is the probe's raw
   # `uname -m` reading and an INPUT to resolve. Reusing the name here would feed
@@ -324,13 +336,13 @@ droid: open the simulation at
   http://localhost:$r_port/vnc.html?autoconnect=1&resize=scale
 
 EOF
-  compose exec sim /opt/droid/launch-sim.sh "$backend"
+  compose exec -u droid sim /opt/droid/launch-sim.sh "$backend"
 }
 
 cmd_shell() {
   require_docker
   load_resolved
-  compose exec sim bash
+  compose exec -u droid sim bash
 }
 
 cmd_down() {
