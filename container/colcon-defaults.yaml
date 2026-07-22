@@ -1,0 +1,40 @@
+# Baked into the image at /etc/colcon/defaults.yaml and selected via
+# COLCON_DEFAULTS_FILE. This narrows every colcon invocation inside the container
+# -- including a bare `colcon build` a developer types by hand -- to the packages
+# the simulation can actually reach.
+#
+# It lives OUTSIDE the bind-mounted source tree on purpose. The obvious
+# alternative, dropping COLCON_IGNORE markers into the package directories, is
+# wrong here: created at runtime they would appear in the developer's working tree
+# as version-control noise, and committed they would change the HOST's build too
+# and break anyone legitimately building the vendor packages natively.
+#
+# The ignored set is hardware-only: the ZED wrapper, the RealSense packages, the
+# AGV robot package, the Woosh message packages, the arm driver, and the
+# object-detection demo. Skipping them is verified safe -- the sensor xacros are
+# self-contained within the description packages, so no simulation package
+# depends on any of these.
+#
+# The set is stated once and aliased into the other two verbs. Three literal
+# copies would be three things to keep in step, and the drift would be silent
+# until a hardware package turned up in a container build.
+build:
+  packages-ignore: &hardware_packages
+    - zed_msgs
+    - realsense2_camera
+    - realsense2_camera_msgs
+    - realsense2_description
+    - rm_camera_demo
+    - ros2_agv_robot
+    - ros2_total_demo
+    - rm_driver
+    - woosh_action_msgs
+    - woosh_common_msgs
+    - woosh_nav_msgs
+    - woosh_robot_msgs
+    - woosh_ros_msgs
+    - woosh_task_msgs
+test:
+  packages-ignore: *hardware_packages
+list:
+  packages-ignore: *hardware_packages

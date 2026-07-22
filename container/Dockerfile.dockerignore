@@ -1,0 +1,37 @@
+# Build context exclusions for container/Dockerfile.
+#
+# Scoped to this Dockerfile via the `<dockerfile>.dockerignore` convention rather
+# than a repository-root .dockerignore: the root file is global to every build in
+# the tree, and the legacy Docker/ setup has its own. This one only governs the
+# image built from container/Dockerfile.
+#
+# Two of these entries are correctness, not just speed:
+#
+#   .git      117 MB, and it changes on every commit, checkout and fetch -- so
+#             including it invalidates the COPY layer (and therefore rosdep, the
+#             workspace build and the multi-minute MuJoCo pre-warm behind it)
+#             every time git touches anything.
+#
+#   install/  the workspace is built WITHOUT --symlink-install, so install/ is
+#             plain copies of host-built artefacts. Copying a host install space
+#             into the image would shadow the container's own build with binaries
+#             linked against the host's libraries, and the failure would surface
+#             at runtime, far from its cause.
+.git
+.gitignore
+.github
+build
+install
+log
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+.superpowers
+.claude
+
+# Not needed to build or run the simulation.
+pic
+*.pdf
+*.gv
+MUJOCO_LOG.TXT
