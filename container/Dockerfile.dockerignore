@@ -1,9 +1,8 @@
 # Build context exclusions for container/Dockerfile.
 #
 # Scoped to this Dockerfile via the `<dockerfile>.dockerignore` convention rather
-# than a repository-root .dockerignore: the root file is global to every build in
-# the tree, and the legacy Docker/ setup has its own. This one only governs the
-# image built from container/Dockerfile.
+# than a repository-root .dockerignore, which would be global to every build in
+# the tree. This one only governs the image built from container/Dockerfile.
 #
 # REQUIRES BUILDKIT. The `<dockerfile>.dockerignore` form is a BuildKit feature;
 # the legacy builder only ever reads `.dockerignore` at the context root. BuildKit
