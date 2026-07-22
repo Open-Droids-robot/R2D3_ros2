@@ -153,6 +153,50 @@ class TestDockerfileConsumesTheDefaultsFile(unittest.TestCase):
         self.assertEqual(self._copy_destination(), self._defaults_file_env())
 
 
+class TestDisplayIsProvidedToExecSessions(unittest.TestCase):
+    """The GUI-launching command runs via `docker compose exec`, which inherits
+    the image's ENV but NOT the runtime `export DISPLAY` that gui-start.sh makes
+    for PID 1. So the display the entrypoint's Xvfb creates must ALSO be declared
+    as image ENV, or Gazebo's Qt/xcb GUI finds no display and the whole `gz sim`
+    process aborts on launch -- taking the server, /clock and controller_manager
+    with it. (Found in hand verification: without the ENV, `./droid up` crashed
+    with 'no Qt platform plugin could be initialized' and /clock never advanced.)
+
+    This is a cross-file drift guard, not a self-consistency check: the two values
+    come from different files created by different mechanisms -- the Xvfb display
+    gui-start.sh actually starts, and the DISPLAY the Dockerfile hands to exec
+    sessions. If they drift, the GUI silently fails to render.
+    """
+
+    def setUp(self):
+        self.dockerfile = (CONTAINER_DIR / "Dockerfile").read_text()
+        self.gui_start = (CONTAINER_DIR / "gui-start.sh").read_text()
+
+    def _dockerfile_display(self):
+        # Match a standalone `ENV DISPLAY=:1`, not the multi-var ENV block.
+        match = re.search(
+            r"^ENV\s+DISPLAY=(\S+)\s*$", self.dockerfile, re.MULTILINE)
+        self.assertIsNotNone(
+            match, "the Dockerfile does not declare ENV DISPLAY -- exec sessions "
+                   "(launch-sim.sh, ./droid shell) will have no display and the "
+                   "Gazebo GUI will abort")
+        return match.group(1)
+
+    def _xvfb_display(self):
+        # The display gui-start.sh actually brings up: `Xvfb "$DISPLAY" ...`,
+        # with `export DISPLAY=":1"` above it.
+        match = re.search(r'export\s+DISPLAY="?(:[0-9]+)"?', self.gui_start)
+        self.assertIsNotNone(
+            match, "could not find gui-start.sh's DISPLAY assignment")
+        self.assertIn(
+            'Xvfb "$DISPLAY"', self.gui_start,
+            "gui-start.sh no longer starts Xvfb on $DISPLAY")
+        return match.group(1)
+
+    def test_dockerfile_display_matches_the_xvfb_display(self):
+        self.assertEqual(self._dockerfile_display(), self._xvfb_display())
+
+
 class TestPrewarmXacroArgsMatchLaunchFile(unittest.TestCase):
     """`container/prewarm-mjcf.py` hand-composes the xacro arguments it feeds
     `Command(...)` rather than importing them from the launch file (it cannot: the

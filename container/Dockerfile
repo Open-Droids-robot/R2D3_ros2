@@ -103,6 +103,16 @@ USER root
 COPY container/entrypoint.sh container/gui-start.sh container/launch-sim.sh /opt/droid/
 RUN chmod +x /opt/droid/*.sh
 
+# The virtual X server that gui-start.sh creates. It MUST live in the image env,
+# not only in gui-start.sh's own `export`: the launch runs via `docker compose
+# exec`, and an exec session inherits the image's ENV but NOT the runtime exports
+# the entrypoint/gui-start process made for PID 1. Without this, Gazebo's Qt GUI
+# finds no display, the xcb platform plugin fails to initialise, and the whole
+# `gz sim` process aborts on startup -- taking the server, /clock and the
+# controller_manager with it. Placing it here also gives `./droid shell` users a
+# working display for rviz2/rqt. Kept in lockstep with gui-start.sh's `:1`.
+ENV DISPLAY=:1
+
 # Bridge networking with published ports, never host networking -- host networking
 # is Linux-only and would break macOS. Outbound HTTPS is all that is required;
 # distributed ROS across machines is explicitly out of scope, so the graph stays
