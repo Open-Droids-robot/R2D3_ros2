@@ -234,7 +234,28 @@ load_resolved() {
     compose_files_content="$compose_files_content
 $(cat "$COMPOSE_DIR/docker-compose.nvidia.yml")"
   fi
-  r_fingerprint="$(printf '%s\n%s' "$resolved" "$compose_files_content" | cksum | tr -d ' ')"
+
+  # Host uid/gid are interpolated into the compose file's `environment:` block
+  # (DROID_HOST_UID / DROID_HOST_GID below) and therefore participate in
+  # Compose's own recreate decision, but they appear in neither the resolved
+  # config text nor the compose files' literal text. A second developer using
+  # the same checkout, or the same developer on a box with a different uid,
+  # would otherwise trigger a silent Compose recreate that this gate never sees.
+  host_uid="$(id -u)"
+  host_gid="$(id -g)"
+
+  # The resolved image digest is also part of Compose's recreate decision (a
+  # local rebuild or a registry re-pull that moves the :jazzy tag) but is
+  # covered by neither the resolve output nor the compose files' text. On a
+  # fresh machine the image is not pulled yet, so `docker image inspect` fails
+  # -- that must not break `up` or cause a spurious refusal, so it is mapped to
+  # a fixed, deterministic placeholder instead of propagating the failure.
+  image_digest="$(docker image inspect --format '{{.Id}}' "$IMAGE_REF" 2>/dev/null)" ||
+    image_digest="no-local-image"
+
+  r_fingerprint="$(printf '%s\n%s\nhost_uid=%s\nhost_gid=%s\nimage_digest=%s' \
+    "$resolved" "$compose_files_content" "$host_uid" "$host_gid" "$image_digest" |
+    cksum | tr -d ' ')"
 
   # Deliberately a DIFFERENT variable from DROID_ARCH, which is the probe's raw
   # `uname -m` reading and an INPUT to resolve. Reusing the name here would feed
@@ -242,8 +263,8 @@ $(cat "$COMPOSE_DIR/docker-compose.nvidia.yml")"
   export DROID_COMPOSE_ARCH="$r_arch"
   export DROID_NOVNC_PORT="$r_port"
   export DROID_CONFIG_FINGERPRINT="$r_fingerprint"
-  export DROID_HOST_UID="$(id -u)"
-  export DROID_HOST_GID="$(id -g)"
+  export DROID_HOST_UID="$host_uid"
+  export DROID_HOST_GID="$host_gid"
   if [ "$r_tier" = "nvidia" ]; then
     export DROID_SOFTWARE_GL="0"
   else
@@ -263,6 +284,26 @@ compose() {
 container_fingerprint() {
   docker inspect -f '{{index .Config.Labels "com.r2d3.droid.config"}}' \
     r2d3-sim 2>/dev/null || true
+}
+
+# entrypoint.sh remaps the `droid` account's uid/gid to the host's before
+# dropping privileges and touches /run/droid/ready once that remap is done.
+# When HOST_UID/GID is not the image default (1000), `compose exec -u droid`
+# run immediately after `compose up -d` can race that remap and fail to
+# resolve the user. Poll for the marker instead of assuming the container is
+# ready, with a bounded timeout and a clear error rather than hanging forever
+# if it never arrives (e.g. the container crashed on start).
+wait_for_ready() {
+  attempts=50 # 50 * 0.2s = 10s
+  i=0
+  while [ "$i" -lt "$attempts" ]; do
+    if compose exec -T sim test -f /run/droid/ready >/dev/null 2>&1; then
+      return 0
+    fi
+    i=$((i + 1))
+    sleep 0.2
+  done
+  die "droid: container did not become ready within 10s (waiting for /run/droid/ready). Check 'docker compose -f container/docker-compose.yml logs sim'."
 }
 
 # The container orchestrator recreates a container whenever its resolved
@@ -329,6 +370,8 @@ EOF
   else
     compose up -d
   fi
+
+  wait_for_ready
 
   cat <<EOF
 

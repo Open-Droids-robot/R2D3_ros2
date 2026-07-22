@@ -52,5 +52,14 @@ export HOME="$USER_HOME"
 export USER="$USER_NAME"
 export LOGNAME="$USER_NAME"
 
+# Readiness signal for the host: `./droid up` runs `compose exec -u droid`
+# right after `compose up -d`, and resolving the `droid` account mid-remap (or
+# before it) is a race when HOST_UID/HOST_GID differ from the image default of
+# 1000. The remap and ownership fixes above are now complete, so drop a marker
+# the host can poll for before it execs as -u droid. Written as root, before
+# privileges are dropped, so no permission games are needed to create it.
+mkdir -p /run/droid
+touch /run/droid/ready
+
 exec setpriv --reuid "$HOST_UID" --regid "$HOST_GID" --init-groups \
   /opt/droid/gui-start.sh "$@"
