@@ -1,0 +1,17 @@
+{
+  "name": "R2D3 simulation workspace",
+  "dockerComposeFile": ["../container/docker-compose.yml"],
+  "service": "sim",
+  "workspaceFolder": "/ws/src/R2D3_ros2",
+  "remoteUser": "droid",
+  "shutdownAction": "none",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-vscode.cpptools",
+        "ms-iot.vscode-ros"
+      ]
+    }
+  }
+}

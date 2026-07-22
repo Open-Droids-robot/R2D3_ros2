@@ -211,5 +211,48 @@ class TestPrewarmXacroArgsMatchLaunchFile(unittest.TestCase):
         self.assertEqual(prewarm_basename, launch_basename)
 
 
+class TestImageReferenceParity(unittest.TestCase):
+    """The entry point prints and reasons about an image the compose file is the
+    one actually pulling. If they drift, `droid` reports success against an image
+    nobody is running."""
+
+    def test_droid_and_compose_name_the_same_image(self):
+        droid = (REPO_ROOT / "droid").read_text()
+        compose = (CONTAINER_DIR / "docker-compose.yml").read_text()
+        ref = re.search(r'IMAGE_REF="([^"]+)"', droid).group(1)
+        self.assertIn(ref, compose)
+        self.assertEqual(ref, "ghcr.io/open-droids-robot/r2d3-sim:jazzy")
+
+
+class TestSecretsHygiene(unittest.TestCase):
+    """The old Docker/.env was committed and uncovered by ignore rules. It held no
+    secrets, but it invited them."""
+
+    def setUp(self):
+        self.tracked = subprocess.run(
+            ["git", "ls-files"], cwd=REPO_ROOT,
+            capture_output=True, text=True).stdout.split()
+
+    def test_env_file_is_git_ignored(self):
+        proc = subprocess.run(
+            ["git", "check-ignore", "-q", "container/.env"],
+            cwd=REPO_ROOT)
+        self.assertEqual(proc.returncode, 0, "container/.env is not git-ignored")
+
+    def test_example_counterpart_is_tracked(self):
+        self.assertIn("container/env.example", self.tracked)
+
+    def test_no_env_file_is_tracked_anywhere(self):
+        offenders = [p for p in self.tracked if Path(p).name == ".env"]
+        self.assertEqual(offenders, [])
+
+
+class TestDevContainer(unittest.TestCase):
+    def test_targets_the_same_compose_service(self):
+        text = (REPO_ROOT / ".devcontainer" / "devcontainer.json").read_text()
+        self.assertIn("../container/docker-compose.yml", text)
+        self.assertIn('"service": "sim"', text)
+
+
 if __name__ == "__main__":
     unittest.main()

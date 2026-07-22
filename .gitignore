@@ -8,3 +8,5 @@ ros2_rm_robot/dual_rm_navigation/R2D3_NAVIGATION_GUIDE.md
 docs
 __pycache__/
 *.pyc
+container/.env
+.env
