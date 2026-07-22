@@ -214,7 +214,18 @@ require_docker() {
 }
 
 # Loads `droid resolve`'s output as shell variables prefixed with r_.
+#
+# Pass `materialise` (only `up` does) to ensure the image is present BEFORE the
+# fingerprint is computed. The fingerprint folds in the local image digest, but
+# on a genuinely fresh clone the image is not pulled until `compose up -d`. Read
+# naively, the FIRST `up` would fingerprint `no-local-image` and the SECOND --
+# now that the pull has happened -- would fingerprint the real digest, trip the
+# drift gate, and demand `--recreate`, destroying container-local installs on the
+# feature's own happy path. Materialising here captures the digest the container
+# is actually created with on the first run too. shell/down/nuke pass nothing and
+# must never trigger a pull.
 load_resolved() {
+  mode="${1:-}"
   probe_platform
   resolved="$(cmd_resolve)" || exit $?
   r_arch="$(printf '%s\n' "$resolved" | sed -n 's/^arch=//p')"
@@ -244,25 +255,16 @@ $(cat "$COMPOSE_DIR/docker-compose.nvidia.yml")"
   host_uid="$(id -u)"
   host_gid="$(id -g)"
 
-  # The resolved image digest is also part of Compose's recreate decision (a
-  # local rebuild or a registry re-pull that moves the :jazzy tag) but is
-  # covered by neither the resolve output nor the compose files' text. On a
-  # fresh machine the image is not pulled yet, so `docker image inspect` fails
-  # -- that must not break `up` or cause a spurious refusal, so it is mapped to
-  # a fixed, deterministic placeholder instead of propagating the failure.
-  image_digest="$(docker image inspect --format '{{.Id}}' "$IMAGE_REF" 2>/dev/null)" ||
-    image_digest="no-local-image"
-
-  r_fingerprint="$(printf '%s\n%s\nhost_uid=%s\nhost_gid=%s\nimage_digest=%s' \
-    "$resolved" "$compose_files_content" "$host_uid" "$host_gid" "$image_digest" |
-    cksum | tr -d ' ')"
-
+  # Export everything the `compose` wrapper consumes BEFORE the image is
+  # materialised below -- the tier selects the compose files and the platform,
+  # uid/gid and GL mode feed the pull/build -- but NOT the fingerprint yet: it
+  # depends on the digest, which is not known until the image exists.
+  #
   # Deliberately a DIFFERENT variable from DROID_ARCH, which is the probe's raw
   # `uname -m` reading and an INPUT to resolve. Reusing the name here would feed
   # resolve's own output back in as its input on any second call.
   export DROID_COMPOSE_ARCH="$r_arch"
   export DROID_NOVNC_PORT="$r_port"
-  export DROID_CONFIG_FINGERPRINT="$r_fingerprint"
   export DROID_HOST_UID="$host_uid"
   export DROID_HOST_GID="$host_gid"
   if [ "$r_tier" = "nvidia" ]; then
@@ -270,6 +272,34 @@ $(cat "$COMPOSE_DIR/docker-compose.nvidia.yml")"
   else
     export DROID_SOFTWARE_GL="1"
   fi
+
+  # Materialise the image before its digest is read, so the fingerprint captures
+  # the digest the container is actually created with -- on the first `up` of a
+  # fresh clone too, not the `no-local-image` placeholder. Attempt a registry
+  # pull first, fall back to a local build (matching docker-compose.yml's own
+  # "pull, else build" design), and only when the image is genuinely absent: a
+  # present image is left untouched, so `compose up -d` below reuses exactly the
+  # digest just fingerprinted and no `up` re-pulls a tag it already has.
+  if [ "$mode" = "materialise" ] &&
+     ! docker image inspect --format '{{.Id}}' "$IMAGE_REF" >/dev/null 2>&1; then
+    compose pull sim || compose build sim
+  fi
+
+  # The resolved image digest is also part of Compose's recreate decision (a
+  # local rebuild or a registry re-pull that moves the :jazzy tag) but is
+  # covered by neither the resolve output nor the compose files' text. If the
+  # image is still absent here (materialise not requested, or pull and build
+  # both failed offline) `docker image inspect` fails -- that must not break the
+  # command, so it is mapped to a fixed, deterministic placeholder instead of
+  # propagating the failure.
+  image_digest="$(docker image inspect --format '{{.Id}}' "$IMAGE_REF" 2>/dev/null)" ||
+    image_digest="no-local-image"
+
+  r_fingerprint="$(printf '%s\n%s\nhost_uid=%s\nhost_gid=%s\nimage_digest=%s' \
+    "$resolved" "$compose_files_content" "$host_uid" "$host_gid" "$image_digest" |
+    cksum | tr -d ' ')"
+
+  export DROID_CONFIG_FINGERPRINT="$r_fingerprint"
 }
 
 compose() {
@@ -352,7 +382,7 @@ cmd_up() {
   done
 
   require_docker
-  load_resolved
+  load_resolved materialise
   [ "$recreate" = "yes" ] || check_drift
 
   if [ "$r_tier" = "cpu" ]; then
@@ -382,15 +412,30 @@ EOF
   compose exec -u droid sim /opt/droid/launch-sim.sh "$backend"
 }
 
+# shell/down/nuke target the running container or project regardless of GPU tier
+# -- the resolved tier only selects which compose `-f` files to pass, and exec/
+# stop/down do not need the nvidia overlay. So they must NEVER hard-fail on GPU
+# acquisition: on an NVIDIA-present-but-unreachable host (docker_gpu=fail),
+# resolving without an override exits 3 with remediation text, which would make a
+# container you started with `--gpu cpu` impossible to shell into or tear down.
+# Forcing the cpu override takes cmd_resolve's override branch, which never calls
+# gpu_unreachable_error. `up` deliberately keeps the hard failure -- that probe is
+# the whole point of the tool.
+resolve_for_teardown() {
+  DROID_GPU_OVERRIDE="cpu"
+  export DROID_GPU_OVERRIDE
+  load_resolved
+}
+
 cmd_shell() {
   require_docker
-  load_resolved
+  resolve_for_teardown
   compose exec -u droid sim bash
 }
 
 cmd_down() {
   require_docker
-  load_resolved
+  resolve_for_teardown
   compose stop
   echo "droid: container stopped. Anything you installed inside it is preserved."
   echo "       Start again with ./droid up"
@@ -398,7 +443,7 @@ cmd_down() {
 
 cmd_nuke() {
   require_docker
-  load_resolved
+  resolve_for_teardown
   cat >&2 <<'EOF'
 droid: this DESTROYS the container and all of its volumes.
 

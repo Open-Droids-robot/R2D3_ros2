@@ -125,5 +125,10 @@ jobs:
           python-version: "3.12"
       - run: pip install pytest pyyaml
       - name: Run the static guards
-        # These require no Docker and reach no network, which is the point.
-        run: python -m pytest container/test/test_droid_resolve.py -v
+        # These require no Docker and reach no network, which is the point. The
+        # whole container/test/ dir runs -- test_droid_resolve.py AND the drift
+        # alarms in test_container_config.py (image-ref parity, the prewarm-xacro
+        # drift guard, devcontainer remoteUser, the CI runner pairing, the
+        # colcon-defaults set). Only TestPackageSelection is deselected: it shells
+        # out to colcon, which is not on a bare runner.
+        run: python -m pytest container/test/ -k 'not TestPackageSelection' -v

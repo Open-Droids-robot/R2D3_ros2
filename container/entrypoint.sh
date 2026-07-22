@@ -16,30 +16,48 @@ HOST_GID="${HOST_GID:-1000}"
 current_uid="$(id -u "$USER_NAME")"
 current_gid="$(id -g "$USER_NAME")"
 
+ids_moved="no"
 if [ "$current_gid" != "$HOST_GID" ]; then
   groupmod -o -g "$HOST_GID" "$USER_NAME"
+  ids_moved="yes"
 fi
 if [ "$current_uid" != "$HOST_UID" ]; then
   usermod -o -u "$HOST_UID" "$USER_NAME"
+  ids_moved="yes"
 fi
 
-# Volumes are created root-owned by the daemon; the home directory needs fixing
-# whenever the ids moved. The bind-mounted source tree is deliberately NOT
-# chowned -- it already belongs to the host user, and recursing into it would
-# rewrite the ctime of every file in the developer's checkout on every start.
-# That is why /ws itself is chowned shallowly and only the build artefact
-# directories below it are chowned recursively.
+# The bind-mounted source tree is deliberately NOT chowned -- it already belongs
+# to the host user, and recursing into it would rewrite the ctime of every file
+# in the developer's checkout on every start. That is why /ws itself and the home
+# directory are chowned shallowly, and only the build artefact directories and
+# the seeded/empty volume mounts below are chowned recursively.
 #
-# $USER_HOME is chowned RECURSIVELY, though. `groupmod -g` chowns nothing and
-# `usermod -u` only rewrites uids, so a shallow chown left /home/droid/.bashrc and
-# the rest of the skeleton owned by the old ids -- an unwritable shell profile for
-# the very user who is about to get a shell. The directory is small (dotfiles plus
-# .ros and .cache, which the loop below already recurses), so the added cost is
-# negligible.
-chown -R "$HOST_UID:$HOST_GID" "$USER_HOME" 2>/dev/null || true
+# The home directory is chowned SHALLOWLY: a blanket `chown -R $USER_HOME` walked
+# every file under it on every start, and XDG_CACHE_HOME / HF_HOME / TORCH_HOME
+# all live under .cache -- so once model weights land there that was thousands of
+# files per `up`/`shell`, and it double-walked .ros/.cache which the loop below
+# recurses again. The skeleton (dotfiles, .config, ...) still needs fixing when
+# the ids move -- `groupmod -g` chowns nothing and `usermod -u` only rewrites
+# uids, so a bare shallow chown would leave /home/droid/.bashrc owned by the old
+# ids, an unwritable shell profile for the user about to get a shell -- so it is
+# chowned then, but excluding the .ros/.cache volume mounts the loop handles.
+chown "$HOST_UID:$HOST_GID" "$USER_HOME" 2>/dev/null || true
+if [ "$ids_moved" = "yes" ]; then
+  find "$USER_HOME" -maxdepth 1 -mindepth 1 ! -name .ros ! -name .cache \
+    -exec chown -R "$HOST_UID:$HOST_GID" {} + 2>/dev/null || true
+fi
+
 chown "$HOST_UID:$HOST_GID" /ws /ws/src 2>/dev/null || true
+# The volume mount points start either root-owned (empty named volumes like the
+# build spaces and .cache) or image-seeded owned by the image-default uid (.ros).
+# Recurse only when the top-level ownership does not already match the target, so
+# a warm .cache/.ros or an already-fixed build tree is never re-walked: on a host
+# whose uid is the image default this is a no-op, and on any other host it runs
+# exactly once and is skipped on every subsequent start.
 for d in "$USER_HOME/.ros" "$USER_HOME/.cache" /ws/build /ws/install /ws/log; do
   [ -d "$d" ] || mkdir -p "$d"
+  [ "$(stat -c '%u:%g' "$d" 2>/dev/null || echo '')" = "$HOST_UID:$HOST_GID" ] &&
+    continue
   chown -R "$HOST_UID:$HOST_GID" "$d" 2>/dev/null || true
 done
 
