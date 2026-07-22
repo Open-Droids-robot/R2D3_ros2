@@ -25,11 +25,24 @@ passed, and the only symptom was a slow first launch:
      pre-warm quietly warms a key nobody asks for. This file reads the defaults
      out of the launch file's own `DeclareLaunchArgument` entities instead.
 
-The final assertion is the guard for both, and for anything else that could ever
-drift (a `CONVERTER_ARGS_VERSION` bump, a changed world file, a converter flag):
-the checksum recomputed from the launch-form description MUST equal the checksum
-file the converter wrote. If it does not, the layer fails loudly rather than
-shipping an image whose "pre-warmed" cache is dead weight.
+The final assertion catches both of those, plus a `CONVERTER_ARGS_VERSION` bump, a
+changed world file, or a stale/foreign checksum left on disk: the checksum
+recomputed from the launch-form description MUST equal the checksum file the
+converter wrote. If it does not, the layer fails loudly rather than shipping an
+image whose "pre-warmed" cache is dead weight.
+
+What it CANNOT catch: `expected` and `stored` both derive from the SAME
+`description` string built two lines above by `launch_form_robot_description()`,
+which hand-composes the xacro arguments (`arm_model:=`, `headless:=`) rather than
+reading them off `mujoco_sim.launch.py`'s `Command([...])`. If someone ADDS an
+xacro argument to that `Command([...])` (or renames one side's `name:=` mapping),
+this driver keeps building only the old argument list, converts it, stores its
+checksum, and the assertion passes -- comparing the driver against itself, not
+against the launch file. The image then ships a pre-warm under a key the launch
+will never ask for, silently. That drift is caught elsewhere, not here: see
+`TestPrewarmXacroArgsMatchLaunchFile` in
+`container/test/test_container_config.py`, which parses both `Command([...])`
+argument lists and asserts they match.
 
 Why it drives `ensure_mjcf.py` directly instead of running the launch file
 -------------------------------------------------------------------------

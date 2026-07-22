@@ -86,7 +86,13 @@ RUN source /opt/ros/jazzy/setup.bash && colcon build && chown -R droid:droid /ws
 # assertion still passing because a cache does exist. The driver uses the real
 # `Command` substitution and reads the launch file's own DeclareLaunchArgument
 # defaults, then ASSERTS that the checksum it computes equals the checksum file the
-# converter wrote. That assertion is the guard; see the script's docstring.
+# converter wrote. That assertion catches converter-side divergence, a
+# CONVERTER_ARGS_VERSION bump, and a stale/foreign checksum -- but NOT the driver's
+# hand-composed xacro argument list drifting from the launch file's (both sides of
+# the assertion derive from the same hand-composed description, so an argument
+# ADDED to mujoco_sim.launch.py's Command([...]) slips through it). That drift is
+# caught by container/test/test_container_config.py's
+# TestPrewarmXacroArgsMatchLaunchFile instead; see the script's docstring.
 USER droid
 RUN source /opt/ros/jazzy/setup.bash; \
     source /ws/install/setup.bash; \

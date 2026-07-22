@@ -152,5 +152,63 @@ class TestDockerfileConsumesTheDefaultsFile(unittest.TestCase):
         self.assertEqual(self._copy_destination(), self._defaults_file_env())
 
 
+class TestPrewarmXacroArgsMatchLaunchFile(unittest.TestCase):
+    """`container/prewarm-mjcf.py` hand-composes the xacro arguments it feeds
+    `Command(...)` rather than importing them from the launch file (it cannot: the
+    launch file builds them from `LaunchConfiguration` values resolved at launch
+    time). Its final checksum assertion is self-consistent by construction -- both
+    `expected` and `stored` derive from the SAME hand-composed description -- so it
+    cannot detect that the hand-composed argument list has drifted from
+    `mujoco_sim.launch.py`'s. Concretely: ADDING an argument to either file's
+    `Command([...])`, or RENAMING one side's `name:=` mapping, slips straight
+    through that assertion (xacro silently defaults an unknown/missing arg) and
+    ships a build-time cache under a key the launch will never ask for. This test
+    is the guard for exactly that gap: it parses both `Command([...])` argument
+    lists and asserts the ordered `name:=` tokens, and the xacro file basename,
+    match."""
+
+    LAUNCH_PATH = REPO_ROOT / "r2d3_mujoco" / "launch" / "mujoco_sim.launch.py"
+    PREWARM_PATH = CONTAINER_DIR / "prewarm-mjcf.py"
+
+    # Matches the `Command([ ... ])` construction (non-greedy, DOTALL) common to
+    # both files.
+    COMMAND_BLOCK_RE = re.compile(r"Command\(\[(.*?)\]\)", re.DOTALL)
+    # Matches a quoted xacro-argument token like `" arm_model:="` -> "arm_model".
+    ARG_TOKEN_RE = re.compile(r'"\s+([A-Za-z0-9_]+):="')
+    # Matches the xacro file basename wherever it appears as a string literal.
+    XACRO_BASENAME_RE = re.compile(r'"([A-Za-z0-9_./]+\.urdf\.xacro)"')
+
+    def _command_block(self, text, path):
+        match = self.COMMAND_BLOCK_RE.search(text)
+        self.assertIsNotNone(match, f"no Command([...]) construction found in {path}")
+        return match.group(1)
+
+    def _xacro_args(self, text, path):
+        return self.ARG_TOKEN_RE.findall(self._command_block(text, path))
+
+    def _xacro_basename(self, text, path):
+        match = self.XACRO_BASENAME_RE.search(text)
+        self.assertIsNotNone(match, f"no *.urdf.xacro literal found in {path}")
+        return Path(match.group(1)).name
+
+    def setUp(self):
+        self.launch_text = self.LAUNCH_PATH.read_text()
+        self.prewarm_text = self.PREWARM_PATH.read_text()
+
+    def test_xacro_argument_names_and_order_match(self):
+        launch_args = self._xacro_args(self.launch_text, self.LAUNCH_PATH)
+        prewarm_args = self._xacro_args(self.prewarm_text, self.PREWARM_PATH)
+        self.assertEqual(
+            prewarm_args, launch_args,
+            "container/prewarm-mjcf.py's hand-composed xacro arguments have "
+            "drifted from mujoco_sim.launch.py's Command([...]) -- the pre-warmed "
+            "cache would be keyed on a description the launch never produces")
+
+    def test_xacro_file_basename_matches(self):
+        launch_basename = self._xacro_basename(self.launch_text, self.LAUNCH_PATH)
+        prewarm_basename = self._xacro_basename(self.prewarm_text, self.PREWARM_PATH)
+        self.assertEqual(prewarm_basename, launch_basename)
+
+
 if __name__ == "__main__":
     unittest.main()
