@@ -1,5 +1,10 @@
 # R2D3 Gazebo Harmonic Simulation – Quick Start Guide
 
+> **Prefer not to install ROS 2 locally?** `./droid up` from the repository root
+> runs this whole simulation in a container and serves the GUI to your browser,
+> on Linux, macOS, Jetson or a headless cloud instance. See
+> [docs/container.md](docs/container.md).
+
 ## Prerequisites
 
 ```bash

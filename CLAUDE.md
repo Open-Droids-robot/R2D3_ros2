@@ -23,6 +23,18 @@ cause.
 The same trap invalidates test and launch results, so rebuild before believing
 either. See `docs/agents/domain.md` for the wider context.
 
+## The container
+
+`./droid up` runs the whole simulation in a container (ROS 2 Jazzy, GUI over
+noVNC at `http://localhost:6080`). The repository is bind-mounted, so it is the
+developer's working tree that runs — but **the container's build semantics are
+identical to the host's**: no `--symlink-install`, `install/` holds plain copies,
+and the same stale-install trap applies. The container neutralises it by
+rebuilding the simulation subset on every launch path rather than by changing
+build semantics, so the rule above is unchanged wherever code runs. Build
+artifacts live on volumes, separate from any native `build/` and `install/` in
+the working tree. See `docs/container.md`.
+
 ## Agent skills
 
 ### Issue tracker

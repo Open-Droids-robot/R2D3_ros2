@@ -1,5 +1,11 @@
 # R2D3 MuJoCo Simulation – Quick Start Guide
 
+> **Prefer not to install ROS 2 locally?** `./droid up --mujoco` from the
+> repository root runs this simulation in a container and serves the GUI to your
+> browser. The image ships a pre-warmed converter venv and MJCF cache, so an
+> unmodified checkout skips the cold-start conversion described below. See
+> [docs/container.md](docs/container.md).
+
 ## Prerequisites
 
 ```bash
