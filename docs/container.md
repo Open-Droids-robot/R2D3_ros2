@@ -164,17 +164,20 @@ Stated honestly:
 
 | Path | Status |
 |---|---|
-| amd64, software-rendering tier, Gazebo and MuJoCo | Exercised during development on this machine; the formal hand-verification pass has not yet been run at the time of writing |
-| amd64 and arm64 image build + workspace compile | Expected to pass in CI; this branch has not yet been pushed, so CI has not actually run it yet |
+| amd64, software-rendering tier, Gazebo | **Hand-verified** — `./droid up` reaches a running sim: `/clock` advancing, five controllers active, Gazebo + RViz rendered in the browser over noVNC |
+| amd64, software-rendering tier, MuJoCo | **Hand-verified** — `./droid up --mujoco` reaches a running sim on a warm cache hit: `/clock` advancing, six controllers active, MuJoCo viewer + RViz in the browser |
+| amd64 image build + workspace compile | Verified locally (the image builds and the 15-package subset compiles inside it) |
+| amd64 and arm64 image build in CI | Expected to pass; this branch has not yet been pushed, so CI has not actually run it yet |
 | NVIDIA accelerated tier | **Not verified** |
 | Jetson | **Not verified** |
 | arm64 at runtime | **Not booted** — only expected to build once CI runs |
 | macOS desktop experience | **Not verified** |
 | Windows / WSL2 | Not supported — deliberately out of scope |
 
-Treat every row above the "Not supported" line as provisional until it is
-independently re-checked; do not read "exercised during development" as
-equivalent to a completed verification pass.
+The two hand-verified rows were exercised on the reference amd64 machine, whose
+GPU is unreachable from Docker, so `--gpu cpu` was used. Treat every row that is
+not marked hand-verified as provisional until it is independently checked; in
+particular, the accelerated tier, Jetson, arm64 runtime, and macOS are unproven.
 
 ## 11. Optional dev container
 
