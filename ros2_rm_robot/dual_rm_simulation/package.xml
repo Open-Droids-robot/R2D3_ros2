@@ -19,11 +19,21 @@
   <exec_depend>diff_drive_controller</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
+  <exec_depend>position_controllers</exec_depend>
   <exec_depend>gz_ros2_control</exec_depend>
+
+  <!-- Neck servo bridge (engine-neutral sim stand-in for the real servo_driver) -->
+  <exec_depend>servo_sim_bridge</exec_depend>
 
   <!-- Gazebo Harmonic -->
   <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>
+
+  <!-- stereo_concat ZED topic shim node -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>message_filters</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

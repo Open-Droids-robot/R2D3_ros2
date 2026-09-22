@@ -1,0 +1,44 @@
+# Build context exclusions for container/Dockerfile.
+#
+# Scoped to this Dockerfile via the `<dockerfile>.dockerignore` convention rather
+# than a repository-root .dockerignore, which would be global to every build in
+# the tree. This one only governs the image built from container/Dockerfile.
+#
+# REQUIRES BUILDKIT. The `<dockerfile>.dockerignore` form is a BuildKit feature;
+# the legacy builder only ever reads `.dockerignore` at the context root. BuildKit
+# is the default in Docker 23+ and in `docker buildx`, so this is honoured in
+# practice -- but a build forced through the old path with DOCKER_BUILDKIT=0 would
+# silently ignore this file and copy a host `install/` (and 117 MB of `.git`) into
+# the image, with the runtime failure landing far from its cause. Build with
+# BuildKit, which is also what the CI job uses.
+#
+# Two of these entries are correctness, not just speed:
+#
+#   .git      117 MB, and it changes on every commit, checkout and fetch -- so
+#             including it invalidates the COPY layer (and therefore rosdep, the
+#             workspace build and the multi-minute MuJoCo pre-warm behind it)
+#             every time git touches anything.
+#
+#   install/  the workspace is built WITHOUT --symlink-install, so install/ is
+#             plain copies of host-built artefacts. Copying a host install space
+#             into the image would shadow the container's own build with binaries
+#             linked against the host's libraries, and the failure would surface
+#             at runtime, far from its cause.
+.git
+.gitignore
+.github
+build
+install
+log
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+.superpowers
+.claude
+
+# Not needed to build or run the simulation.
+pic
+*.pdf
+*.gv
+MUJOCO_LOG.TXT

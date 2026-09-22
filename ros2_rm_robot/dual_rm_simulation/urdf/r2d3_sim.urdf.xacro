@@ -14,7 +14,8 @@
     <!-- ── Modular includes ──────────────────────────────────── -->
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/lidar.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/imu.urdf.xacro"/>
-    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/depth_camera.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/zed2_sim.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/wrist_cams_sim.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/gazebo/sim_gazebo.urdf.xacro"/>
     <xacro:include filename="$(find dual_rm_simulation)/urdf/ros2_control/sim_ros2_control.urdf.xacro"/>
 
@@ -31,15 +32,18 @@
     <xacro:include filename="$(find dual_rm_description)/urdf/r2d3_description.urdf.xacro"/>
 
     <!-- ── 3. Sensors ────────────────────────────────────────── -->
-    <xacro:lidar_sensor parent_link="base_link_underpan"
-                        xyz="0.0 -0.24 0.0" rpy="0 0 ${-pi/2}"/>
+    <xacro:lidar_sensor parent_link="base_footprint"
+                        xyz="0.325 0 0.210" rpy="0 0 0"/>
 
     <!-- IMU: centre of AGV chassis -->
-    <xacro:imu_sensor parent_link="base_link_underpan"
-                      xyz="0 0 0" rpy="0 0 0"/>
+    <xacro:imu_sensor parent_link="base_footprint"
+                      xyz="0 0 0.233" rpy="0 0 0"/>
 
-    <!-- Depth camera -->
-    <xacro:depth_camera_sensor/>
+    <!-- ZED 2 head camera (Gz stereo sensor pair) -->
+    <xacro:zed2_sim_sensors/>
+
+    <!-- Wrist D435 cameras (Gz rgbd_camera per wrist) -->
+    <xacro:wrist_cams_sim_sensors/>
 
     <!-- ── 4. Gazebo physics properties ──────────────────────── -->
     <xacro:sim_gazebo_properties arm_dof="${arm_dof}"/>

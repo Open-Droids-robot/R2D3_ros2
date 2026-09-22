@@ -1,0 +1,291 @@
+<?xml version="1.0"?>
+<!--
+  MuJoCo conversion inputs for the R2D3 robot, embedded in the URDF so the
+  make_mjcf_from_robot_description converter picks them up.
+  raw_inputs      -> copied verbatim into the generated MJCF
+  processed_inputs -> interpreted by the converter (camera, lidar, modify_element)
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Position actuator for one arm-style joint; ctrlrange inherited from joint limits.
+         kp default 2000 (not 25000): the distal arm links have very small inertia
+         (l_link4 ~1e-4, l_link6 ~5e-4 kg*m^2). With the explicit stiffness term of a
+         MuJoCo position actuator integrated at the 0.002 s timestep, kp=25000 puts the
+         natural frequency (omega=sqrt(kp/I) ~ 5000 rad/s) far past the discrete-time
+         stability limit, so the wrist joints buzz continuously at rest (measured
+         |qvel| ~ 7-11 rad/s in pure MuJoCo, independent of contact). kp=2000 brings
+         omega under the stable range (measured |qvel| ~ 0.003 rad/s, dead steady) while
+         still tracking trajectories tightly - gravity is already handled by gravcomp=1
+         on these bodies, so high positional stiffness is unnecessary. -->
+    <xacro:macro name="_mj_pos_act" params="joint_name kp:=2000">
+        <position name="${joint_name}" joint="${joint_name}" kp="${kp}"
+                  dampratio="1.0" inheritrange="1.0"/>
+    </xacro:macro>
+
+    <!-- Gravity compensation on a body (MuJoCo analogue of the Gazebo
+         <gravity>false</gravity> applied to arm/head links) -->
+    <xacro:macro name="_mj_gravcomp" params="body_name">
+        <modify_element type="body" name="${body_name}" gravcomp="1"/>
+    </xacro:macro>
+
+    <!-- Passive joint damping. Necessary in addition to the actuator's dampratio:
+         mujoco_ros2_control drives the sim from a control thread that is asynchronous
+         to the physics thread, and that coupling re-excites a high-frequency limit
+         cycle on the low-inertia wrist joints (l_joint6/r_joint6 measured buzzing at
+         |qvel| ~ 10-15 rad/s in the live node) even though the identical MJCF is
+         perfectly steady in standalone MuJoCo. A small native joint damping term is
+         applied every physics step regardless of control-loop timing and kills the
+         buzz (|qvel| drops to ~0.0006 rad/s) without harming trajectory tracking.
+         damping=3 is mildly over-critical for the distal joints (kv_crit ~ 2 at
+         kp=2000) and well under-critical for the proximal ones, so it targets the
+         joints that actually oscillate. -->
+    <xacro:macro name="_mj_joint_damp" params="joint_name damping:=3">
+        <modify_element type="joint" name="${joint_name}" damping="${damping}"/>
+    </xacro:macro>
+
+    <xacro:macro name="mujoco_inputs" params="arm_dof">
+        <mujoco_inputs>
+
+            <raw_inputs>
+                <option integrator="implicitfast" noslip_iterations="3"/>
+
+                <!-- Required: the converter emits every geom with class="collision" or
+                     class="visual" but never defines those classes itself (see
+                     mujoco_ros2_control/urdf_to_mujoco_utils.py). Without this default
+                     block the compiler rejects the MJCF with
+                     "unknown default class name 'collision'". -->
+                <!-- Wheel/caster traction (Task 4 spike finding): the R2D3 description
+                     is visual-only (no <collision> elements), so the converter
+                     synthesizes every collision geom from the visual mesh with NO
+                     name attribute (confirmed: 0 of 68 robot geoms in the generated
+                     MJCF carry a name, only the scene's static geoms do). modify_element
+                     matches strictly on an element's existing "name" attribute, so
+                     individual wheel/caster geoms cannot be targeted: there is no
+                     name for it to match. The friction/condim values below (matching
+                     the Gazebo drive-wheel tuning, mu 1.5) are therefore applied via
+                     the shared "collision" default class, i.e. to every robot collision
+                     geom. This is safe here because only the wheels/casters normally
+                     contact the ground; the platform's casters are modeled as real
+                     2-DOF (swivel+roll) joints (see robot_description_formatted.urdf),
+                     so they self-align under drive torque rather than needing an
+                     artificially low ground-contact mu the way Gazebo's simplified
+                     single-DOF caster friction model did. See git history:
+                     git show aaae018:r2d3_mujoco/SPIKE_NOTES.md for the
+                     full investigation (decompose_mesh/obj2mjcf naming was also checked
+                     and does not produce named geoms either). -->
+                <default>
+                    <default class="visual">
+                        <geom group="2" type="mesh" contype="0" conaffinity="0"/>
+                    </default>
+                    <!-- conaffinity=0 disables robot self-collision (the MuJoCo analogue
+                         of Gazebo's <self_collide>false</self_collide> on every link).
+                         MuJoCo only auto-excludes parent-child contacts, so without this
+                         the convex-hull collision geoms of non-adjacent links penetrate
+                         each other every step (measured: the chassis hull - merged into
+                         base_footprint - sank 4.4 cm into the casters and 6.5 cm into
+                         head_link1), producing persistent deep contacts that destabilize
+                         the base. contype stays 1 (default), so robot geoms still collide
+                         with the world (ground/walls, which use contype=1 conaffinity=1):
+                         robot(contype1,conaff0) vs world(conaff1) -> collide; robot vs
+                         robot -> no collision.
+
+                         rgba alpha=0: MuJoCo's ray-casting eliminator (engine_ray.c
+                         ray_eliminate(), used by mj_ray and therefore by every
+                         <rangefinder> sensor) drops any geom whose rgba alpha is exactly
+                         0. Zeroing the collision class keeps the lidar rays from ever
+                         hitting the robot's own crude convex-hull collision copies
+                         (defense in depth); the visible VISUAL meshes are cleared instead
+                         by raising the lidar scan plane above the chassis in
+                         scripts/ensure_mjcf.py:raise_lidar_scan_plane(). alpha is purely
+                         visual and does not affect contact physics. -->
+                    <default class="collision">
+                        <geom group="3" type="mesh" friction="1.5 0.005 0.0001" condim="4"
+                              conaffinity="0" rgba="1 1 1 0"/>
+                    </default>
+                </default>
+
+                <actuator>
+                    <!-- Drive wheels: native velocity actuators (matches the
+                         ros2_control velocity command interface) -->
+                    <velocity name="joint_left_wheel" joint="joint_left_wheel"
+                              kv="100" ctrlrange="-10 10"/>
+                    <velocity name="joint_right_wheel" joint="joint_right_wheel"
+                              kv="100" ctrlrange="-10 10"/>
+
+                    <!-- Left arm -->
+                    <xacro:_mj_pos_act joint_name="l_joint1"/>
+                    <xacro:_mj_pos_act joint_name="l_joint2"/>
+                    <xacro:_mj_pos_act joint_name="l_joint3"/>
+                    <xacro:_mj_pos_act joint_name="l_joint4"/>
+                    <xacro:_mj_pos_act joint_name="l_joint5"/>
+                    <xacro:_mj_pos_act joint_name="l_joint6"/>
+                    <xacro:if value="${arm_dof == 7}">
+                        <xacro:_mj_pos_act joint_name="l_joint7"/>
+                    </xacro:if>
+
+                    <!-- Right arm -->
+                    <xacro:_mj_pos_act joint_name="r_joint1"/>
+                    <xacro:_mj_pos_act joint_name="r_joint2"/>
+                    <xacro:_mj_pos_act joint_name="r_joint3"/>
+                    <xacro:_mj_pos_act joint_name="r_joint4"/>
+                    <xacro:_mj_pos_act joint_name="r_joint5"/>
+                    <xacro:_mj_pos_act joint_name="r_joint6"/>
+                    <xacro:if value="${arm_dof == 7}">
+                        <xacro:_mj_pos_act joint_name="r_joint7"/>
+                    </xacro:if>
+
+                    <!-- Platform lift (prismatic, carries the torso). MoveIt drives it
+                         via a GripperCommand action (a single position setpoint, no
+                         time-parameterized trajectory), so the joint_limits.yaml
+                         velocity limit is never applied by the controller - on the real
+                         robot / Gazebo the setpoint is rate-limited by the joint's
+                         <limit velocity="0.15"> in the physics layer. MuJoCo has no
+                         per-joint velocity clamp, so a stiff position actuator slews the
+                         lift to target in ~30 ms (measured peak 2.33 m/s, 15x the limit).
+                         We reproduce the 0.15 m/s lift with a force-saturated slew: the
+                         joint's actuatorfrcrange caps the actuator force at F, and a large
+                         native joint damping b makes the force-saturated terminal velocity
+                         v = F/b. Both are set on the joint in processed_inputs below (F=225,
+                         b=1500 -> v=0.15 m/s, measured constant 0.150 in both directions).
+                         The clamp/damping live on the JOINT, not here, because
+                         mujoco_ros2_control does not honour this actuator's kp or forcerange
+                         (verified: changing kp does not change live behaviour) - only the
+                         joint's passive damping and actuatorfrcrange take effect. -->
+                    <position name="platform_joint" joint="platform_joint" kp="50000"
+                              dampratio="1.0" inheritrange="1.0"/>
+
+                    <!-- Head -->
+                    <xacro:_mj_pos_act joint_name="head_joint1" kp="500"/>
+                    <xacro:_mj_pos_act joint_name="head_joint2" kp="500"/>
+                </actuator>
+
+                <sensor>
+                    <!-- IMU triple at the imu_link site (all URDF links become MJCF sites).
+                         Names follow the 0.0.3 convention: <IMU>_quat/_gyro/_accel
+                         for the ros2_control sensor "imu_sensor_imu". -->
+                    <framequat name="imu_sensor_quat" objtype="site" objname="imu_link"/>
+                    <gyro name="imu_sensor_gyro" site="imu_link"/>
+                    <accelerometer name="imu_sensor_accel" site="imu_link"/>
+
+                    <!-- Rangefinder attached to the replicated 'rf' sites generated by
+                         the processed <lidar> tag below. Name must match the
+                         ros2_control <sensor name="lidar"> entry. -->
+                    <rangefinder name="lidar" site="rf"/>
+                </sensor>
+            </raw_inputs>
+
+            <processed_inputs>
+                <!-- ZED 2 stereo pair at the optical-frame sites. fovy(deg)
+                     derived from the Gazebo horizontal_fov of 1.9199 rad at
+                     1280x720: fovy = 2*atan(tan(1.9199/2)*720/1280) = 77.56 deg.
+                     Camera names must equal the ros2_control <sensor> names in
+                     mujoco_ros2_control.urdf.xacro. -->
+                <camera site="zed_left_camera_frame_optical" name="zed_left"
+                        fovy="77.56" mode="fixed" resolution="1280 720"/>
+                <camera site="zed_right_camera_frame_optical" name="zed_right"
+                        fovy="77.56" mode="fixed" resolution="1280 720"/>
+
+                <!-- Wrist D435s at the colour optical-frame sites. fovy(deg)
+                     derived from the Gazebo horizontal_fov of 1.5184 rad at
+                     848x480: fovy = 2*atan(tan(1.5184/2)*480/848) = 56.48 deg.
+                     Camera names must equal the ros2_control <sensor> names in
+                     mujoco_ros2_control.urdf.xacro. -->
+                <camera site="left_wrist_camera_color_optical_frame" name="left_wrist"
+                        fovy="56.48" mode="fixed" resolution="848 480"/>
+                <camera site="right_wrist_camera_color_optical_frame" name="right_wrist"
+                        fovy="56.48" mode="fixed" resolution="848 480"/>
+
+                <!-- 240-ray lidar matching the Gazebo gpu_lidar:
+                     +/-120 deg, angle_increment = 4.1887902/239 -->
+                <lidar ref_site="laser_link" sensor_name="rf"
+                       min_angle="-2.0943951" max_angle="2.0943951"
+                       angle_increment="0.0175263"/>
+
+                <!-- Gravity compensation on arm/head/torso bodies (Gazebo sim disables
+                     gravity on these links). Bodies connected by fixed joints are fused
+                     by the converter, so only movable-joint bodies are listed. -->
+                <xacro:_mj_gravcomp body_name="l_link1"/>
+                <xacro:_mj_gravcomp body_name="l_link2"/>
+                <xacro:_mj_gravcomp body_name="l_link3"/>
+                <xacro:_mj_gravcomp body_name="l_link4"/>
+                <xacro:_mj_gravcomp body_name="l_link5"/>
+                <xacro:_mj_gravcomp body_name="l_link6"/>
+                <xacro:_mj_gravcomp body_name="r_link1"/>
+                <xacro:_mj_gravcomp body_name="r_link2"/>
+                <xacro:_mj_gravcomp body_name="r_link3"/>
+                <xacro:_mj_gravcomp body_name="r_link4"/>
+                <xacro:_mj_gravcomp body_name="r_link5"/>
+                <xacro:_mj_gravcomp body_name="r_link6"/>
+                <xacro:if value="${arm_dof == 7}">
+                    <xacro:_mj_gravcomp body_name="l_link7"/>
+                    <xacro:_mj_gravcomp body_name="r_link7"/>
+                </xacro:if>
+                <xacro:_mj_gravcomp body_name="head_link1"/>
+                <xacro:_mj_gravcomp body_name="head_link2"/>
+                <xacro:_mj_gravcomp body_name="platform_base_link"/>
+
+                <!-- Passive damping on the arm joints (see _mj_joint_damp above). -->
+                <xacro:_mj_joint_damp joint_name="l_joint1"/>
+                <xacro:_mj_joint_damp joint_name="l_joint2"/>
+                <xacro:_mj_joint_damp joint_name="l_joint3"/>
+                <xacro:_mj_joint_damp joint_name="l_joint4"/>
+                <xacro:_mj_joint_damp joint_name="l_joint5"/>
+                <xacro:_mj_joint_damp joint_name="l_joint6"/>
+                <xacro:_mj_joint_damp joint_name="r_joint1"/>
+                <xacro:_mj_joint_damp joint_name="r_joint2"/>
+                <xacro:_mj_joint_damp joint_name="r_joint3"/>
+                <xacro:_mj_joint_damp joint_name="r_joint4"/>
+                <xacro:_mj_joint_damp joint_name="r_joint5"/>
+                <xacro:_mj_joint_damp joint_name="r_joint6"/>
+                <xacro:if value="${arm_dof == 7}">
+                    <xacro:_mj_joint_damp joint_name="l_joint7"/>
+                    <xacro:_mj_joint_damp joint_name="r_joint7"/>
+                </xacro:if>
+
+                <!-- Platform lift velocity limiting (see actuator block above for the
+                     full rationale). The converter sets actuatorfrcrange from the URDF
+                     effort limit (60 N); we override it here together with a large joint
+                     damping so the force-saturated terminal slew velocity is
+                     v = actuatorfrcrange / damping = 225/1500 = 0.15 m/s. A large damping
+                     is REQUIRED for live stability: mujoco_ros2_control's asynchronous
+                     control loop pumps energy into the force-saturated actuator
+                     (relay-like), and below ~1000 Ns/m the platform goes unstable
+                     (measured: damping 400 rings to 2.3 m/s with 0.3 m overshoot), while
+                     damping 1500+ is a dead-steady constant-velocity slew. The force
+                     clamp is then raised proportionally so the STABLE damping still yields
+                     the 0.15 m/s design speed. -->
+                <modify_element type="joint" name="platform_joint"
+                                damping="1500" actuatorfrcrange="-225 225"/>
+
+                <!-- Neck slew limiting (same force-saturated-slew technique as the
+                     platform lift above). The neck is driven by a
+                     JointGroupPositionController, which sends an instantaneous
+                     position step (unlike the arms' trajectory controller, which
+                     feeds interpolated setpoints). MuJoCo has no per-joint velocity
+                     clamp, so the stiff head position actuator tracks that step
+                     almost instantly and the head snaps (Gazebo's joint ramps to the
+                     step gradually, so it looks smooth there). The head actuator is
+                     already force-saturated for any real move (kp=500 * error > the
+                     2 N*m actuatorfrcrange whenever error > 0.004 rad), so adding
+                     native joint damping b gives a constant force-saturated terminal
+                     velocity v = F/b = 2/2 = 1.0 rad/s - a smooth, hardware-plausible
+                     head speed. As with the platform, mujoco_ros2_control honours only
+                     the joint's passive damping + actuatorfrcrange (not the actuator
+                     kp), so the slew must be set on the JOINT here. The real servo
+                     slew speed is still to be confirmed on hardware (issue #6); tune
+                     this damping once measured (lower = faster). -->
+                <xacro:_mj_joint_damp joint_name="head_joint1" damping="2"/>
+                <xacro:_mj_joint_damp joint_name="head_joint2" damping="2"/>
+
+                <!-- Wheel/caster friction tuning (Task 4): applied via the shared
+                     "collision" default class in raw_inputs above, not via
+                     modify_element, because the converter never assigns a "name"
+                     to synthesized collision geoms for this (visual-only)
+                     description, so there is nothing modify_element type="geom"
+                     could match. See git history: git show aaae018:r2d3_mujoco/SPIKE_NOTES.md for the full investigation. -->
+            </processed_inputs>
+
+        </mujoco_inputs>
+    </xacro:macro>
+
+</robot>

@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+  R2D3 Simulation URDF - MuJoCo (mujoco_ros2_control)
+  Usage:
+    xacro r2d3_mujoco.urdf.xacro                    # default: 65b
+    xacro r2d3_mujoco.urdf.xacro arm_model:=75b     # 75b variant
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="r2d3_sim">
+
+    <xacro:arg name="arm_model" default="65b"/>
+    <xacro:arg name="headless" default="false"/>
+    <xacro:property name="arm_model" value="$(arg arm_model)"/>
+    <xacro:property name="arm_dof" value="${6 if arm_model == '65b' else 7}"/>
+
+    <!-- Sensor frame macros reused from the Gazebo sim package.
+         Their <gazebo> sensor tags are ignored by the MuJoCo converter;
+         only the links/joints (laser_link, imu_link) matter. The ZED frames
+         (zed_*_camera_frame_optical) come from the core robot description via
+         body_head_platform below, not from a Gz-sensor macro:
+         zed2_sim.urdf.xacro's Gz-sensor macro is never instantiated in MuJoCo. -->
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/lidar.urdf.xacro"/>
+    <xacro:include filename="$(find dual_rm_simulation)/urdf/sensors/imu.urdf.xacro"/>
+    <xacro:include filename="$(find r2d3_mujoco)/urdf/mujoco_inputs.urdf.xacro"/>
+    <xacro:include filename="$(find r2d3_mujoco)/urdf/ros2_control/mujoco_ros2_control.urdf.xacro"/>
+
+    <!-- base_footprint (ground-level frame for Nav2) -->
+    <link name="base_footprint"/>
+    <joint name="base_footprint_to_base" type="fixed">
+        <parent link="base_footprint"/>
+        <child link="base_link_underpan"/>
+        <origin xyz="0 0 0.233" rpy="0 0 ${pi/2}"/>
+    </joint>
+
+    <!-- Full robot mechanical description -->
+    <xacro:include filename="$(find dual_rm_description)/urdf/r2d3_description.urdf.xacro"/>
+
+    <!-- Sensor frames (same placement as Gazebo sim, r2d3_sim.urdf.xacro):
+         mounted in the +X-forward nav frame (base_footprint) at the real robot's
+         coordinates, with zero compensation rotations. -->
+    <xacro:lidar_sensor parent_link="base_footprint"
+                        xyz="0.325 0 0.210" rpy="0 0 0"/>
+    <xacro:imu_sensor parent_link="base_footprint"
+                      xyz="0 0 0.233" rpy="0 0 0"/>
+    <!-- ZED 2 Gz sensor tags are ignored by the MuJoCo converter; the ZED
+         links/frames themselves come from the core description (zed2 macro
+         in body_head_platform). Nothing to instantiate here. -->
+
+    <!-- MuJoCo conversion inputs (actuators, sensors, camera, lidar, scene tweaks) -->
+    <xacro:mujoco_inputs arm_dof="${arm_dof}"/>
+
+    <!-- ros2_control with MujocoSystemInterface -->
+    <xacro:mujoco_ros2_control arm_dof="${arm_dof}" headless="$(arg headless)"/>
+
+</robot>

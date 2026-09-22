@@ -1,0 +1,15 @@
+# The cross-repo ref-pairing record for rogent mode (./droid up --rogent).
+#
+# This workspace and the rogent agent live in different repositories; the pair
+# of refs known to work together is pinned HERE, not in the container tooling.
+# A fresh machine materialises the checkout once, as a sibling of this repo:
+#
+#   cd <parent of R2D3_ros2> && vcs import --input R2D3_ros2/rogent.repos .
+#
+# ./droid up --rogent finds it there by default, or wherever DROID_ROGENT_SRC
+# points. The checkout is bind-mounted, never cloned by the tooling itself.
+repositories:
+  rogent-v3:
+    type: git
+    url: https://github.com/Open-Droids-robot/rogent-v3.git
+    version: sim_rogent

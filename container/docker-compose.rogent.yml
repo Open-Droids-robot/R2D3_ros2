@@ -1,0 +1,72 @@
+# Applied as an overlay only when `./droid up --rogent` is used. Everything
+# rogent mode changes lives here, so the default mode's composed service is
+# byte-identical with this file absent -- toggling the overlay is a config
+# change the drift fingerprint sees, and forces `--recreate`.
+services:
+  sim:
+    # The derived image (base + rogent deps + Kokoro + paplay). Pull is
+    # attempted first and a local build is the fallback, same as the base.
+    # The `rogent` additional context points at the developer's rogent
+    # checkout so the Dockerfile can read its requirements.txt; `./droid`
+    # validates DROID_ROGENT_SRC before compose ever sees it.
+    image: ghcr.io/open-droids-robot/r2d3-sim:jazzy-rogent
+    build:
+      context: ..
+      dockerfile: container/Dockerfile.rogent
+      additional_contexts:
+        rogent: ${DROID_ROGENT_SRC:?set by ./droid up --rogent}
+    environment:
+      # Container-wide, deliberately: all sim nodes, RViz and every shell
+      # session speak zenoh in rogent mode, so the whole graph is visible to
+      # rogent. ROS_DOMAIN_ID stays unset (0), matching rogent's 0/... key
+      # expressions; ROS_LOCALHOST_ONLY / discovery-range are DDS-only and
+      # inert under zenoh, so the base image's values are left alone.
+      RMW_IMPLEMENTATION: rmw_zenoh_cpp
+      # The in-container marker gui-start.sh (router) and launch-sim.sh
+      # (:7447 gate) key off. Distinct from the host-side DROID_ROGENT_MODE
+      # flag that ./droid resolve reads.
+      DROID_ROGENT: "1"
+      # Fixed target path decouples in-container config from the host uid.
+      PULSE_SERVER: unix:/run/host-pulse/native
+      # `./droid up --rogent --mute` points this at a host null sink so
+      # speech plays silently; otherwise the host's default sink.
+      PULSE_SINK: ${DROID_PULSE_SINK:-@DEFAULT_SINK@}
+      # The LLM seam rogent-v3 PR #15 built for this container: flip the
+      # bind-mounted checkout to local models with zero file divergence.
+      # Ollama serves on the HOST (see extra_hosts below). Default is the
+      # zero-cloud dev posture; export DROID_ROGENT_LLM_BACKEND=google on the
+      # host (with keys in rogent's env) to run Gemini instead (rogent-v3#11).
+      ROGENT_LLM_BACKEND: ${DROID_ROGENT_LLM_BACKEND:-ollama}
+      ROGENT_LLM_BASE_URL: http://host.docker.internal:11434
+      # Kokoro TTS on the container's CUDA runtime dies without a traceback
+      # while the host LLM server holds the 8 GB card — the CPU pin is the
+      # fallback rogent-v3#9 accepted for exactly this contention.
+      ROGENT_SPEECH_DEVICE: cpu
+      # Zero-cloud gate (rogent-v3#17): wandb's bundled Sentry reporter phones
+      # home on `import weave`. rogent's sim profile stubs weave in-process;
+      # these cover any other entry point that imports it directly.
+      WANDB_MODE: disabled
+      WANDB_DISABLED: "true"
+      WANDB_ERROR_REPORTING: "false"
+      WEAVE_DISABLED: "true"
+      # Kokoro resolves hexgrad/Kokoro-82M through huggingface_hub, which
+      # phones the Hub (CloudFront) on every start even when the snapshot is
+      # cached on the r2d3_cache volume. Offline mode serves it from cache.
+      HF_HUB_OFFLINE: "1"
+      # Perception's captured-frame directory. rogent derives it by walking up
+      # from its own source tree, which from the /rogent mount reaches "/" and
+      # an unwritable /outputs; pin it inside the (bind-mounted) checkout.
+      ROGENT_OUTPUT_DIR: /rogent/outputs
+    extra_hosts:
+      # Ollama runs on the HOST (GPU passthrough into the container is flaky);
+      # rogent reaches it at http://host.docker.internal:11434.
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # The developer's rogent working tree -- edits effective immediately,
+      # no image rebuild. `./droid rogent` runs from this mount.
+      - ${DROID_ROGENT_SRC:?set by ./droid up --rogent}:/rogent
+      # Host Pulse socket for audible Kokoro speech (paplay -> host speakers).
+      # On a host without the socket (macOS) this mounts an empty directory,
+      # paplay fails, and speech degrades -- accepted; rogent mode is
+      # Linux-first (rogent-v3#9).
+      - /run/user/${DROID_HOST_UID:-1000}/pulse:/run/host-pulse

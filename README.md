@@ -42,89 +42,30 @@ For more information about the bot topic service function, see[List of services 
 
 The following is the installation and use tutorial of the package.
 
-## 🐳 Docker Implementation
+## 🐳 Containerised simulation
 
-This project provides a comprehensive containerized ROS2 development environment with **multi-distribution support** (Foxy, Humble, Jazzy) specifically configured for the **OpenDroids R2D3 dual-arm composite lifting robot**.
-
-### 🚀 Quick Start
-
-**Option 1: Docker Compose (Recommended)**
-```bash
-# One-command setup and start
-make setup && make start
-
-# Open shell in container
-make shell
-
-# Setup R2D3 packages
-~/scripts/setup_r2d3.sh
-```
-
-**Option 2: Choose Your ROS2 Distribution**
-```bash
-# Original R2D3 (Foxy)
-make start DISTRO=foxy
-
-# Recommended for production (Humble) 
-make start DISTRO=humble
-
-# Latest features (Jazzy)
-make start DISTRO=jazzy
-```
-
-### 🎯 Key Features
-
-- **Multi-Distribution Support**: Foxy (original), Humble (recommended), Jazzy (latest)
-- **Complete R2D3 Environment**: All robot packages pre-configured and ready
-- **GUI Support**: Full X11 forwarding for RViz, Gazebo, and rqt tools
-- **Audio Support**: PulseAudio integration for robot audio feedback
-- **MoveIt2 Integration**: Motion planning and manipulation capabilities
-- **Camera Support**: Intel RealSense D435 camera integration
-- **Cross-Platform**: Works on Linux, macOS, and Windows (with WSL2)
-
-### 📋 Prerequisites
+One command, on any machine, from a fresh clone:
 
 ```bash
-# Install Docker and Docker Compose
-sudo apt update && sudo apt install docker.io docker-compose-plugin
-
-# Add user to docker group
-sudo usermod -aG docker $USER
-# Log out and back in for group changes to take effect
+./droid up
 ```
 
-### 🛠️ Essential Commands
+This detects your platform, starts a single container, builds the simulation
+subset, launches Gazebo with RViz, and prints a URL. Open
+<http://localhost:6080/vnc.html?autoconnect=1&resize=scale> and you will see the
+robot. The same command and the same URL work on an amd64 Linux desktop, an Apple
+Silicon Mac, a Jetson and a headless cloud instance, because the GUI is delivered
+over noVNC rather than through the host's display stack.
 
 ```bash
-# Environment Management
-make help              # Show all available commands
-make setup             # Setup host environment (X11, PulseAudio)
-make start              # Start default (Humble) environment
-make start DISTRO=foxy  # Start specific distribution
-make shell              # Open shell in running container
-make stop               # Stop environment
-make restart            # Restart environment
-make status             # Check container status
-
-# Development
-make build              # Build images
-make logs               # View container logs
-make clean              # Clean up everything
-
-# R2D3 Operations (inside container)
-r2d3_camera            # Launch camera
-r2d3_demo              # Launch robot demo
-r2d3_build             # Build workspace
-r2d3_ws                # Go to workspace
+./droid up --mujoco   # switch the simulation backend
+./droid shell         # a shell inside the container
+./droid doctor        # re-run the platform probe
+./droid down          # stop, preserving anything you installed inside
 ```
 
-### 📚 Documentation
-
-For comprehensive Docker documentation, see:
-- **[Docker README](Docker/readme.md)** - Complete Docker setup guide
-- **[Quick Start Guide](Docker/QUICKSTART.md)** - 5-minute setup tutorial
-- **[Distribution Guide](Docker/DISTRO_GUIDE.md)** - ROS2 distribution details
-- **[Workspace Overview](Docker/WORKSPACE_OVERVIEW.md)** - Project structure guide
+Requires only bash and Docker. ROS 2 Jazzy only. See **[docs/container.md](docs/container.md)**
+for the two rendering tiers, GPU setup, and what has and has not been verified.
 
 ---
 
@@ -333,40 +274,25 @@ Please refer to the following operation specifications when using the robotic ar
 * Place the robotic arm in a safe location when not in use to avoid it from falling down and damaging or injuring other objects during vibration.
 * Disconnect the robotic arm from the power supply in time when not in use.
 
-### 🐛 Docker Troubleshooting
+### 🐛 Container Troubleshooting
 
 **Container won't start:**
 ```bash
 # Check Docker is running
 sudo systemctl start docker
 
-# Check permissions
-groups $USER  # Should include 'docker'
+# Re-run the platform probe
+./droid doctor
 ```
 
-**GUI applications don't show:**
-```bash
-# Setup X11 forwarding
-make setup
-# Or manually:
-xhost +local:docker
-```
+**GUI doesn't show:** the GUI is served over noVNC, not X11 forwarding — open
+<http://localhost:6080/vnc.html?autoconnect=1&resize=scale> in a browser. If
+port 6080 is already taken by another `droid`/compose stack, stop that one
+first (`./droid down` in the other checkout).
 
-**Audio doesn't work:**
-```bash
-# Start PulseAudio
-pulseaudio --start
-
-# Check audio devices in container
-aplay -l
-```
-
-**Build failures:**
-```bash
-# Clean and rebuild
-make clean
-make build
-```
+**GPU unreachable / configuration drift refused / MuJoCo reconversion is
+slow:** see the Troubleshooting section of **[docs/container.md](docs/container.md)**,
+which covers these cases in detail.
 
 ### Version update
 
@@ -378,6 +304,7 @@ make build
 | V1.1.2 | 1. Added visual crawling demo | 2024-12-24 |
 | V1.1.3 | 1. Added chassis function package when enlightenment | 2025-01-02 |
 | V1.2.0 | 1. **Major Docker Update**: Multi-distribution support (Foxy, Humble, Jazzy) 2. Comprehensive Docker Compose setup 3. Enhanced development environment with GUI and audio support 4. Updated documentation and quick start guides | 2025-01-15 |
+| V1.3.0 | 1. **Container consolidation**: replaced the multi-distribution `Docker/` tree with a single ROS 2 Jazzy container workflow (`./droid up`), auto-detecting CPU/NVIDIA rendering and serving the GUI over noVNC. See [docs/container.md](docs/container.md) | 2026-07-22 |
 
 ### Common problem
 1. exec:sudo bash ros2_install.sh

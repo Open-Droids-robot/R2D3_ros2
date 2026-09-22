@@ -1,0 +1,19 @@
+# ZED 2 overrides for the R2D3 head camera (applied on top of the wrapper's
+# zed2.yaml defaults). Keep this minimal - defaults are good.
+/zed/zed_node:
+  ros__parameters:
+    general:
+      grab_resolution: 'HD720'   # 1280x720, matches the sim sensors
+      pub_resolution: 'NATIVE'
+      grab_frame_rate: 15        # matches the sim update_rate
+    video:
+      # Wrapper defaults leave these off; the sim/real topic contract
+      # requires left/right and stereo images, so opt in explicitly.
+      publish_left_right: true
+      publish_stereo: true
+    depth:
+      depth_mode: 'NEURAL'
+    pos_tracking:
+      # Nav owns TF (map->odom->base_footprint); the camera must not publish
+      # its own odom/pose TF.
+      pos_tracking_enabled: false

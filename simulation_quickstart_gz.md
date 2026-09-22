@@ -1,15 +1,44 @@
 # R2D3 Gazebo Harmonic Simulation – Quick Start Guide
 
+> **Prefer not to install ROS 2 locally?** `./droid up` from the repository root
+> runs this whole simulation in a container and serves the GUI to your browser,
+> on Linux, macOS, Jetson or a headless cloud instance. See
+> [docs/container.md](docs/container.md).
+
 ## Prerequisites
 
 ```bash
 # Build the workspace
-cd ~/Ros2_Workspaces/R2D3_ros2
-colcon build --symlink-install
+cd <your-workspace-root>          # e.g. ~/code/r2d3
+colcon build
 source install/setup.bash
 ```
 
 > **Tip:** Always source `install/setup.bash` in every new terminal.
+
+### Rebuild after editing — yes, every time
+
+This workspace is built **without** `--symlink-install`, so `install/` holds
+plain *copies*, not links. At runtime everything resolves through the install
+space: `$(find pkg)` in a xacro, `xacro.load_yaml()` on a config, launch files,
+world files, params. **Editing a file in `src/` has no effect until you
+rebuild** — the sim keeps reading the previous copy.
+
+```bash
+colcon build --packages-select <pkg> && source install/setup.bash
+```
+
+This applies to plain data files too, which is the surprising part: change a
+YAML, relaunch without rebuilding, and the old value is still in force with no
+warning. It looks exactly like "the setting does nothing", so it tends to send
+you debugging code that was never wrong. For description/config-only packages
+the rebuild is ~1 s — it is only copying files.
+
+If you would rather have live edits, `colcon build --symlink-install` links
+non-compiled assets instead of copying them and removes this entirely. It is a
+whole-workspace choice: mixing the two produces a confusing hybrid install
+space, so switch with a clean `rm -rf build install` first, and expect every
+contributor and doc to assume the same mode.
 
 ---
 
@@ -42,7 +71,7 @@ ros2 launch dual_rm_simulation gz_sim.launch.py robot_model:=75b gz_verbosity:=2
 |-----------------------------|-------------------------------------------|
 | `gazebo` (Gz Sim)           | Physics simulation (headless rendering)   |
 | `robot_state_publisher`     | Publishes `/robot_description` and `/tf`  |
-| `ros_gz_bridge`             | Bridges `/clock`, `/scan`, `/imu`, `/camera/*` |
+| `ros_gz_bridge`             | Bridges `/clock`, `/scan`, `/imu`, `/zed/zed_node/*` |
 | `joint_state_broadcaster`   | Publishes `/joint_states`                 |
 | `diff_drive_controller`     | AGV base velocity control                 |
 | `left_arm_controller`       | Left arm joint trajectory control         |
@@ -230,6 +259,49 @@ r2d3_test_nodes         Simple test executables for AGV and arm motion
 
 ---
 
+## Aiming the wrist cameras
+
+Each wrist carries a RealSense D435 publishing under `/left_wrist/**` and
+`/right_wrist/**` (`color/image_raw`, `color/camera_info`,
+`depth/image_rect_raw`, `depth/color/points`).
+
+Aim is set in one place, read by both sims:
+
+```
+ros2_rm_robot/dual_rm_description/dual_rm_description/config/wrist_cameras.yaml
+```
+
+Per arm variant (`65b` / `75b`) and side:
+
+- `tilt` — **degrees** about the mount Y. **Negative tilts the camera down**
+  toward the gripper. This is usually the only value you need.
+- `pan` — **degrees** about the mount Z (left/right sweep).
+
+All angles in that file are degrees; the xacro converts to radians at the one
+point where it reads the file.
+- `xyz` / `rpy` — the physical housing pose. These describe the bracket in the
+  wrist mesh; leave them alone unless the hardware changes.
+
+`pan: 0, tilt: 0` is the camera looking straight down the tool axis (the
+wrist's +Z, the direction the gripper reaches along) — so it sees whatever the
+gripper is pointed at, and an arm pointing down sees the floor. Roughly
+`tilt: -16` centres the gripper tip in frame; `-45` angles it well across the
+gripper.
+
+> **An edit here does nothing until you rebuild.** This workspace does not use
+> `--symlink-install`, so `$(find ...)` resolves to the *install* space and
+> xacro keeps reading the previous copy of the file. If a tilt change appears
+> to have no effect, this is almost certainly why — rebuild and relaunch.
+
+Rebuild after editing — this workspace does not use `--symlink-install`, so
+xacro reads the installed copy:
+
+```bash
+colcon build --packages-select dual_rm_description && source install/setup.bash
+```
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
@@ -240,5 +312,6 @@ r2d3_test_nodes         Simple test executables for AGV and arm motion
 | `libEGL warning: egl: failed to create dri2 screen` | GPU driver issue | Harmless; simulation runs with headless software rendering |
 | Robot not moving in Gazebo but moves in RViz | Wheel collision geometry mismatch | Already fixed: cylinder primitives for drive wheels |
 | Nav2 lifecycle manager fails to bring up nodes | Race condition at startup | Relaunch; transient issue with sim clock settling |
-| RTAB-Map: `Waiting for data on topic ...` | Camera topics not bridged or not publishing | Verify `ros2 topic hz /camera/image` and `/camera/depth_image` |
+| RTAB-Map: `Waiting for data on topic ...` | Camera topics not bridged or not publishing | Verify `ros2 topic hz /zed/zed_node/left/color/rect/image` and `/zed/zed_node/depth/depth_registered` |
 | RTAB-Map: no map generated | Textureless environment (depth_only mode) | Use `slam_type:=rtabmap` (adds LiDAR) or add visual features to the world |
+| `ros2 topic hz` on a camera topic reports an implausibly high or noisy rate | Stale simulator/bridge processes from an earlier session survived a naive `pkill` and are duplicate-publishing onto the same topic name; `ros2 topic hz` silently aggregates across all publishers | Check publisher count first with `ros2 topic info -v <topic>`; if more than one, find and kill the stragglers with `pgrep -af 'mujoco\|gz sim\|ros_gz_bridge\|ruby\|component_container'` |

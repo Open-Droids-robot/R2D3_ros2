@@ -1,0 +1,42 @@
+# Fluxbox window placement for the noVNC desktop. Installed to ~/.fluxbox/apps
+# by gui-start.sh at every container start; see docs/container.md "The desktop".
+#
+# The desktop is a 1920x1080 virtual screen tiled into four fixed, peer
+# quadrants so every pane is usable at the viewer's default size:
+#
+#   +-------------------+-------------------+
+#   | MuJoCo / Gazebo   | RViz              |   y 0 .. 640
+#   +-------------------+-------------------+
+#   | rogent agent      | shell             |   y 640 .. 1080
+#   +-------------------+-------------------+
+#
+# Every pane is placed here, at map time, so the size each toolkit asks for
+# (GLFW's fullscreen MuJoCo viewer, Qt's RViz, xterm's own -geometry, which is
+# only a fallback) does not matter. GUI windows match on WM_CLASS, terminals on
+# the instance name gui-start.sh gives them with `xterm -name`; all read with
+# xwininfo on the running desktop -- note the class is `MuJoCo`, case and all.
+# The rogent pane is absent in default mode; the shell pane is not.
+[app] (class=MuJoCo)
+  [Position]    (UpperLeft) {0 0}
+  [Dimensions]  {960 640}
+[end]
+
+[app] (class=gz)
+  [Position]    (UpperLeft) {0 0}
+  [Dimensions]  {960 640}
+[end]
+
+[app] (class=rviz2)
+  [Position]    (UpperLeft) {960 0}
+  [Dimensions]  {960 640}
+[end]
+
+[app] (name=rogent)
+  [Position]    (UpperLeft) {0 640}
+  [Dimensions]  {960 440}
+[end]
+
+[app] (name=shell)
+  [Position]    (UpperLeft) {960 640}
+  [Dimensions]  {960 440}
+[end]

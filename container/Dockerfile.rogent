@@ -1,0 +1,52 @@
+# The rogent-mode image: the base simulation image plus what the rogent agent
+# needs at runtime. Built only when `./droid up --rogent` is used; the default
+# mode never sees this file, keeping the base image byte-identical in behaviour.
+#
+# The rogent SOURCE is not baked in -- it is bind-mounted at /rogent by
+# container/docker-compose.rogent.yml, the same founding principle as the
+# simulation tree: the developer's working tree is what runs. Only rogent's
+# python DEPENDENCIES are baked, from the checkout's own requirements.txt,
+# delivered through the compose overlay's `rogent` additional build context
+# (the checkout lives outside this repository, so the main build context
+# cannot COPY it).
+FROM ghcr.io/open-droids-robot/r2d3-sim:jazzy
+
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# pulseaudio-utils provides paplay, which rogent's Kokoro speech path plays
+# through the host Pulse socket the overlay bind-mounts at /run/host-pulse.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      pulseaudio-utils python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=rogent requirements.txt /tmp/rogent-requirements.txt
+
+# Into the SYSTEM python, not a venv: rogent's vendored sim nav agent is an
+# rclpy node, and rclpy only exists in the sourced /opt/ros environment of the
+# system interpreter. Two lines of the requirements need care:
+#   - rclpy is dropped: it comes from the ROS apt install. PyPI's `rclpy` is
+#     not the ROS client library; letting pip install it would shadow /opt/ros
+#     with a package that cannot talk to the graph.
+#   - numpy is constrained <2: the apt-provided ROS python stack (cv_bridge
+#     among it) is built against the distro numpy 1.x; an unconstrained pip
+#     resolve would upgrade to 2.x and break it.
+# The torch payload kokoro pulls in is accepted deliberately (proven-first,
+# optimise later -- see rogent-v3#11). The en_core_web_sm wheel is spaCy's
+# English model, which Kokoro's G2P otherwise pip-installs AT RUNTIME on first
+# synthesis -- PEP 668 blocks that inside the image and kills the agent.
+# --ignore-installed: several of rogent's deps need newer versions of packages
+# the base image got from apt (typing_extensions, PyYAML, ...), and pip cannot
+# uninstall Debian-owned packages (no RECORD file). Instead of uninstalling,
+# install fresh copies to /usr/local, which precedes the apt dist-packages on
+# sys.path; the constraints file keeps the copies ABI-compatible with the ROS
+# stack (numpy 1.x for cv_bridge).
+RUN grep -vE '^rclpy\b' /tmp/rogent-requirements.txt > /tmp/rogent-reqs-filtered.txt && \
+    printf 'numpy<2\n' > /tmp/rogent-constraints.txt && \
+    pip3 install --no-cache-dir --break-system-packages --ignore-installed \
+      --timeout 120 --retries 10 \
+      -c /tmp/rogent-constraints.txt \
+      -r /tmp/rogent-reqs-filtered.txt \
+      "kokoro>=0.3.4" soundfile \
+      "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" && \
+    rm /tmp/rogent-requirements.txt /tmp/rogent-reqs-filtered.txt /tmp/rogent-constraints.txt

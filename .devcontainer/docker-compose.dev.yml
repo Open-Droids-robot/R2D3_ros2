@@ -1,0 +1,59 @@
+# The dev container overlay. Applied on top of docker-compose.resolved.yml,
+# which .devcontainer/initialize.sh generates from `./droid render` -- the same
+# compose files, tier and host ids `./droid up` would use, fully interpolated.
+# Nothing about the image, mounts, GPU tier or rogent mode is decided here.
+#
+# What this file changes, and why, is the whole `./droid up` coexistence story:
+#
+# - A SEPARATE compose project and container. VS Code manages its container
+#   with its own compose override (labels, metadata) and its own lifecycle
+#   ("Rebuild Container"), while ./droid manages r2d3-sim through a drift
+#   fingerprint and `--recreate`. Pointing both at one container makes each
+#   tool's `compose up` see the other's configuration as drift and recreate --
+#   destroying container-local installs on every switch. Two containers, two
+#   projects, and neither tool can ever address the other's.
+#
+# - The SAME five named volumes, as `external`. build/, install/, log/, the
+#   MuJoCo cache and downloaded weights are shared with r2d3-sim, so a build in
+#   the editor is what `./droid up` launches next, and vice versa. initialize.sh
+#   pre-creates them with compose's own project labels, so the r2d3 project
+#   still owns them (`./droid nuke` removes them) and neither project warns.
+#
+# - noVNC on 6081, so the dev container's own display coexists with r2d3-sim
+#   on 6080. The GUI stack runs in both; use whichever container launched the
+#   sim. ROS traffic does NOT cross the container boundary (the image pins
+#   ROS_LOCALHOST_ONLY=1), so a sim launched by `./droid up` is invisible to a
+#   terminal in the dev container: launch it from the dev container instead.
+name: r2d3-dev
+
+services:
+  sim:
+    container_name: r2d3-dev
+    ports: !override
+      - "${DROID_DEV_NOVNC_PORT:-6081}:6080"
+    labels:
+      # check_drift only ever inspects r2d3-sim; this container is recreated by
+      # the editor, so the fingerprint carries no meaning here. Say so.
+      com.r2d3.droid.config: "devcontainer"
+      com.r2d3.droid.devcontainer: "1"
+
+networks:
+  default:
+    name: r2d3-dev_default
+
+volumes:
+  r2d3_build:
+    external: true
+    name: r2d3_r2d3_build
+  r2d3_install:
+    external: true
+    name: r2d3_r2d3_install
+  r2d3_log:
+    external: true
+    name: r2d3_r2d3_log
+  r2d3_ros_home:
+    external: true
+    name: r2d3_r2d3_ros_home
+  r2d3_cache:
+    external: true
+    name: r2d3_r2d3_cache

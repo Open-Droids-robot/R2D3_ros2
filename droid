@@ -1,0 +1,623 @@
+#!/usr/bin/env bash
+# R2D3 containerised simulation workspace.
+#
+# Constrained to bash 3.2 (macOS ships 3.2): no associative arrays, no ${var^^},
+# no mapfile, no globstar. Nothing beyond bash and Docker is required on the host.
+set -eu
+
+IMAGE_REF="ghcr.io/open-droids-robot/r2d3-sim:jazzy"
+ROGENT_IMAGE_REF="ghcr.io/open-droids-robot/r2d3-sim:jazzy-rogent"
+NOVNC_PORT="6080"
+REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+
+die() { printf '%s\n' "$*" >&2; exit 2; }
+
+usage() {
+  cat <<'EOF'
+R2D3 containerised simulation workspace.
+
+Usage: ./droid <command> [options]
+
+Commands:
+  up [--mujoco] [--rogent] [--gpu <tier>] [--recreate] [--mute]
+                Ensure the image, start the container, rebuild the simulation
+                subset, launch the simulation, and print the noVNC URL.
+  rogent        Open an interactive rogent agent session (REPL) in a container
+                started with `up --rogent`, once the simulation clock advances.
+  shell         Open a shell in the running container.
+  doctor        Re-run the platform probe and print raw + resolved values.
+  resolve       Print the resolved configuration as key=value lines. No side effects.
+  render [--rogent] [--gpu <tier>]
+                Print the fully rendered compose configuration `up` would apply
+                (base file + the resolved tier and mode overlays, interpolated),
+                as `docker compose config` YAML. Touches no container; the dev
+                container's initializeCommand consumes this.
+  down          Stop the container, preserving anything installed inside it.
+  nuke          Destroy the container AND its volumes. Container-local installs are lost.
+
+Options for `up`:
+  --mujoco      Use the MuJoCo backend instead of Gazebo (the default).
+  --rogent      Provision the rogent agent mode: derived image, zenoh RMW with
+                an in-container router, rogent source bind-mounted from
+                DROID_ROGENT_SRC. Run the agent afterwards with ./droid rogent.
+  --gpu <tier>  Override platform detection. <tier> is `cpu` or `nvidia`.
+  --mute        Rogent mode: route the agent's speech to a silent null sink on
+                the host (created on demand) instead of your speakers. Speech
+                events and logs are unaffected -- only the playback is silent.
+  --recreate    Consent to recreating the container when its configuration has
+                drifted. This destroys container-local installations.
+
+The GUI is served over noVNC at http://localhost:6080 on every platform.
+See docs/container.md.
+EOF
+}
+
+# --- resolve ----------------------------------------------------------------
+#
+# A pure decision step: consumes probe results from the environment, prints the
+# resolved configuration, performs no side effects. Every branching decision in
+# this tool flows through here, which is what makes the decision table testable
+# offline with fabricated environments -- and what makes "why did it pick this?"
+# answerable by a human running `./droid resolve`.
+cmd_resolve() {
+  os="${DROID_OS:-}"
+  arch="${DROID_ARCH:-}"
+  gpu_vendor="${DROID_GPU_VENDOR:-}"
+  dri="${DROID_DRI:-}"
+  jetson="${DROID_JETSON:-}"
+  docker_gpu="${DROID_DOCKER_GPU:-}"
+  override="${DROID_GPU_OVERRIDE:-}"
+
+  [ -n "$os" ] || os="linux"
+  [ -n "$gpu_vendor" ] || gpu_vendor="none"
+  [ -n "$dri" ] || dri="no"
+  [ -n "$jetson" ] || jetson="no"
+  [ -n "$docker_gpu" ] || docker_gpu="unknown"
+
+  case "$arch" in
+    x86_64|amd64) arch="amd64" ;;
+    aarch64|arm64) arch="arm64" ;;
+    "") die "droid resolve: DROID_ARCH is not set" ;;
+    *) die "droid resolve: unsupported architecture '$arch' (expected x86_64 or aarch64)" ;;
+  esac
+
+  if [ -n "$override" ]; then
+    case "$override" in
+      cpu|nvidia) tier="$override" ;;
+      *) die "droid resolve: unsupported --gpu tier '$override' (expected cpu or nvidia)" ;;
+    esac
+  elif [ "$os" = "darwin" ]; then
+    # Docker Desktop has no GPU passthrough to Linux containers, so a Mac's own
+    # hardware is irrelevant here and must never produce a GPU error.
+    tier="cpu"
+  elif [ "$gpu_vendor" = "nvidia" ] && [ "$docker_gpu" = "ok" ]; then
+    tier="nvidia"
+  elif [ "$gpu_vendor" = "nvidia" ] && [ "$docker_gpu" = "fail" ]; then
+    # This discrimination is heuristic, not exact: probe_docker_gpu() reports
+    # "fail" for ANY docker-run failure, not only a GPU-acquisition refusal. A
+    # transient or unrelated Docker error (permissions, daemon restarting mid-
+    # call, disk pressure) will be misreported here as a GPU problem and sent
+    # through NVIDIA Container Toolkit remediation text that may not apply.
+    gpu_unreachable_error
+  else
+    tier="cpu"
+  fi
+
+  # Rogent mode is part of the resolved configuration, not a launch detail:
+  # it swaps the image, the RMW and the mounts, so it must flow through the
+  # same fingerprint/drift machinery as the tier. `up --rogent` sets the
+  # DROID_ROGENT_MODE input; everything else leaves it unset.
+  rogent="no"
+  [ "${DROID_ROGENT_MODE:-}" = "1" ] && rogent="yes"
+
+  printf 'os=%s\n' "$os"
+  printf 'arch=%s\n' "$arch"
+  printf 'platform=linux/%s\n' "$arch"
+  printf 'gpu_vendor=%s\n' "$gpu_vendor"
+  printf 'dri=%s\n' "$dri"
+  printf 'jetson=%s\n' "$jetson"
+  printf 'tier=%s\n' "$tier"
+  printf 'rogent=%s\n' "$rogent"
+  printf 'novnc_port=%s\n' "$NOVNC_PORT"
+}
+
+# Hard failure, deliberately. An NVIDIA GPU is present but Docker cannot acquire
+# it. Falling back silently means the developer runs software rendering for weeks
+# while blaming the container for being slow.
+gpu_unreachable_error() {
+  cat >&2 <<EOF
+droid: an NVIDIA GPU is present, but Docker cannot acquire it.
+
+  nvidia-smi works on this host, but 'docker run --gpus all' fails. That usually
+  means the NVIDIA Container Toolkit is missing or has generated no CDI spec.
+
+  To fix it:
+    sudo apt-get install -y nvidia-container-toolkit
+    sudo nvidia-ctk runtime configure --runtime=docker
+    sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+    sudo systemctl restart docker
+  Then re-run:  ./droid doctor
+
+  To proceed on software rendering instead, without fixing this:
+    ./droid up --gpu cpu
+EOF
+  exit 3
+}
+
+# --- probe ------------------------------------------------------------------
+#
+# Detection is a probe, not an inspection. Host inspection alone is insufficient:
+# on the reference machine nvidia-smi reports an RTX 4060 and `docker info` lists
+# an nvidia runtime, yet `docker run --gpus all` fails with a CDI discovery error.
+# An inspection-based implementation would generate a broken configuration on the
+# very machine this was developed on. So the GPU question is answered by ATTEMPTING
+# it.
+probe_platform() {
+  case "$(uname -s)" in
+    Darwin) DROID_OS="darwin" ;;
+    *) DROID_OS="linux" ;;
+  esac
+  DROID_ARCH="$(uname -m)"
+
+  if [ -d /dev/dri ]; then DROID_DRI="yes"; else DROID_DRI="no"; fi
+
+  DROID_JETSON="no"
+  if [ -f /etc/nv_tegra_release ]; then
+    DROID_JETSON="yes"
+  elif [ -r /proc/device-tree/compatible ] &&
+       tr -d '\0' < /proc/device-tree/compatible 2>/dev/null | grep -qi tegra; then
+    DROID_JETSON="yes"
+  fi
+
+  DROID_GPU_VENDOR="none"
+  if [ "$DROID_OS" != "darwin" ] && command -v nvidia-smi >/dev/null 2>&1 &&
+     nvidia-smi -L >/dev/null 2>&1; then
+    DROID_GPU_VENDOR="nvidia"
+  fi
+
+  DROID_DOCKER_GPU="unknown"
+  if [ "${DROID_SKIP_DOCKER_PROBE:-}" = "1" ]; then
+    printf 'droid: DROID_SKIP_DOCKER_PROBE=1 -- skipping the GPU acquisition probe; reporting docker_gpu=unknown\n' >&2
+    DROID_DOCKER_GPU="unknown"
+  elif [ "$DROID_GPU_VENDOR" = "nvidia" ]; then
+    DROID_DOCKER_GPU="$(probe_docker_gpu)"
+  fi
+
+  export DROID_OS DROID_ARCH DROID_DRI DROID_JETSON DROID_GPU_VENDOR DROID_DOCKER_GPU
+}
+
+# Answers "can Docker actually acquire a GPU?" by trying. Distinguishes a real
+# refusal (`fail`) from an inability to run the probe at all (`unknown`, e.g. no
+# network to fetch the probe image) -- because only the former justifies walling
+# the developer off.
+probe_docker_gpu() {
+  command -v docker >/dev/null 2>&1 || { echo "unknown"; return; }
+  if ! docker image inspect hello-world >/dev/null 2>&1; then
+    docker pull -q hello-world >/dev/null 2>&1 || { echo "unknown"; return; }
+  fi
+  if docker run --rm --gpus all hello-world >/dev/null 2>&1; then
+    echo "ok"
+  else
+    echo "fail"
+  fi
+}
+
+cmd_doctor() {
+  probe_only="no"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --probe-only) probe_only="yes"; shift ;;
+      *) die "droid doctor: unknown option '$1'" ;;
+    esac
+  done
+
+  probe_platform
+  printf 'os=%s\n' "$DROID_OS"
+  printf 'arch=%s\n' "$DROID_ARCH"
+  printf 'gpu_vendor=%s\n' "$DROID_GPU_VENDOR"
+  printf 'dri=%s\n' "$DROID_DRI"
+  printf 'jetson=%s\n' "$DROID_JETSON"
+  printf 'docker_gpu=%s\n' "$DROID_DOCKER_GPU"
+  [ "$probe_only" = "yes" ] && return 0
+
+  printf '\n--- resolved ---\n'
+  cmd_resolve
+}
+
+# --- lifecycle ----------------------------------------------------------------
+
+COMPOSE_DIR="$REPO_ROOT/container"
+
+require_docker() {
+  command -v docker >/dev/null 2>&1 ||
+    die "droid: docker is not installed or not on PATH. See docs/container.md."
+  docker info >/dev/null 2>&1 ||
+    die "droid: the Docker daemon is not reachable. Is Docker running?"
+}
+
+# Loads `droid resolve`'s output as shell variables prefixed with r_.
+#
+# Pass `materialise` (only `up` does) to ensure the image is present BEFORE the
+# fingerprint is computed. The fingerprint folds in the local image digest, but
+# on a genuinely fresh clone the image is not pulled until `compose up -d`. Read
+# naively, the FIRST `up` would fingerprint `no-local-image` and the SECOND --
+# now that the pull has happened -- would fingerprint the real digest, trip the
+# drift gate, and demand `--recreate`, destroying container-local installs on the
+# feature's own happy path. Materialising here captures the digest the container
+# is actually created with on the first run too. shell/down/nuke pass nothing and
+# must never trigger a pull.
+load_resolved() {
+  mode="${1:-}"
+  probe_platform
+  resolved="$(cmd_resolve)" || exit $?
+  r_arch="$(printf '%s\n' "$resolved" | sed -n 's/^arch=//p')"
+  r_tier="$(printf '%s\n' "$resolved" | sed -n 's/^tier=//p')"
+  r_rogent="$(printf '%s\n' "$resolved" | sed -n 's/^rogent=//p')"
+  r_port="$(printf '%s\n' "$resolved" | sed -n 's/^novnc_port=//p')"
+  # The fingerprint covers the resolved configuration AND the compose files that
+  # actually govern this invocation. `docker compose up -d` recreates the
+  # container whenever the composed service definition changes, independently of
+  # any label this tool sets -- a `git pull` that only touches
+  # docker-compose.yml (or, on the nvidia tier, docker-compose.nvidia.yml) must
+  # therefore trip the same consent gate as a probe/tier change. The nvidia
+  # overlay is folded in only when it is actually part of this invocation, so a
+  # cpu-tier user is never asked to consent to changes in a file that does not
+  # affect them.
+  compose_files_content="$(cat "$COMPOSE_DIR/docker-compose.yml")"
+  if [ "$r_tier" = "nvidia" ]; then
+    compose_files_content="$compose_files_content
+$(cat "$COMPOSE_DIR/docker-compose.nvidia.yml")"
+  fi
+  if [ "$r_rogent" = "yes" ]; then
+    compose_files_content="$compose_files_content
+$(cat "$COMPOSE_DIR/docker-compose.rogent.yml")"
+  fi
+
+  # Host uid/gid are interpolated into the compose file's `environment:` block
+  # (DROID_HOST_UID / DROID_HOST_GID below) and therefore participate in
+  # Compose's own recreate decision, but they appear in neither the resolved
+  # config text nor the compose files' literal text. A second developer using
+  # the same checkout, or the same developer on a box with a different uid,
+  # would otherwise trigger a silent Compose recreate that this gate never sees.
+  host_uid="$(id -u)"
+  host_gid="$(id -g)"
+
+  # Export everything the `compose` wrapper consumes BEFORE the image is
+  # materialised below -- the tier selects the compose files and the platform,
+  # uid/gid and GL mode feed the pull/build -- but NOT the fingerprint yet: it
+  # depends on the digest, which is not known until the image exists.
+  #
+  # Deliberately a DIFFERENT variable from DROID_ARCH, which is the probe's raw
+  # `uname -m` reading and an INPUT to resolve. Reusing the name here would feed
+  # resolve's own output back in as its input on any second call.
+  export DROID_COMPOSE_ARCH="$r_arch"
+  export DROID_NOVNC_PORT="$r_port"
+  export DROID_HOST_UID="$host_uid"
+  export DROID_HOST_GID="$host_gid"
+  if [ "$r_tier" = "nvidia" ]; then
+    export DROID_SOFTWARE_GL="0"
+  else
+    export DROID_SOFTWARE_GL="1"
+  fi
+
+  # In rogent mode the composed service runs the DERIVED image, so that is the
+  # ref to materialise and fingerprint; the base ref otherwise.
+  active_image_ref="$IMAGE_REF"
+  [ "$r_rogent" = "yes" ] && active_image_ref="$ROGENT_IMAGE_REF"
+
+  # Materialise the image before its digest is read, so the fingerprint captures
+  # the digest the container is actually created with -- on the first `up` of a
+  # fresh clone too, not the `no-local-image` placeholder. Attempt a registry
+  # pull first, fall back to a local build (matching docker-compose.yml's own
+  # "pull, else build" design), and only when the image is genuinely absent: a
+  # present image is left untouched, so `compose up -d` below reuses exactly the
+  # digest just fingerprinted and no `up` re-pulls a tag it already has.
+  if [ "$mode" = "materialise" ] &&
+     ! docker image inspect --format '{{.Id}}' "$active_image_ref" >/dev/null 2>&1; then
+    compose pull sim || compose build sim
+  fi
+
+  # The resolved image digest is also part of Compose's recreate decision (a
+  # local rebuild or a registry re-pull that moves the :jazzy tag) but is
+  # covered by neither the resolve output nor the compose files' text. If the
+  # image is still absent here (materialise not requested, or pull and build
+  # both failed offline) `docker image inspect` fails -- that must not break the
+  # command, so it is mapped to a fixed, deterministic placeholder instead of
+  # propagating the failure.
+  image_digest="$(docker image inspect --format '{{.Id}}' "$active_image_ref" 2>/dev/null)" ||
+    image_digest="no-local-image"
+
+  # DROID_ROGENT_SRC is interpolated into the overlay's volume mounts and so
+  # participates in Compose's recreate decision, but -- like host_uid/gid -- it
+  # appears in neither the resolved text nor the compose files' literal text.
+  # Fold it in; empty outside rogent mode, so the default path is unchanged.
+  r_fingerprint="$(printf '%s\n%s\nhost_uid=%s\nhost_gid=%s\nimage_digest=%s\nrogent_src=%s' \
+    "$resolved" "$compose_files_content" "$host_uid" "$host_gid" "$image_digest" \
+    "${DROID_ROGENT_SRC:-}" |
+    cksum | tr -d ' ')"
+
+  export DROID_CONFIG_FINGERPRINT="$r_fingerprint"
+}
+
+compose() {
+  # bash 3.2-safe indexed array (no associative features used). The teardown
+  # paths (shell/down/nuke/rogent) never set rogent mode and so run with the
+  # base file only -- exec/stop/down address the same project and service
+  # regardless of which overlays created the container.
+  compose_files=(-f "$COMPOSE_DIR/docker-compose.yml")
+  [ "$r_tier" = "nvidia" ] &&
+    compose_files=("${compose_files[@]}" -f "$COMPOSE_DIR/docker-compose.nvidia.yml")
+  [ "${r_rogent:-no}" = "yes" ] &&
+    compose_files=("${compose_files[@]}" -f "$COMPOSE_DIR/docker-compose.rogent.yml")
+  docker compose "${compose_files[@]}" "$@"
+}
+
+container_fingerprint() {
+  docker inspect -f '{{index .Config.Labels "com.r2d3.droid.config"}}' \
+    r2d3-sim 2>/dev/null || true
+}
+
+# entrypoint.sh remaps the `droid` account's uid/gid to the host's before
+# dropping privileges and touches /run/droid/ready once that remap is done.
+# When HOST_UID/GID is not the image default (1000), `compose exec -u droid`
+# run immediately after `compose up -d` can race that remap and fail to
+# resolve the user. Poll for the marker instead of assuming the container is
+# ready, with a bounded timeout and a clear error rather than hanging forever
+# if it never arrives (e.g. the container crashed on start).
+wait_for_ready() {
+  attempts=50 # 50 * 0.2s = 10s
+  i=0
+  while [ "$i" -lt "$attempts" ]; do
+    if compose exec -T sim test -f /run/droid/ready >/dev/null 2>&1; then
+      return 0
+    fi
+    i=$((i + 1))
+    sleep 0.2
+  done
+  die "droid: container did not become ready within 10s (waiting for /run/droid/ready). Check 'docker compose -f container/docker-compose.yml logs sim'."
+}
+
+# The container orchestrator recreates a container whenever its resolved
+# configuration changes -- which would silently destroy the packages a developer
+# installed with sudo inside it. Re-running the platform probe and landing on a
+# different tier is exactly such a change, so the documented recovery path would
+# otherwise be the thing that wipes their tools. Refuse, and require consent.
+check_drift() {
+  existing="$(container_fingerprint)"
+  [ -n "$existing" ] || return 0
+  [ "$existing" = "unset" ] && return 0
+  [ "$existing" = "$r_fingerprint" ] && return 0
+  cat >&2 <<EOF
+droid: the resolved configuration has changed since this container was created.
+
+  Applying it requires recreating the container, which DESTROYS anything you
+  installed inside it with sudo, along with your shell history and scratch files.
+  Your source tree, build artifacts and caches are on volumes and are unaffected.
+
+  Resolved now:
+$(printf '%s\n' "$resolved" | sed 's/^/    /')
+
+  To keep the existing container, run it unchanged:
+    ./droid shell
+
+  To accept the new configuration and recreate:
+    ./droid up --recreate
+
+  Anything you want to keep permanently belongs in container/Dockerfile, so your
+  teammates get it too.
+EOF
+  exit 4
+}
+
+# Rogent mode runs the developer's own rogent checkout, bind-mounted -- never a
+# surprise network clone. The checkout is located via DROID_ROGENT_SRC, falling
+# back to the sibling directory rogent.repos materialises into, and validated
+# BEFORE compose ever interpolates it: compose would either hard-stop on the
+# `:?` guard with a less helpful message or, for the volume mount, let the
+# Docker engine create a root-owned empty directory at the missing path.
+require_rogent_src() {
+  src="${DROID_ROGENT_SRC:-$REPO_ROOT/../rogent-v3}"
+  if [ ! -f "$src/requirements.txt" ] || [ ! -f "$src/main.py" ]; then
+    cat >&2 <<EOF
+droid: rogent mode needs a rogent-v3 checkout, and none was found at
+  $src
+
+  Set DROID_ROGENT_SRC to an existing checkout, or materialise the pinned one
+  (rogent.repos records the repo + ref this workspace is paired with):
+
+    cd "$(cd "$REPO_ROOT/.." && pwd)" && vcs import --input R2D3_ros2/rogent.repos .
+
+  vcs is python3-vcstool. Then re-run ./droid up --rogent.
+EOF
+    exit 5
+  fi
+  DROID_ROGENT_SRC="$(cd "$src" && pwd)"
+  export DROID_ROGENT_SRC
+}
+
+# --mute: the container's paplay honours PULSE_SINK, so pointing it at a
+# null sink on the host silences playback without touching rogent -- the
+# synthesis/playback events that the PoC audit relies on still fire. The sink
+# is created on demand (module-null-sink) and survives until the sound server
+# restarts; DROID_PULSE_SINK is folded into the compose env by the overlay.
+MUTE_SINK="droid_mute"
+enable_mute_sink() {
+  command -v pactl >/dev/null 2>&1 ||
+    die "droid up --mute: pactl not found on the host (pulseaudio-utils)"
+  pactl list short sinks 2>/dev/null | awk '{print $2}' | grep -qx "$MUTE_SINK" ||
+    pactl load-module module-null-sink "sink_name=$MUTE_SINK" \
+      "sink_properties=device.description=DroidMute" >/dev/null ||
+    die "droid up --mute: could not create the $MUTE_SINK null sink"
+  DROID_PULSE_SINK="$MUTE_SINK"
+  export DROID_PULSE_SINK
+  echo "droid: rogent speech muted (host sink $MUTE_SINK)"
+}
+
+cmd_up() {
+  backend="gz"
+  recreate="no"
+  rogent_mode="no"
+  mute="no"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --mujoco) backend="mujoco"; shift ;;
+      --rogent) rogent_mode="yes"; shift ;;
+      --gpu) [ $# -ge 2 ] || die "droid up: --gpu needs a tier"
+             DROID_GPU_OVERRIDE="$2"; export DROID_GPU_OVERRIDE; shift 2 ;;
+      --recreate) recreate="yes"; shift ;;
+      --mute) mute="yes"; shift ;;
+      *) die "droid up: unknown option '$1' (try ./droid --help)" ;;
+    esac
+  done
+
+  if [ "$rogent_mode" = "yes" ]; then
+    DROID_ROGENT_MODE="1"
+    export DROID_ROGENT_MODE
+    require_rogent_src
+    [ "$mute" = "yes" ] && enable_mute_sink
+  fi
+
+  require_docker
+  load_resolved materialise
+  [ "$recreate" = "yes" ] || check_drift
+
+  if [ "$r_tier" = "cpu" ]; then
+    cat <<'EOF'
+droid: running on the software-rendering tier.
+
+  The goal of this tier is to be ALIVE, not fast. The simulation carries four
+  RGBD cameras and a GPU lidar, so software rendering will be slow -- that is
+  expected, not a defect. The GPU tier is the recommended path for real work.
+EOF
+  fi
+
+  if [ "$recreate" = "yes" ]; then
+    compose up -d --force-recreate
+  else
+    compose up -d
+  fi
+
+  wait_for_ready
+
+  cat <<EOF
+
+droid: open the simulation at
+  http://localhost:$r_port/vnc.html?autoconnect=1&resize=scale
+
+EOF
+  # Printed before the foreground launch below, which blocks for the sim's
+  # whole lifetime -- afterwards would be too late to be useful.
+  [ "$rogent_mode" = "yes" ] &&
+    echo "droid: rogent mode -- once the sim is up, start the agent from another terminal with: ./droid rogent"
+  compose exec -u droid sim /opt/droid/launch-sim.sh "$backend"
+}
+
+# shell/down/nuke target the running container or project regardless of GPU tier
+# -- the resolved tier only selects which compose `-f` files to pass, and exec/
+# stop/down do not need the nvidia overlay. So they must NEVER hard-fail on GPU
+# acquisition: on an NVIDIA-present-but-unreachable host (docker_gpu=fail),
+# resolving without an override exits 3 with remediation text, which would make a
+# container you started with `--gpu cpu` impossible to shell into or tear down.
+# Forcing the cpu override takes cmd_resolve's override branch, which never calls
+# gpu_unreachable_error. `up` deliberately keeps the hard failure -- that probe is
+# the whole point of the tool.
+resolve_for_teardown() {
+  DROID_GPU_OVERRIDE="cpu"
+  export DROID_GPU_OVERRIDE
+  load_resolved
+}
+
+cmd_shell() {
+  require_docker
+  resolve_for_teardown
+  compose exec -u droid sim bash
+}
+
+# `up --rogent` provisions; `rogent` runs. This is a thin exec into the running
+# container: land in the bind-mounted rogent source and start the interactive
+# text-goal REPL (typed goals -- the PoC's driving mode). Anything after
+# `./droid rogent` is passed straight to rogent's main.py, so a one-shot goal
+# or --debug work unchanged. Uses the teardown-style resolve: exec addresses
+# the container regardless of which overlays created it.
+cmd_rogent() {
+  require_docker
+  resolve_for_teardown
+  # Pre-flight execs get </dev/null: `compose exec -T` still forwards stdin, so
+  # a piped goal (scripted PoC runs) would be eaten before main.py ever reads it.
+  compose exec -T sim test -f /run/droid/ready </dev/null >/dev/null 2>&1 ||
+    die "droid rogent: no running container. Provision one with: ./droid up --rogent [--mujoco]"
+  marker="$(compose exec -T sim printenv DROID_ROGENT </dev/null 2>/dev/null | tr -d '\r')" || marker=""
+  [ "$marker" = "1" ] ||
+    die "droid rogent: the running container was not started with --rogent. Re-provision with: ./droid up --rogent --recreate"
+
+  # Everything from here -- the sim-ready guard (/clock must be ADVANCING,
+  # not merely present), the sourced ROS environment rclpy needs, and the
+  # exec of main.py -- lives in container/rogent-run.sh, shared with the
+  # agent pane of the noVNC desktop (gui-start.sh) so the two paths cannot
+  # drift. Without --wait a stalled clock is a hard failure with remediation.
+  compose exec -u droid -w /rogent sim /opt/droid/rogent-run.sh "$@"
+}
+
+# The one place the compose file selection is exposed as data rather than
+# acted upon. `.devcontainer/initialize.sh` feeds this to VS Code so "Reopen in
+# Container" composes exactly what `up` would -- same probe, same tier, same
+# overlays, same host uid/gid -- without a second copy of the decision table in
+# JSON. It runs the same platform probe as `doctor` (including the
+# `docker run --gpus all` attempt) and hard-fails on an unreachable GPU the same
+# way `up` does; `--gpu cpu` (or DROID_GPU_OVERRIDE=cpu in the environment) is
+# the escape hatch. No image is materialised, so the fingerprint label in the
+# output may read `no-local-image`; the dev container overlay replaces it anyway.
+cmd_render() {
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --rogent) DROID_ROGENT_MODE="1"; export DROID_ROGENT_MODE; shift ;;
+      --gpu) [ $# -ge 2 ] || die "droid render: --gpu needs a tier"
+             DROID_GPU_OVERRIDE="$2"; export DROID_GPU_OVERRIDE; shift 2 ;;
+      *) die "droid render: unknown option '$1' (try ./droid --help)" ;;
+    esac
+  done
+  [ "${DROID_ROGENT_MODE:-}" = "1" ] && require_rogent_src
+  require_docker
+  load_resolved
+  compose config
+}
+
+cmd_down() {
+  require_docker
+  resolve_for_teardown
+  compose stop
+  echo "droid: container stopped. Anything you installed inside it is preserved."
+  echo "       Start again with ./droid up"
+}
+
+cmd_nuke() {
+  require_docker
+  resolve_for_teardown
+  cat >&2 <<'EOF'
+droid: this DESTROYS the container and all of its volumes.
+
+  You will lose: packages you installed inside the container, the build and
+  install spaces, the MuJoCo cache, and any downloaded model weights.
+  You will NOT lose: anything in your source tree, which lives on your host.
+EOF
+  printf 'Type "nuke" to confirm: '
+  read -r confirm
+  [ "$confirm" = "nuke" ] || die "droid: aborted; nothing was destroyed."
+  compose down --volumes --remove-orphans
+  echo "droid: destroyed. ./droid up will start clean."
+}
+
+# --- dispatch ---------------------------------------------------------------
+[ $# -gt 0 ] || { usage; exit 2; }
+case "$1" in
+  resolve) shift; cmd_resolve "$@" ;;
+  doctor) shift; cmd_doctor "$@" ;;
+  up) shift; cmd_up "$@" ;;
+  render) shift; cmd_render "$@" ;;
+  rogent) shift; cmd_rogent "$@" ;;
+  shell) shift; cmd_shell "$@" ;;
+  down) shift; cmd_down "$@" ;;
+  nuke) shift; cmd_nuke "$@" ;;
+  -h|--help|help) usage ;;
+  *) die "droid: unknown command '$1' (try ./droid --help)" ;;
+esac

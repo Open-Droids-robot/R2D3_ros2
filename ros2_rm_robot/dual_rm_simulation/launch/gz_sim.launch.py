@@ -124,11 +124,44 @@ def generate_launch_description():
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
-            # Depth camera (rgbd_camera sensor)
-            '/camera/image@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
-            '/camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            # ZED 2 head camera: two rgbd_camera sensors (topics zed/left,
+            # zed/right). Right depth/points exist in Gz but are not bridged.
+            '/zed/left/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/zed/left/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/zed/left/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/zed/left/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            '/zed/right/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/zed/right/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            # Wrist D435s: one rgbd_camera per wrist (topics left_wrist,
+            # right_wrist).
+            '/left_wrist/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/left_wrist/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/left_wrist/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/left_wrist/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            '/right_wrist/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/right_wrist/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/right_wrist/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/right_wrist/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+        ],
+        remappings=[
+            # Gz topic names -> the real zed-ros2-wrapper (v5.x) topic contract.
+            ('/zed/left/image', '/zed/zed_node/left/color/rect/image'),
+            ('/zed/left/camera_info', '/zed/zed_node/left/color/rect/camera_info'),
+            ('/zed/left/depth_image', '/zed/zed_node/depth/depth_registered'),
+            ('/zed/left/points', '/zed/zed_node/point_cloud/cloud_registered'),
+            ('/zed/right/image', '/zed/zed_node/right/color/rect/image'),
+            ('/zed/right/camera_info', '/zed/zed_node/right/color/rect/camera_info'),
+            # Gz topic names -> the real realsense2_camera topic contract, so
+            # swapping in real D435s is a launch-file change with no consumer
+            # edits.
+            ('/left_wrist/image', '/left_wrist/color/image_raw'),
+            ('/left_wrist/camera_info', '/left_wrist/color/camera_info'),
+            ('/left_wrist/depth_image', '/left_wrist/depth/image_rect_raw'),
+            ('/left_wrist/points', '/left_wrist/depth/color/points'),
+            ('/right_wrist/image', '/right_wrist/color/image_raw'),
+            ('/right_wrist/camera_info', '/right_wrist/color/camera_info'),
+            ('/right_wrist/depth_image', '/right_wrist/depth/image_rect_raw'),
+            ('/right_wrist/points', '/right_wrist/depth/color/points'),
         ],
         parameters=[{'use_sim_time': False}],
         output='screen',
@@ -155,6 +188,28 @@ def generate_launch_description():
         package='controller_manager', executable='spawner',
         arguments=['platform_controller'],
     )
+    neck_controller_spawner = Node(
+        package='controller_manager', executable='spawner',
+        arguments=['neck_controller'],
+    )
+
+    # ── Neck servo bridge: real servo contract → /neck_controller/commands ──
+    neck_servo_bridge = Node(
+        package='servo_sim_bridge',
+        executable='neck_servo_bridge',
+        name='neck_servo_bridge',
+        output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
+
+    # ── Sim-only ZED shim: side-by-side stereo + rgb alias ──────
+    stereo_concat = Node(
+        package='dual_rm_simulation',
+        executable='stereo_concat.py',
+        name='stereo_concat',
+        output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
 
     # ── Event sequencing: spawn → JSB → other controllers ────────
     evt_spawn_done = RegisterEventHandler(
@@ -171,6 +226,7 @@ def generate_launch_description():
                 left_arm_controller_spawner,
                 right_arm_controller_spawner,
                 platform_controller_spawner,
+                neck_controller_spawner,
             ],
         )
     )
@@ -191,4 +247,6 @@ def generate_launch_description():
         spawn_entity,
         evt_spawn_done,
         evt_jsb_done,
+        neck_servo_bridge,
+        stereo_concat,
     ])

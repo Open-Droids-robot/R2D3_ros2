@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot name="body_head_platform" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:property name="mesh_path" value="file://$(find dual_rm_description)/meshes/common/" />
+  <xacro:include filename="$(find dual_rm_description)/urdf/sensors/zed2.urdf.xacro"/>
   <xacro:macro name="visual_collision" params="mesh">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -90,25 +91,6 @@
     </inertial>
     <xacro:visual_collision mesh="head_link2.STL" />
   </link>
-  <link
-    name="camera_link">
-    <inertial>
-      <origin
-        xyz="0.0016556 -0.01252 1.2156E-05"
-        rpy="0 0 0" />
-      <mass
-        value="0.049778" />
-      <inertia
-        ixx="4.8577E-06"
-        ixy="4.3442E-07"
-        ixz="-6.2436E-10"
-        iyy="3.075E-05"
-        iyz="6.4645E-10"
-        izz="3.0901E-05" />
-    </inertial>
-    <xacro:visual_collision mesh="camera_link.STL" />
-  </link>
-
   <joint
     name="platform_joint"
     type="prismatic">
@@ -157,23 +139,30 @@
       link="head_link2" />
     <axis
       xyz="-1 0 0" />
+    <!-- Tilt range widened to match the real neck's pitch, derived from the
+         servo-unit calibration over the usable band (units 200-800):
+         deg = (units-500)*(70.1/300) - 7.766 -> approx -1.359 .. +1.088 rad.
+         See servo_sim_bridge and issue #8. -->
     <limit
-      lower="-0.419"
-      upper="0.419"
+      lower="-1.359"
+      upper="1.088"
       effort="2"
       velocity="1.57" />
   </joint>
-  <joint
-    name="camera_joint"
-    type="fixed">
-    <origin
-      xyz="-0.0032391 -0.051866 0.061606"
-      rpy="0 0 ${-pi/2}" />
-    <parent
-      link="head_link2" />
-    <child
-      link="camera_link" />
-    <axis
-      xyz="0 0 0" />
-  </joint>
+  <!-- ZED 2 head camera. The -pi/2 yaw is the physical mount: the ZED body
+       is X-forward while the head meshes are modeled -Y-forward (the sim
+       overlay's +pi/2 mesh->nav yaw at base_footprint_to_base makes -Y face
+       nav +X). One fixed physical angle is therefore correct in BOTH the
+       real-faithful core and the sim overlay - the two yaws cancel. No
+       sim-only compensation frames needed (retires the issue #11
+       camera_gz_frame mechanism). Origin inherited from the old camera_joint;
+       real mount offset to be calibrated on hardware. Guarded by
+       dual_rm_simulation/test/test_gz_camera_bore.py and
+       r2d3_mujoco/test/test_camera_optical_frame.py.
+       Origin calibrated 2026-07-16 against the head mesh in sim: 30 mm
+       forward (head-forward is -Y in the mesh frame) and 10 mm down from
+       the old camera_joint origin. -->
+  <xacro:zed2_camera name="zed" parent="head_link2">
+    <origin xyz="-0.0032391 -0.081866 0.051606" rpy="0 0 ${-pi/2}"/>
+  </xacro:zed2_camera>
 </robot>

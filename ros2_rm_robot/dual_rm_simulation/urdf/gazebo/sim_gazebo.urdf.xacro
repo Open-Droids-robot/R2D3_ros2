@@ -99,7 +99,6 @@
         <!-- ── Head, camera, hand base links ─────────────────── -->
         <xacro:_gz_no_gravity link_name="head_link1"/>
         <xacro:_gz_no_gravity link_name="head_link2"/>
-        <xacro:_gz_no_gravity link_name="camera_link"/>
         <xacro:_gz_no_gravity link_name="l_base_link1"/>
         <xacro:_gz_no_gravity link_name="r_base_link1"/>
         <xacro:_gz_no_gravity link_name="r_hand_base_link"/>

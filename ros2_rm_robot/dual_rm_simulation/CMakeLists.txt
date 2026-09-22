@@ -11,4 +11,9 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  scripts/stereo_concat.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()

@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!--
+  Wrist RealSense D435 sensors for Gz Sim (Harmonic).
+
+  Each wrist gets one rgbd_camera mounted DIRECTLY on its colour frame, which
+  already bores outward along the housing normal with the configured pan/tilt
+  applied (dual_rm_description d435.urdf.xacro + config/wrist_cameras.yaml).
+
+  Per the issue #11 postmortem, a sensor is NEVER oriented with a <pose> -
+  only via the frame it is mounted on. That rule is load-bearing here: MuJoCo
+  has no equivalent to a Gz <pose>, so any orientation expressed that way
+  would silently make the two sims disagree. Guarded by
+  test_gz_camera_bore.py::TestGzWristCameraBore.
+
+  D435 optics: 87 deg hfov, 848x480, 0.3-3.0 m.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="_wrist_gz_cam" params="side">
+        <gazebo reference="${side}_wrist_camera_color_frame">
+            <sensor name="${side}_wrist" type="rgbd_camera">
+                <always_on>true</always_on>
+                <update_rate>15</update_rate>
+                <topic>${side}_wrist</topic>
+                <gz_frame_id>${side}_wrist_camera_color_optical_frame</gz_frame_id>
+
+                <camera name="${side}_wrist">
+                    <horizontal_fov>1.5184</horizontal_fov>  <!-- 87 deg, D435 -->
+                    <image>
+                        <width>848</width>
+                        <height>480</height>
+                        <format>R8G8B8</format>
+                    </image>
+                    <depth_camera>
+                        <clip>
+                            <near>0.3</near>
+                            <far>3.0</far>
+                        </clip>
+                    </depth_camera>
+                    <clip>
+                        <near>0.3</near>
+                        <far>3.0</far>
+                    </clip>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.007</stddev>
+                    </noise>
+                </camera>
+            </sensor>
+        </gazebo>
+    </xacro:macro>
+
+    <xacro:macro name="wrist_cams_sim_sensors">
+        <xacro:_wrist_gz_cam side="left"/>
+        <xacro:_wrist_gz_cam side="right"/>
+    </xacro:macro>
+
+</robot>
