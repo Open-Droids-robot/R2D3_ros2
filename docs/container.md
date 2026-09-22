@@ -140,8 +140,8 @@ separate "remember to rebuild" step to forget.
 The container deliberately keeps the host's **non-symlink** install
 semantics: `install/` inside the container holds plain copies too, exactly
 as it does on the host. This is on purpose, so there is one mental model
-everywhere and the existing rebuild-trap documentation (see the repository's
-`CLAUDE.md`) stays true whether you're running natively or in the container.
+everywhere: an edit under `src/` does not exist until `colcon build` copies it
+into `install/`, whether you're running natively or in the container.
 The rebuild itself is cheap, because the ignored packages (below) are the
 bulk of the workspace and the simulation subset is almost entirely data
 packages.
@@ -247,7 +247,7 @@ shell` gets you the same environment without an editor integration.
    `--symlink-install`**, exactly what every `./droid up` launch path does.
    The build is not repeated on later starts; rebuild yourself
    (`cd /ws && colcon build --packages-select <pkg>`) and remember the
-   install-space copy trap in `CLAUDE.md` applies here as everywhere.
+   install-space copy trap applies here as everywhere.
 4. Terminals open as `droid` (never root — files you create in the
    bind-mounted tree stay yours), in `/ws/src/R2D3_ros2`, with ROS sourced.
    The Python and C++ extensions are pointed at `/opt/ros/jazzy` and

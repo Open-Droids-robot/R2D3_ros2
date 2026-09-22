@@ -36,8 +36,7 @@
 
     <!-- Sensor frames (same placement as Gazebo sim, r2d3_sim.urdf.xacro):
          mounted in the +X-forward nav frame (base_footprint) at the real robot's
-         coordinates, with zero compensation rotations (see the URDF unification
-         spec, docs/superpowers/specs/2026-07-13-r2d3-urdf-unification-design.md). -->
+         coordinates, with zero compensation rotations. -->
     <xacro:lidar_sensor parent_link="base_footprint"
                         xyz="0.325 0 0.210" rpy="0 0 0"/>
     <xacro:imu_sensor parent_link="base_footprint"

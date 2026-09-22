@@ -372,7 +372,7 @@ class TestDevContainer(unittest.TestCase):
         self.assertIn("ports: !override", text)
 
     def test_post_create_builds_without_symlink_install(self):
-        # The container's build semantics equal the host's (CLAUDE.md).
+        # The container's build semantics equal the host's (docs/container.md).
         post = (self.DEVCONTAINER_DIR / "post-create.sh").read_text()
         self.assertEqual(self.config["postCreateCommand"],
                          "bash .devcontainer/post-create.sh")

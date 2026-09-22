@@ -11,7 +11,7 @@
 #    does before launching: plain `colcon build`, no --symlink-install, scoped
 #    by the image's /etc/colcon/defaults.yaml. install/ is plain copies, so an
 #    edit under src/ does not exist until a rebuild copies it -- the same trap
-#    as on the host (see CLAUDE.md). This first build populates the shared
+#    as on the host (see docs/container.md). This first build populates the shared
 #    install volume on a fresh clone; later rebuilds are on you:
 #    `colcon build --packages-select <pkg>` from /ws.
 set -eu
