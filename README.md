@@ -1,312 +1,520 @@
-<div align="left">
-
-[English](./README.md)
-
 # Open Droids - R2D3
 
-<img src="./pic/dual_lift_robot.jpg" alt="pic" style="zoom:50%;" />
+<img src="./pic/dual_lift_robot.jpg" alt="R2D3 dual-arm lifting robot" style="zoom:50%;" />
 
-This package provides comprehensive ROS2 support for the **OpenDroids R2D3 dual-arm composite lifting robot** with multi-distribution support.
+ROS 2 **Jazzy** workspace for the **Open Droids R2D3**, a dual-arm mobile
+manipulator:
 
-### 🎯 ROS2 Distribution Support
+- **Base:** differential-drive chassis with a 2D lidar and an IMU.
+- **Torso:** a lifting column that raises and lowers both arms.
+- **Arms:** two RealMan arms, either **RM65-B** (6-DOF) or **RM75-B** (7-DOF),
+  each with a RealSense D435 camera on the wrist.
+- **Head:** a pan/tilt neck carrying a ZED 2 stereo camera.
 
-| Distribution | Ubuntu | Status | Recommended Use | Original R2D3 Support |
-|--------------|--------|--------|-----------------|----------------------|
-| **Foxy** | 20.04 | ✅ Supported | Original development, legacy systems | ✅ Native (Original target) |
-| **Humble** | 22.04 | ✅ **Recommended** | Production use, best stability | ✅ Adapted |
-| **Jazzy** | 24.04 | ✅ Supported | Latest features, cutting-edge | ✅ Adapted |
+The whole robot also runs in **simulation**, on **Gazebo Harmonic** or
+**MuJoCo**, so you can develop navigation, manipulation and agent behaviour
+without the hardware. The simulated robot uses the **same URDF, topics,
+frames and controllers** as the real one, so code written against the sim
+runs on the robot unchanged.
 
-**Recommendation**: Use **Foxy or Humble** for the best balance of stability and features. The original R2D3 was designed for Foxy, and all packages have been adapted to work with newer distributions.
+## Contents
 
-### 📋 Requirements
-
-* The supported robotic arm controller version is 1.6.5 or above.
-* Ubuntu 20.04+ (depending on ROS2 distribution)
-* ROS2 Foxy, Humble, or Jazzy
-
-| Embodied double-arm lifting robot (7-axis)                                        |                                                     |                                                              |
-| ------------------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------------ |
-| Part Name                                                     | Hardware version information                                        | Software version information                                                 |
-| Mechanical arm                                                       | RM75-B                                              | Controller V1.6.5 and above, API V4.2.8 and above, ROS2 function package V1.0.1      |
-| camera                                                         | Realsense D435C                                     | ros2_realsense2                                              |
-| Main control                                                         | jetson xavier NX                                    | ubuntu20.04 、ros-foxy                                       |
-| Chassis                                                         | woosh                                               | API version 0.10.8, socket communication                                    |
-| Head motor/lift                                              | WHJ30-80 joint                                        | Used as the expansion axis of the robot arm, the head joint is connected to the right arm as the expansion joint, and the lift and lower joint is connected to the left arm as the expansion joint. |
-| End Tool (optional)                                             | EG2-4C2 claws/Dexterous hand (right hand RM56DFX-2R/Left hand) RM56DFX-2L） | Integration with robotic arm API and ROS packages                                       |
-| Voice module                                                     | Fun M240 microphone array                                 | Voice module information V5.1（https://pan.baidu.com/e/1nVS8SXqZWn5scmidNqWb7w?_at_=1724069216106） |
-|  |                                                     |                                                              |
-
-If the robot arm is RM65-B, set [ros2_rm_robot/dual_rm_driver/config/dual_left_config.yaml](./ros2_rm_robot/dual_rm_driver/config/dual_left_config.yaml) and [ros2_rm_robot/dual_rm_ driver/config/dual_right_config.yaml](./ros2_rm_robot/dual_rm_driver/config/dual_right_config.yaml) arm_type, arm_dof parameter 7 is changed to 6, and the arm_joints parameter joint7 is deleted.
-
-For more information about the bot topic service function, see[List of services for the service of the embossed arms lifting ROS2](./List of services for the service of the embossed arms lifting ROS2.md)|
-
-The following is the installation and use tutorial of the package.
-
-## 🐳 Containerised simulation
-
-One command, on any machine, from a fresh clone:
-
-```bash
-./droid up
-```
-
-This detects your platform, starts a single container, builds the simulation
-subset, launches Gazebo with RViz, and prints a URL. Open
-<http://localhost:6080/vnc.html?autoconnect=1&resize=scale> and you will see the
-robot. The same command and the same URL work on an amd64 Linux desktop, an Apple
-Silicon Mac, a Jetson and a headless cloud instance, because the GUI is delivered
-over noVNC rather than through the host's display stack.
-
-```bash
-./droid up --mujoco   # switch the simulation backend
-./droid shell         # a shell inside the container
-./droid doctor        # re-run the platform probe
-./droid down          # stop, preserving anything you installed inside
-```
-
-Requires only bash and Docker. ROS 2 Jazzy only. See **[docs/container.md](docs/container.md)**
-for the two rendering tiers, GPU setup, and what has and has not been verified.
+- [Quick start: simulation in a container](#-quick-start-simulation-in-a-container)
+- [Running the simulation natively](#-running-the-simulation-natively)
+- [Choosing a simulator](#-choosing-a-simulator)
+- [Launch levels](#-launch-levels)
+- [Working with the simulated robot](#-working-with-the-simulated-robot)
+- [Rogent agent mode](#-rogent-agent-mode)
+- [Repository layout](#-repository-layout)
+- [Real robot](#-real-robot)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## 1\. Build the environment
+## 🚀 Quick start: simulation in a container
+
+This is the fastest way to see the robot. All you need is **bash and Docker**.
+You don't need ROS 2, GPU drivers or an X11 setup on the host.
+
+```bash
+git clone https://github.com/Open-Droids-robot/R2D3_ros2.git
+cd R2D3_ros2
+./droid up            # Gazebo Harmonic (default)
+./droid up --mujoco   # or MuJoCo
+```
+
+`./droid up` does five things:
+
+1. **Probes your platform.** It checks whether Docker can actually reach an
+   NVIDIA GPU, not just whether one is installed.
+2. **Pulls or builds the image.** This is a single ROS 2 Jazzy image with
+   Gazebo, MuJoCo, Nav2 and MoveIt preinstalled.
+3. **Starts one container** with your checkout bind-mounted at
+   `/ws/src/R2D3_ros2`.
+4. **Rebuilds the simulation packages** so that your latest edits are always
+   included.
+5. **Launches the simulator and RViz** and prints the URL of the desktop.
+
+Open the desktop in any browser:
+
+**<http://localhost:6080/vnc.html?autoconnect=1&resize=scale>**
+
+It is split into four panes:
+
+```
++-------------------------+-------------------------+
+| simulator               | RViz                    |
+| (Gazebo / MuJoCo)       |                         |
++-------------------------+-------------------------+
+| rogent agent (goal>)    | shell                   |
+| rogent mode only        | ROS + workspace sourced |
++-------------------------+-------------------------+
+```
+
+The **shell** pane already has ROS and the workspace sourced, so
+`ros2 topic list` works straight away. Click a pane to give it keyboard focus.
+The same command and URL work on an amd64 Linux desktop, an Apple Silicon Mac,
+a Jetson and a headless cloud machine.
+
+### Commands
+
+| Command | What it does | What it keeps or loses |
+|---|---|---|
+| `./droid up` | Start the container, rebuild and launch Gazebo | Keeps everything |
+| `./droid up --mujoco` | Same, with MuJoCo instead of Gazebo | Keeps everything |
+| `./droid up --rogent [--mute]` | Same, plus the rogent agent (see [Rogent agent mode](#-rogent-agent-mode)) | Keeps everything |
+| `./droid up --gpu cpu\|nvidia` | Override the GPU detection | Keeps everything |
+| `./droid up --recreate` | Accept recreating the container after its configuration changed | Loses anything installed inside the container |
+| `./droid shell` | Open a shell in the running container | Keeps everything |
+| `./droid doctor` | Re-run the platform probe and print the diagnosis | Changes nothing |
+| `./droid resolve` | Print the resolved configuration and why it was chosen | Changes nothing |
+| `./droid down` | Stop the container | Keeps `apt install`s, shell history and scratch files |
+| `./droid nuke` | Delete the container **and** its volumes (asks you to type `nuke`) | Loses installs, build output, the MuJoCo cache and model weights |
+
+### Rendering: GPU vs CPU
+
+`./droid up` picks one of two rendering tiers automatically:
+
+- **`nvidia`** renders on the GPU via the NVIDIA Container Toolkit. This is
+  the recommended tier for real work.
+- **`cpu`** uses software rendering (llvmpipe). It's the fallback on Macs, on
+  machines without a GPU and wherever GPU passthrough isn't set up. It aims
+  to **work, not to be fast**: the sim drives four RGB-D cameras and a lidar,
+  so expect a low frame rate.
+
+Suppose an NVIDIA GPU is present but Docker can't reach it. Then `./droid up`
+**stops with an error** and prints the commands to fix it, rather than quietly
+falling back to slow software rendering. To continue anyway, run
+`./droid up --gpu cpu`.
+
+### Editing code
+
+Edit files on the host as usual; the container sees them straight away.
+Build output (`build/`, `install/`, `log/`) lives on Docker volumes, so it
+never clashes with a native build on the host. Every `./droid up` rebuilds
+before launching. When you're working inside `./droid shell`, rebuild
+yourself with `cd /ws && colcon build --packages-select <pkg>`.
+
+The first `./droid up --mujoco` from a branch, or after editing the robot
+description, regenerates the MuJoCo model. That takes a few minutes. It
+hasn't hung, and later launches are fast.
+
+A VS Code dev container ("Reopen in Container") is also included. The full
+container guide is in **[docs/container.md](docs/container.md)**.
+
 ---
-Before using the package, we first need to do the following operations.
 
-* 1.[Install ROS2](#1.Install_ROS2) # skip if already installed 
-* 2.[Install Moveit2](#Install_Moveit2)
-* 3.[Configure the package environment](#Configure_the_package_environment)
-* 4.[Compile](#Compile)
+## 🛠 Running the simulation natively
 
-### 1.Install_ROS2
-
-----
-
-We provide the installation script for ROS2, `ros2_install.sh`, which is located in the `scripts` folder of the `ros2_rm_robot\dual_rm_install` package. In practice, we need to move to the path and execute the following commands.
+Use this if you already have **Ubuntu 24.04 and ROS 2 Jazzy** and would
+rather not use Docker.
 
 ```bash
-sudo bash ros2_install.sh
+# 1. Create a workspace and clone into src/
+mkdir -p ~/r2d3_ws/src && cd ~/r2d3_ws/src
+git clone https://github.com/Open-Droids-robot/R2D3_ros2.git
+
+# 2. Install the dependencies
+cd ~/r2d3_ws
+rosdep install --from-paths src --ignore-src -r -y
+
+# 3. Build only the simulation packages
+COLCON_DEFAULTS_FILE=src/R2D3_ros2/container/colcon-defaults.yaml colcon build
+source install/setup.bash
 ```
 
-If you do not want to use the script installation, you can also refer to the website [ROS2_INSTALL](https://docs.ros.org/en/foxy/Installation/Ubuntu-Install-Debians.html).
+Step 3 uses the same package selection as the container. It skips the 14
+hardware-only packages: the ZED wrapper, the RealSense driver, the arm
+driver, the Woosh chassis packages and the grasping demo. Those need vendor
+SDKs, and no simulation package depends on them.
 
-### Install_Moveit2
+Source `install/setup.bash` in every new terminal.
 
-----
+> **Rebuild after every edit.** The workspace is built **without**
+> `--symlink-install`, so `install/` holds plain copies. Everything is read
+> from `install/` at runtime: launch files, xacro, YAML configs and worlds.
+> An edit under `src/` has no effect until you run
+> `colcon build --packages-select <pkg>` again. If a changed setting seems to
+> do nothing, rebuild before you debug.
 
-We provide the installation script for Moveit2, `moveit2_install.sh`, which is located in the `scripts` folder of the `ros2_rm_robot\dual_rm_install` package. In practice, we need to move to the path and execute the following commands.
+---
+
+## ⚖️ Choosing a simulator
+
+Both simulators load the same robot description and expose the same ROS
+interface. Choose by what you need:
+
+| | Gazebo Harmonic | MuJoCo |
+|---|---|---|
+| Default in the container | Yes | `--mujoco` |
+| Strengths | Mature sensor simulation and the classic ROS workflow | Fast and stable contact physics, ground-truth odometry, pause and step |
+| First launch | Quick | Converts URDF → MJCF once (~30 s warm, minutes when cold), then cached |
+| World | `dual_rm_simulation/worlds/nav_empty.sdf` | `r2d3_mujoco/worlds/nav_empty.xml` |
+| Rogent agent mode | — | Supported (`--rogent --mujoco`) |
+| Detailed guide | [simulation_quickstart_gz.md](simulation_quickstart_gz.md) | [simulation_quickstart_mujoco.md](simulation_quickstart_mujoco.md) |
+
+---
+
+## 🧱 Launch levels
+
+Each backend can be launched at three levels. Pick the smallest one that
+does what you need.
+
+| Level | Gazebo Harmonic | MuJoCo |
+|---|---|---|
+| **1. Robot + controllers** | `ros2 launch dual_rm_simulation gz_sim.launch.py` | `ros2 launch r2d3_mujoco mujoco_sim.launch.py` |
+| **2. + Nav2 (SLAM)** | `ros2 launch dual_rm_navigation bringup_sim.launch.py` | `ros2 launch r2d3_mujoco bringup_sim.launch.py use_moveit:=false` |
+| **3. + MoveIt 2 (full stack)** | `ros2 launch r2d3_bringup bringup_sim.launch.py` | `ros2 launch r2d3_mujoco bringup_sim.launch.py` |
+
+When you use the container, `./droid up` starts level 1, and
+`./droid up --rogent --mujoco` starts level 2. To run a different level, stop
+the running launch and start the one you want from the shell pane.
+
+### Level 1: robot and controllers
+
+Starts the simulator, spawns the robot and activates every `ros2_control`
+controller. Navigation and MoveIt are not started.
+
+| Node | Purpose |
+|---|---|
+| `robot_state_publisher` | Publishes `/robot_description` and `/tf` |
+| `joint_state_broadcaster` | Publishes `/joint_states` |
+| `diff_drive_controller` | Base velocity control and wheel odometry |
+| `left_arm_controller`, `right_arm_controller` | Arm joint trajectory control |
+| `platform_controller` | Torso lift |
+| `neck_controller` + `neck_servo_bridge` | Pan/tilt neck, driven through the real robot's servo messages |
+| `ros_gz_bridge` (Gazebo) | Bridges `/clock`, the sensors and the cameras into ROS |
+| `ensure_mjcf.py` (MuJoCo) | Cached URDF → MJCF conversion |
+
+### Levels 2 and 3: navigation and manipulation
+
+Level 2 adds **Nav2** and a SLAM or localization backend. Level 3 also adds
+**MoveIt 2** (`move_group`) and a combined RViz view with the Nav2 tools and
+the MotionPlanning panel.
+
+| Argument | Default | Meaning |
+|---|---|---|
+| `robot_model` | `65b` | `65b` for 6-DOF arms, `75b` for 7-DOF arms |
+| `mode` | `slam` | `slam` builds a new map; `localization` navigates on a saved one |
+| `slam_type` | `slam_toolbox` | SLAM backend (see the next table) |
+| `map` | *(empty)* | Map YAML; required for `mode:=localization` with `slam_toolbox` |
+| `use_rviz` | `true` | Whether to start RViz |
+| `use_moveit` | `true` | Whether to start MoveIt 2 (full-stack launches only) |
+| `world` | `nav_empty` | Path to the world file |
+| `headless` | `false` | MuJoCo only: run without the viewer window |
+
+| `slam_type` | Sensors | Best for |
+|---|---|---|
+| `slam_toolbox` | 2D lidar | Fast, lightweight 2D mapping |
+| `rtabmap` | ZED RGB-D + lidar | Richer maps with loop closure |
+| `rtabmap_depth_only` | ZED RGB-D only | Mapping without a lidar |
+
+Examples:
 
 ```bash
-sudo bash moveit2_install.sh
+# MuJoCo full stack with 7-DOF arms and RTAB-Map
+ros2 launch r2d3_mujoco bringup_sim.launch.py robot_model:=75b slam_type:=rtabmap
+
+# Gazebo: navigate on a previously saved map
+ros2 launch dual_rm_navigation bringup_sim.launch.py \
+  mode:=localization map:=$HOME/maps/my_map.yaml
+
+# MuJoCo without any GUI (useful for CI)
+ros2 launch r2d3_mujoco bringup_sim.launch.py use_rviz:=false headless:=true
 ```
 
-If you do not want to use the script installation, you can also refer to the website [Moveit2_INSTALL](https://moveit.ros.org/install-moveit2/binary/).
+---
 
-### Configure_the_package_environment
+## 🎮 Working with the simulated robot
 
-----
-
-This script is located in the `lib` folder of the` ros2_rm_robot\dual_rm_driver` package. In practice, we need to move to the path and execute the following commands.
+### Drive the base
 
 ```bash
-sudo bash lib_install.sh
+ros2 run teleop_twist_keyboard teleop_twist_keyboard \
+  --ros-args -r /cmd_vel:=/diff_drive_controller/cmd_vel \
+  -p stamped:=true -p frame_id:=base_footprint
 ```
 
-----
+The base controller takes **stamped** twists (`TwistStamped`). Your own nodes
+should publish them on `/diff_drive_controller/cmd_vel`.
 
-Install chassis Ros2 interface installation package
-Execute in the path of~/ros_2agv_robot/lib
+### Check that the controllers work
 
-link to lib : https://seafile.wsrobotics.com/d/9fee6b1fda3b4403919c/?p=%2F%E8%BD%AF%E4%BB%B6%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91%E6%8E%A5%E5%8F%A3%2F%E5%BA%94%E7%94%A8%E5%B1%82ROS2%E6%8E%A5%E5%8F%A3%2Fv0.0.1&mode=list 
-
-(if on Jetson)
-```bash 
-cd ros2_agv_robot/lib/
-sudo ./ros-foxy-woosh-robot-agent_0.0.1-0focal_arm64.run
-```
-(if on other Arch(laptop or sim env))
-```bash
-cd ros2_agv_robot/lib/
-sudo ./ros-foxy-woosh-robot-agent_0.0.1-0focal_amd64.run
-```
-
-### Compile
-
-----
-
-After the above execution is successful, execute the following commands to compile the package. First, we need to build a workspace and import the package file into the `src` folder under the workspace, and then use the `colcon build` command to compile.
+These scripted motions need level 1 or higher to be running:
 
 ```bash
-mkdir -p ~/ros2_ws/src
-cp -r rm_dual_arm_lifting_robot_ros2 ~/ros2_ws/src
-cd ~/ros2_ws
-colcon build --packages-select rm_ros_interfaces
-colcon build --packages-select realsense2_camera_msgs
-source ./install/setup.bash
+# Base: forward, stop, rotate, stop, backward, stop
+ros2 run r2d3_test_nodes test_agv_motion --ros-args -p use_sim_time:=true
+
+# Arms: left wave, home, right wave, home
+ros2 run r2d3_test_nodes test_arm_motion --ros-args -p use_sim_time:=true
+```
+
+### Map and navigate
+
+With level 2 or 3 running, drive around (or send goals) to build the map:
+
+- **Nav2 Goal** (the green arrow in RViz's toolbar): click a point on the map
+  and the robot plans a path there and drives it. The global plan shows in
+  green and the local plan in blue.
+- **2D Pose Estimate**: tell the robot where it is. Use this after starting
+  in localization mode.
+
+Save the finished map, then relaunch with
+`mode:=localization map:=~/maps/my_map.yaml` to navigate on it:
+
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/maps/my_map
+```
+
+### Plan arm motions
+
+With level 3 running, in RViz's **MotionPlanning** panel:
+
+1. Choose a planning group: `left_arm`, `right_arm` or `platform` (the torso
+   lift).
+2. Drag the interactive marker to a target pose.
+3. Click **Plan**, check the preview, then click **Execute**. **Plan &
+   Execute** does both at once.
+
+### Move the neck
+
+The simulated neck takes the **same servo messages as the real robot**, so
+head-control code runs unchanged on both. Servo `2` pans and servo `5` tilts.
+Positions are raw servo units: `500` is centre, and the usable range is
+`200`–`800`.
+
+```bash
+# Pan the head, then tilt it (500 = centre)
+ros2 topic pub --once /servo_control/move servo_interfaces/msg/ServoMove "{servo_id: 2, angle: 650}"
+ros2 topic pub --once /servo_control/move servo_interfaces/msg/ServoMove "{servo_id: 5, angle: 400}"
+
+# Read back both servo positions
+ros2 topic echo /servo_both_angles
+```
+
+The mapping from units to joint angle is set in
+[`neck_servo_bridge.yaml`](ros2_servo_driver/servo_sim_bridge/config/neck_servo_bridge.yaml).
+
+### Sensors and cameras
+
+| Sensor | Topics | Frame |
+|---|---|---|
+| 2D lidar | `/scan` | `laser_link` |
+| IMU | `/imu` | — |
+| ZED 2 head camera | `/zed/zed_node/{left,right}/…`, `/zed/zed_node/depth/depth_registered`, `/zed/zed_node/point_cloud/cloud_registered` | ZED wrapper frames |
+| Left/right wrist D435 | `/{left,right}_wrist/color/image_raw`, `…/depth/image_rect_raw`, `…/depth/color/points` | `{left,right}_wrist_camera_*` |
+| Joints | `/joint_states` | — |
+| Wheel odometry | `/diff_drive_controller/odom` | `odom` → `base_footprint` |
+| Ground-truth odometry (MuJoCo only) | `/ground_truth_odom` | — |
+
+The ZED topics follow the real `zed-ros2-wrapper` (v5) naming, and the wrist
+cameras follow the `realsense2_camera` naming. Nodes that consume them work
+unchanged against the real drivers.
+
+**Aiming the wrist cameras.** Both simulators read the wrist-camera aim from
+[`wrist_cameras.yaml`](ros2_rm_robot/dual_rm_description/dual_rm_description/config/wrist_cameras.yaml).
+The values are in degrees, per arm variant and side:
+
+- **`tilt`** is usually the only one you need. Negative values tilt the
+  camera down toward the gripper; about `-16` centres the gripper tip.
+- **`pan`** turns the camera left or right.
+
+Rebuild `dual_rm_description` after changing it.
+
+### MuJoCo extras
+
+```bash
+# Pause and resume the physics
+ros2 service call /mujoco_ros2_control_node/set_pause mujoco_ros2_control_msgs/srv/SetPause "{paused: true}"
+
+# Advance 10 steps (only while paused)
+ros2 service call /mujoco_ros2_control_node/step_simulation mujoco_ros2_control_msgs/srv/StepSimulation "{steps: 10}"
+
+# Reset the world
+ros2 service call /mujoco_ros2_control_node/reset_world mujoco_ros2_control_msgs/srv/ResetWorld "{keyframe: ''}"
+
+# Force the URDF → MJCF model to be regenerated
+ros2 launch r2d3_mujoco mujoco_sim.launch.py force_recompile:=true
+```
+
+In the MuJoCo viewer window, **Space** pauses and resumes, and **→** steps
+one frame while paused.
+
+---
+
+## 🤖 Rogent agent mode
+
+[rogent-v3](https://github.com/Open-Droids-robot/rogent-v3) is Open Droids'
+natural-language agent. You type a goal such as "go to the red box". Rogent
+plans how to achieve it and carries it out through Nav2, speaking its
+progress aloud. In agent mode it runs against the simulation instead of the
+robot, **entirely on local models**:
+- language: Ollama on the host
+- speech: Kokoro TTS
+
+```bash
+# One-time: check out rogent-v3 next to this repo, at the pinned version
+cd .. && vcs import --input R2D3_ros2/rogent.repos . && cd R2D3_ros2
+
+./droid up --rogent --mujoco          # MuJoCo + Nav2 + the agent
+./droid up --rogent --mujoco --mute   # same, but speech goes to a silent sink
+```
+
+How it works:
+
+- **Waiting for the sim.** The agent pane (bottom-left of the desktop) waits
+  until the simulation clock is actually advancing, then shows a `goal>`
+  prompt. Type goals there.
+- **Second prompt from the host.** `./droid rogent` opens another agent
+  prompt from a host terminal. Both prompts can run at the same time.
+- **Different image and transport.** Agent mode builds a derived image with
+  rogent's dependencies. It also switches ROS communication to Zenoh
+  (`rmw_zenoh_cpp`), with a router inside the container.
+- **Speech.** Speech plays through the host's PulseAudio. Use `--mute` for
+  repeated test runs: the speech pipeline still runs, and only the sound is
+  silenced.
+- **Language models.** If Google API keys are present in rogent's
+  environment, it uses Gemini. Otherwise it stays fully local.
+- **Switching mode.** Turning `--rogent` on or off changes the container's
+  configuration, so add `--recreate` when you switch.
+
+Full details are in [docs/container.md §13](docs/container.md#13-rogent-mode).
+
+---
+
+## 📁 Repository layout
+
+| Path | Contents |
+|---|---|
+| `droid`, `container/`, `.devcontainer/` | Container workflow: CLI, image, compose files and noVNC desktop |
+| `r2d3_mujoco/` | MuJoCo simulation: URDF → MJCF conversion, world, controllers, launch |
+| `ros2_rm_robot/dual_rm_simulation/` | Gazebo Harmonic simulation: world, bridges, launch |
+| `ros2_rm_robot/dual_rm_description/` | Robot description (URDF/xacro), **shared by both sims and the real robot** |
+| `ros2_rm_robot/dual_rm_navigation/` | Nav2, SLAM Toolbox and RTAB-Map configuration and launch |
+| `ros2_rm_robot/dual_rm_moveit_config/` | MoveIt 2 configurations for the 65B and 75B arms |
+| `ros2_r2d3_apps/r2d3_bringup/` | Unified Nav2 + MoveIt 2 bringup and ZED configuration |
+| `ros2_r2d3_apps/r2d3_test_nodes/` | Scripted base and arm motion tests |
+| `ros2_servo_driver/` | Neck servo messages (`servo_interfaces`) and the sim servo bridge |
+| `ros2_zed/` | ZED ROS 2 wrapper + `zed_msgs`, vendored. The wrapper is skipped by default. |
+| `ros2_realsense2/`, `ros2_agv_robot/`, `woosh_msgs/`, `ros2_total_demo/` | Hardware drivers and demos (real robot only) |
+
+---
+
+## 🦾 Real robot
+
+| Part | Hardware | Software |
+|---|---|---|
+| Arms | RM75-B (or RM65-B) | Controller V1.6.5+, API V4.2.8+ |
+| Head camera | ZED 2 | `zed-ros2-wrapper` (in `ros2_zed/`; remove its `COLCON_IGNORE` to build it) |
+| Wrist cameras | RealSense D435 | `ros2_realsense2` |
+| Chassis | Woosh | API 0.10.8, socket communication |
+| Neck | Pan/tilt servos | `servo_interfaces` servo contract |
+| Lift | WHJ30-80 joint | Expansion axis of the left arm |
+| End effector (optional) | EG2-4C2 gripper / RM56DFX dexterous hands | Arm API + ROS packages |
+| Voice | M240 microphone array | — |
+
+The arm driver has one config per variant, in
+[`rm_driver/config/`](./ros2_rm_robot/dual_rm_driver/rm_driver/config/):
+`dual_65_{left,right}_config.yaml` for RM65-B arms and
+`dual_75_{left,right}_config.yaml` for RM75-B arms.
+
+For the arm's topics and services, see
+[List of services](./List_of_services_for_the_service_of_the_embossed_arms_lifting_ROS2.md).
+
+### Building for hardware
+
+Hardware builds need the vendor SDKs and libraries:
+- **Arm driver:** `ros2_rm_robot/dual_rm_driver/rm_driver/lib/lib_install.sh`.
+- **Woosh chassis agent:** a `.run` installer in `ros2_agv_robot/lib/`. Pick
+  your ROS distro and use `arm64` on Jetson or `amd64` elsewhere. Only Foxy
+  and Humble builds are shipped.
+- **ZED SDK:** required only if you build the ZED wrapper.
+
+Then build the whole workspace:
+
+```bash
+cd ~/r2d3_ws
+colcon build --packages-select rm_ros_interfaces realsense2_camera_msgs
+source install/setup.bash
 colcon build
 ```
 
-<img src="./pic/success.png" alt="pic" style="zoom:50%;" />
+### Hardware demos
 
-After the compilation is completed, the package can be run.
+```bash
+# RealSense camera + demo viewer
+ros2 launch realsense2_camera rs_launch.py
+ros2 run rm_camera_demo sub_image_node
 
-For more MoveIt configuration information, see[Embodied arms lifting ROS2-foxy-moveit2 configuration tutorial](./Dual-arm composite lifting ROS2-foxy-moveit2 configuration tutorial.pdf)|
+# Whole-robot linkage demo
+ros2 launch ros2_total_demo total_demo.launch.py
+ros2 run ros2_total_demo total_demo_node
 
-## 2\. Function running
+# Visual grasping: run start.launch.py, then ONE of the two grasp scripts,
+# depending on the end effector. Put your camera serial number in
+# detect_object.py first.
+ros2 launch ros2_total_demo start.launch.py
+ros2 run ros2_total_demo catch2object_gripper.py     # two-finger gripper
+ros2 run ros2_total_demo catch2object_aoyi_hand.py   # dexterous hands
+```
+
+### Safety
+
+- Before each use, check the arm mounting: no loose screws, no vibration.
+- Keep people and objects out of the arms' working range while they move.
+- Park the arms in a safe position when idle, and cut power when not in use.
 
 ---
 
-Introduction to the package: The package includes example control of the dual-arm composite lifting robot in ROS2, allowing users to perform ROS2 operations on the dual-arm composite lifting robot. For ease of portability, each part of the dual-arm composite lifting robot is separately split into independent packages, facilitating the reuse and assembly of the packages.
+## Version history
 
-**Note:** The lifting module for the dual-arm lifting is connected to the lifting mechanism of the left arm, and the head rotation is connected to the expansion joint of the right arm.
+| Version | Changes | Date |
+|---|---|---|
+| V1.0 | First release | 2024-11-11 |
+| V1.1 | Fixed a driver UDP reporting bug; added Gazebo arm simulation | 2024-11-25 |
+| V1.1.1 | Improved the linkage demo; fixed left-arm URDF orientation; camera code cleanup | 2024-12-12 |
+| V1.1.2 | Visual grasping demo | 2024-12-24 |
+| V1.1.3 | Chassis package | 2025-01-02 |
+| V1.2.0 | Multi-distribution Docker setup | 2025-01-15 |
+| V1.3.0 | Single ROS 2 Jazzy container workflow (`./droid up`), GUI over noVNC | 2026-07-22 |
+| V1.4.0 | MuJoCo simulation, unified sim/real URDF, ZED 2 head camera and wrist D435s in sim, simulated neck, rogent agent mode | 2026-09-22 |
 
-### 2.1  Demos for Various Components
+## Troubleshooting
 
-#### 2.1.1 AGV Demo
+| Symptom | Cause and fix |
+|---|---|
+| Container won't start | Make sure Docker is running (`sudo systemctl start docker`), then run `./droid doctor`. |
+| "GPU unreachable" error | Docker can't reach your NVIDIA GPU. Run the fix commands that `./droid doctor` prints, or use `./droid up --gpu cpu`. |
+| Browser shows nothing | The GUI is served over noVNC, not X11. Open the URL above. If port 6080 is taken, run `./droid down` in the other checkout. |
+| "Configuration has changed" refusal | Your platform or compose files changed since the container was created. `./droid resolve` shows what changed; `./droid up --recreate` accepts it. |
+| A changed setting or launch file does nothing | `install/` is stale. Rebuild the package (see [Running the simulation natively](#-running-the-simulation-natively)). |
+| First MuJoCo launch takes minutes | The URDF → MJCF model is being regenerated. This is expected after description edits or on a new branch. |
+| Everything is slow in the `cpu` tier | Expected: software rendering is meant to work, not to be fast. Use an NVIDIA GPU for real work. |
+| A topic's rate looks doubled or noisy | Leftover simulator processes from an earlier run are publishing too. Check with `ros2 topic info -v <topic>`, then kill the stragglers (`pgrep -af 'mujoco\|gz sim\|ros_gz_bridge'`). |
+| 75B arm controllers stay `inactive` in MuJoCo | `mujoco_ros2_control` 0.0.3 doesn't export the command interface for joint 7. This is a known upstream limit; use `robot_model:=65b` for full arm control in MuJoCo. |
 
-#### 2.1.2 Camera Demo
-
-The camera demo is located in the ros2_realsense2 folder, and the realsense2_camera camera node needs to be started first during the demo package (rm_camera_demo) test, and the command is as follows:
-
-```bash
-source ~/ros2_ws/install/setup.bash
-ros2 launch realsense2_camera rs_launch.py 
-```
-
-Note: The original camera node start command is ros2 launch realsense2_camera rs_launch.py, if you need to use depth alignment RGB images, you need to add parameters to get the aligned image topic.
-
-To start the demo visualizing D435 images, use the following command.
-
-```bash
-ros2 run rm_camera_demo sub_image_node
-```
-
-<img src="./pic/camera_demo.png" alt="pic" style="zoom:50%;" />
-
-Start the demo to get the coordinate value of the center point of the image, and run the following command:
-
-```bash
-ros2 run rm_camera_demo Center_Coordinate_node
-```
-
-If you want to view the point cloud information of the camera, you can use the demo example provided with the camera driver package with the following command.
-
-```bash
-source ~/ros2_ws/install/setup.bash
-ros2 launch realsense2_camera demo_pointcloud_launch.py
-```
-
-open the first rgb camera
-```bash
-source ~/ros2_ws/install/setup.bash
-ros2 run rm_camera_demo camera_0_node 
-```
-
-Open the second rgb camera
-```bash
-source ~/ros2_ws/install/setup.bash
-ros2 run rm_camera_demo camera_1_node 
-```
-
-Open the realsense depth camera, and the program will detect all realsense cameras. You can open the specified camera by selecting the device number
-```bash
-source ~/ros2_ws/install/setup.bash
-ros2 run rm_camera_demo open_realsense_node 
-```
-
-#### 2.1.3 Voice Module Demo
-
-#### 2.1.4 Overall Linkage Demo
-
-1. Test Demo
-
-start driver
-
-```
-source ~/ros2_ws/install/setup.bash
-ros2 launch ros2_total_demo total_demo.launch.py
-```
-
-start demo node
-
-```
-source ~/ros2_ws/install/setup.bash
-ros2 run ros2_total_demo total_demo_node
-```
-
-2.camera catch Demo（obj bottle）
-
-start driver
-
-```
-source ~/ros2_ws/install/setup.bash
-ros2 launch ros2_total_demo start.launch.py
-```
-
-note：executing the camera node（ros2_total_demo/scripts detect_object.py）will print serial_number，please fill in the correct serial number in the code and compile it for execution
-
-start the visual capture Program (Aoyi and smart hands)
-
-```
-source ~/ros2_ws/install/setup.bash
-ros2 run ros2_total_demo catch2object_aoyi_hand.py
-```
-
-or
-
-start the visual capture program（Two finger claws）
-
-```
-source ~/ros2_ws/install/setup.bash
-ros2 run ros2_total_demo catch2object_gripper.py
-```
-
-Note: The test demo and visual grasping demo cannot be launched simultaneously. The execution script should be selected based on the end effector of the robot
-
-### Safety Tips
-
-----
-
-Please refer to the following operation specifications when using the robotic arm to ensure the user's safety.
-
-* Check the installation of the robotic arm before each use, including whether the mounting screw is loose and whether the robotic arm is vibrating or trembling.
-* During the running of the robotic arm, no person shall be in the falling or working range of the robotic arm, nor shall any other object be placed in the robot arm's safety range.
-* Place the robotic arm in a safe location when not in use to avoid it from falling down and damaging or injuring other objects during vibration.
-* Disconnect the robotic arm from the power supply in time when not in use.
-
-### 🐛 Container Troubleshooting
-
-**Container won't start:**
-```bash
-# Check Docker is running
-sudo systemctl start docker
-
-# Re-run the platform probe
-./droid doctor
-```
-
-**GUI doesn't show:** the GUI is served over noVNC, not X11 forwarding — open
-<http://localhost:6080/vnc.html?autoconnect=1&resize=scale> in a browser. If
-port 6080 is already taken by another `droid`/compose stack, stop that one
-first (`./droid down` in the other checkout).
-
-**GPU unreachable / configuration drift refused / MuJoCo reconversion is
-slow:** see the Troubleshooting section of **[docs/container.md](docs/container.md)**,
-which covers these cases in detail.
-
-### Version update
-
-| Revision | Content Update | Effective Date |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-| V1.0 | First Submit Code | 2024-11-11 |
-| V1.1 | 1. Modified driver cannot report UDP information BUG 2. Added robotic arm gazebo simulation function | 2024-11-25 |
-| V1.1.1 | 1. Improved the overall linkage demo 2. Modified the left-hand installation direction bug in urdf 3. Optimized the camera code | 2024-12-12 |
-| V1.1.2 | 1. Added visual crawling demo | 2024-12-24 |
-| V1.1.3 | 1. Added chassis function package when enlightenment | 2025-01-02 |
-| V1.2.0 | 1. **Major Docker Update**: Multi-distribution support (Foxy, Humble, Jazzy) 2. Comprehensive Docker Compose setup 3. Enhanced development environment with GUI and audio support 4. Updated documentation and quick start guides | 2025-01-15 |
-| V1.3.0 | 1. **Container consolidation**: replaced the multi-distribution `Docker/` tree with a single ROS 2 Jazzy container workflow (`./droid up`), auto-detecting CPU/NVIDIA rendering and serving the GUI over noVNC. See [docs/container.md](docs/container.md) | 2026-07-22 |
-
-### Common problem
-1. exec:sudo bash ros2_install.sh
-error：invalid option line 7: set: -
-solution： dos2unix ros2_install.sh
+More: [docs/container.md § Troubleshooting](docs/container.md#15-troubleshooting),
+and the troubleshooting sections of the
+[Gazebo](simulation_quickstart_gz.md) and
+[MuJoCo](simulation_quickstart_mujoco.md) guides.
